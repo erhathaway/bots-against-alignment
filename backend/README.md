@@ -4,3 +4,6 @@
 
 `poetry install`
 
+# Run
+
+`uvicorn src:app --reload`
