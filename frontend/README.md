@@ -1,10 +1,10 @@
 # Install Dependencies
 
-`pnpm install`
+`npm install`
 
 # Build 
 
-`pnpm run build`
+`npm run build`
 
 # Run Dev
 
