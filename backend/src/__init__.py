@@ -199,7 +199,7 @@ def parse_response_for_winner(response, user_id_to_num):
 @app.get("/health_check")
 async def health_check():
     return {"status": "OK"}
-	
+
 @app.get("/game/{game_id}")
 def get_game(game_id: str):
 	"""Returns a valid game object id if it exists, otherwise returns an error"""
@@ -213,6 +213,7 @@ def get_game(game_id: str):
 def create_game():
 	"""Creates a new game and returns the creator ID and game ID"""
 	game = Game()
+	all_running_games[game.game_id] = game
 
 	return {"creator_id": game.creator_id, "game_id": game.game_id}
 
