@@ -230,7 +230,7 @@ def game_status(game_id: str):
 	return{"status": status, "bots": bots}
 
 
-@app.get("/user_status?game_id={game_id}&user_id={user_id}") #CDC UPDATE HERE
+@app.get("/user_status?game_id={game_id}&user_id={user_id}")
 def user_status(game_id:str, user_id:str):
 	"""Returns the status of the user with the specified user ID"""
 	game = all_running_games.get(game_id)
@@ -267,7 +267,7 @@ def turn(game_id:str,user_id:str):
 	return{ "alignment_prompt": game.turn_prompt, "turn_id":game.turn_id}
 
 
-@app.post("alignment?game_id={game_id}&suggestion={suggestion}&turn_id={turn_id}&user_id={user_id}")##TODO send user name
+@app.post("alignment?game_id={game_id}&suggestion={suggestion}&turn_id={turn_id}&user_id={user_id}")
 def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,user_id:str):
 	game = all_running_games.get(game_id)
 	bot = game.user_bot_names[user_id]
@@ -296,4 +296,4 @@ def turn_finale(game_id:str,turn_id:str):
 @app.get("/game_finale?game_id={game_id}")
 def game_finale(game_id:str):
 	alignment_responses = game.build_alignment_reponse()
-	return{"aligner_responses": alignment_responses ,"aligner_prompt":game.aligner_prompt}#TODO we should tell them what the aligner prompt was
+	return{"aligner_responses": alignment_responses ,"aligner_prompt":game.aligner_prompt}
