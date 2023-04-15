@@ -144,7 +144,11 @@ def build_player_prompt(bot_prompt, turn_prompt, extra_context):
 
 
 def build_aligner_prompt(aligner_prompt,turn_prompt, user_prompts):
-    messages = [
+	if aligner_prompt is None:
+		aligner_prompt =''
+	if turn_prompt is None:
+		turn_prompt =''
+	messages = [
         {"role": "system", "content" : "You are playing the aligner you are playing an alignment game. You will select the proper response based on your alignment goal."},
         {"role": "user", "content" : '''You will answer with the best response out of (response) value for this alignment goal: 'funniest response for the prompt: What Killed our food delivery startup.
 			(1. "people who can't multitask.")
@@ -153,11 +157,11 @@ def build_aligner_prompt(aligner_prompt,turn_prompt, user_prompts):
 			(4. "Fools who ignore their priorities.")'''},
 		{"role": "assistant", "content" : '''(1. "people who can't multitask.")'''},
 		{"role": "user", "content" : '''You will answer with the best response out of (response) value for this alignment goal:''' +aligner_prompt+':'+turn_prompt}]
-    user_id_to_num={}
-    for unn, [user_id, response] in enumerate(user_prompts.items()):
-        messages[-1]['content'] =  messages[-1]['content']+str(unn)+ '. '+response+''')/n '''
-        user_id_to_num[unn] = user_id
-    return messages,user_id_to_num
+	user_id_to_num={}
+	for unn, [user_id, response] in enumerate(user_prompts.items()):
+		messages[-1]['content'] =  messages[-1]['content']+str(unn)+ '. '+response+''')/n '''
+		user_id_to_num[unn] = user_id
+	return messages,user_id_to_num
 
 def run_chatGPT_call(messages):
     completion = openai.ChatCompletion.create(
