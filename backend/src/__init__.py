@@ -285,7 +285,7 @@ def turn(game_id:str):
 	game = game_state.state.get(game_id)
 	if game is None:
 		raise HTTPException(status_code=404, detail="Game not found")
-	game.turn_prompt = game.turn_prompts.random.choice()
+	game.turn_prompt = random.choice(game.turn_prompts)
 	return{ "alignment_prompt": game.turn_prompt, "turn_id":game.turn_id}
 
 
