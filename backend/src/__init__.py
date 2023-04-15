@@ -39,7 +39,7 @@ class Game:
 		self.aligner_prompt = '' #TODO we need to add the base string to this
 		self.turn_prompt = ''
 		self.turn_prompts = ["a cat", "a hat","a bat","a mat"] #TODO grab from core list of CAH prompts
-		self.turn_id = 0
+		self.turn_id = 1
 		
 	def new_user(self):
 		user_id = uuid.uuid4()
@@ -66,7 +66,7 @@ class Game:
 		self.aligner_prompt =self.aligner_prompt+' '+' '.joint(full_aligner_prompt)
 
 @app.get("/health_check")
-	async def health_check():
+async def health_check():
     return {"status": "OK"}
 	
 @app.get("/game/{game_id}")
@@ -143,7 +143,7 @@ def start_game(game_id: str, creator_id: str):
 	game.game_status = "STARTED"
 	game.aligner_prompt = game.make_full_aligner_prompt()
 
-'''
+
 @app.get("/turn?game_id={game_id}")
 def turn(game_id:str):
 	"""Returns the turn prompt and turn ID"""
@@ -153,4 +153,3 @@ def turn(game_id:str):
 	game.turn_prompt = game.turn_prompts.random.choice()
 	return{ "alignment_prompt": game.turn_prompt, "turn_id":game.turn_id}
 	
-'''
