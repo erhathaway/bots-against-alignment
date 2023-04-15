@@ -58,9 +58,9 @@ class Game:
 
 	
 	def __init__(self):
-		self.game_id = uuid.uuid4()
-		game_state.state[self.game_id] = self
-		self.creator_id = uuid.uuid4()
+		self.game_id = str(uuid.uuid4())
+		game_state.state.update({self.game_id: self })
+		self.creator_id = str(uuid.uuid4())
 		self.user_ids = []
 		self.user_aligner_prompts = {}
 		self.user_bots = {}
@@ -86,7 +86,7 @@ class Game:
 		return []
 		
 	def new_user(self):
-		user_id = uuid.uuid4()
+		user_id = str(uuid.uuid4())
 		self.user_ids.append(user_id)
 		return user_id
 	
@@ -205,19 +205,20 @@ async def health_check():
     return {"status": "OK"}
 
 @app.get("/game/{game_id}")
-def get_game(game_id: str):
+def get_game(game_id):
 	"""Returns a valid game object id if it exists, otherwise returns an error"""
-	game_id = game_state.state.get(game_id)
-	if game_id is None:
-		raise HTTPException(status_code=404, detail="Game not found")
+	game = game_state.state.get(game_id)
+
+	if game is None:
+		raise HTTPException(status_code=404, detail=f"Game not found: {game_id}")
 	else:
-		return {"game_id": game_id}
+		return {"game_id": game.game_id}
 
 @app.post("/game")
 def create_game():
 	"""Creates a new game and returns the creator ID and game ID"""
 	game = Game()
-	game_state.state[game.game_id] = game
+	# game_state.state[game.game_id] = game
 
 	return {"creator_id": game.creator_id, "game_id": game.game_id}
 
