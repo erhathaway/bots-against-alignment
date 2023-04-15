@@ -77,13 +77,8 @@ class Game:
 		self.prompts_remaining = 2
 
 	def load_turn_prompts(self):
-		# with open(str(src_dir / "CAHreponses.csv"), mode='r') as csv_file:
-		# 	# Create a CSV reader
-		# 	csv_reader = csv.reader(csv_file)
-		# 	# Load CSV content into a list
-		# 	data = [row for row in csv_reader]
-		# return data 
-		return []
+		prompts = get_all_csv_data()
+		return prompts
 		
 	def new_user(self):
 		user_id = str(uuid.uuid4())
@@ -327,5 +322,49 @@ def game_finale(game_id:str):
 	return{"aligner_responses": alignment_responses ,"aligner_prompt":game.aligner_prompt}
 
 def get_all_csv_data():
-
+	prompts = ['______: good to the last drop.',
+		 '______: kid tested, mother approved.',
+		 "______?\xa0Jim'll fix it!",
+		 '????? Do NOT go here! Found _____ in my fettuccine alfredo!',
+		 'A romantic candlelit dinner would be incomplete without ______.',
+		 "After four platinum albums and three Grammys, it's time to get back to my roots, to what inspired me to make music in the first place: ______.",
+		 'But before I kill you, Mr. Bond, I must show you ______.',
+		 'Channel 9 is pleased to present its new variety show, "Hey Hey It\'s ______."',
+		 'Click Here for ______!!!',
+		 "Hey Reddit! I'm ______. Ask me anything.",
+		 "Howdy, neighbor! I couldn't help but notice you struggling with ______. Need a hand?",
+		 "I wish I hadn't lost the instruction manual for ______.",
+		 'Life was difficult for cavemen before ______.',
+		 'TFL apologizes for the delay in train service due to ______.',
+		 "This season at Steppenwolf, Samuel Beckett's classic existential play: Waitng for ______.",
+		 "What's the new fad diet?",
+		 "What's that sound?",
+		 'And over here is Picasso\'s famous painting, "portrait of _______."',
+		 'Come with me, and I will show you a world of ______.',
+		 'I lost my arm in a ______ accident.',
+		 'What killed Old Jim?',
+		 'They just enacted a new city bylaw to prevent ______.',
+		 'Best dog toys: tennis balls, bones, ______.',
+		 "What's way better than the dog park?",
+		 'Deadlines are for _________.',
+		 'Creativity is a concept lost on people who _________.',
+		 "I may be a temperamental artist, but you're a __________.",
+		 "It's great to be a creative mind in a workplace full of _________.",
+		 'Strategically speaking, the project should _________.',
+		 'It was a perfect project until _________.',
+		 "Let's forget the feedback for a moment, what if we _________.",
+		 "People ask me all the time what the secret is to my creativity, I tell them it's __________.",
+		 "No. We don't support ______.",
+		 "What's your user hiding from you?",
+		 'Pentesting found a _______________ process running on the printer',
+		 'CVE-0000-1234 has been given the marketing name of _______________',
+		 '_______________ attacks are such a hot exploit right now',
+		 '_________ won my vote.',
+		 "Ever since the drought, we've had a crippling shortage of _________.",
+		 'Forget the tech industry, the next big thing is _________.',
+		 'Hands down, NorCal is the best place to find _________.',
+		 'I just graduated with a degree in __________.',
+		 "I've started a new workout plan that revolves around _________.",
+		 "Let's go to SF his weekend and see _________.",
+		 "What is a software engineer's best friend?"]
 	return prompts
