@@ -179,7 +179,7 @@ def run_chatGPT_call_suggestion(bot_prompt,turn_prompt):
 	{"role": "assistant", "content" : "Going to the emergency room."},
 	{"role": "user", "content" : bot_prompt+ ' '+ turn_prompt}]
 	)
-	reponse = completion['choices'][0]['message']['content']
+	response = completion['choices'][0]['message']['content']
 	if 'sorry' in response:
 		response = 'bad bot'
 	return response
