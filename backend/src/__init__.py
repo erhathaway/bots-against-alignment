@@ -107,7 +107,7 @@ def config_game(game_id: str, creator_id: str, aligner: AlignerType, points: int
 	game.points = points
 	return {"game_id": game_id, "aligner": aligner, "points": points}
 
-@app.post("/user?game_id={game_id}&aligner_prompt={aligner_prompt}&bot_name={bot_name}&current_prompt={current_prompt}")
+@app.post("/user?game_id={game_id}&aligner_prompt={aligner_prompt}&bot_name={bot_name}&current_prompt={current_prompt}") #TODO UPDATE POST CALL
 def join_game(game_id: str, aligner_prompt: str, bot_name: str,current_prompt:str):
 	"""Joins the game with the specified game ID and returns the user ID"""
 	game = all_running_games.get(game_id)
@@ -156,7 +156,7 @@ def start_game(game_id: str, creator_id: str):
 	
 @app.get("/turn?game_id={game_id}&user_id={user_id}")
 def turn(game_id:str,user_id:str):
-	"""Returns the turn prompt and turn ID"""
+	"""Returns the turn prompt and turn ID""" ##TODO UPDATE POST CALL
 	game = all_running_games.get(game_id)
 	if game is None:
 		raise HTTPException(status_code=404, detail="Game not found")
@@ -164,5 +164,10 @@ def turn(game_id:str,user_id:str):
 	current_prompt = game.user_bot_names[user_id]['current_prompt']
 	changes_remaining = game.user_bot_names[user_id]['changes_remaining']
 	return{ "alignment_prompt": game.turn_prompt, "turn_id":game.turn_id,"current_prompt":current_prompt,"changes_remaining":changes_remaining}
+
+@app.post("alignment?game_id={game_id}&suggestion={suggestion}&turn_id={turn_id}&user_id={user_id}")
+def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,user_id:str):
+
+
 	
 	
