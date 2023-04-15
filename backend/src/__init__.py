@@ -60,7 +60,7 @@ class Game:
 		self.turn_responses ={}
 		self.alignment_responses = {}
 		self.emergence_mode=True
-		self.changes_remaining = 2
+		self.prompts_remaining = 2
 
 	def load_turn_prompts(self):
 		with open('CAHreponses.csv', mode='r') as csv_file:
@@ -79,7 +79,7 @@ class Game:
 		user_aligner_prompts[user_id] = user_aligner_prompt
 	
 	def add_to_bot_names(self, bot_name: str, user_id: str,current_prompt:str):
-		user_bots[user_id] = {"name":bot_name, "score":"0","current_prompt":current_prompt,"changes_remaining":changes_remaining}
+		user_bots[user_id] = {"name":bot_name, "score":"0","current_prompt":current_prompt,"prompts_remaining":prompts_remaining,"submitted_prompts":current_prompt}
 	
 	def bots_to_list(self):
 		bots = []
@@ -129,13 +129,13 @@ def construct_player_prompt(bot_prompt, turn_prompt, extra_context):
 def construct_aligner_prompt(aligner_prompt,turn_prompt, user_prompts):
     messages = [
         {"role": "system", "content" : "You are playing the aligner you are playing an alignment game. You will select the proper response based on your alignment goal."},
-        {"role": "user", "content" : '''You will answer with the best response out of (response) pairs for this alignment goal: 'funniest response for the prompt: What Killed our food delivery startup.
+        {"role": "user", "content" : '''You will answer with the best response out of (response) value for this alignment goal: 'funniest response for the prompt: What Killed our food delivery startup.
 			(1. "people who can't multitask.")
 			(2. "People who never procrastinate.")
 			(3. "Imcompetent losers like you.")
 			(4. "Fools who ignore their priorities.")'''},
 		{"role": "assistant", "content" : '''(1. "people who can't multitask.")'''},
-		{"role": "user", "content" : '''You will answer with the best response out of (response) pairs for this alignment goal:''' +aligner_prompt+':'+turn_prompt}]
+		{"role": "user", "content" : '''You will answer with the best response out of (response) value for this alignment goal:''' +aligner_prompt+':'+turn_prompt}]
     user_id_to_num={}
     for unn, [user_id, response] in enumerate(user_prompts.items()):
         messages[-1]['content'] =  messages[-1]['content']+str(unn)+ '. '+response+''')/n '''
@@ -166,7 +166,9 @@ def run_chatGPT_call_suggestion(bot_prompt,turn_prompt):
 	if 'sorry' in response:
 		response = 'bad bot'
 	return response
-
+def parse_response_for_winner(response,user_id_to_num):
+	return(random.choice(list(user_id_to_num.values()))) #TEMP update with Don
+	
 
 	
 
@@ -202,14 +204,14 @@ def config_game(game_id: str, creator_id: str, aligner: AlignerType, points: int
 	game.points = points
 	return {"game_id": game_id, "aligner": aligner, "points": points}
 
-@app.post("/user?game_id={game_id}&aligner_prompt={aligner_prompt}&bot_name={bot_name}&current_prompt={current_prompt}") #TODO UPDATE POST CALL
-def join_game(game_id: str, aligner_prompt: str, bot_name: str,current_prompt:str):
+@app.post("/join_game?game_id={game_id}&aligner_prompt={aligner_prompt}&bot_prompt={bot_prompt}&bot_name={bot_name}")
+def join_game(game_id: str, aligner_prompt: str, bot_name: str,bot_prompt:str):
 	"""Joins the game with the specified game ID and returns the user ID"""
 	game = all_running_games.get(game_id)
 	if game is None:
 		raise HTTPException(status_code=404, detail="Game not found")
 	user_id = game.new_user()
-	game.add_to_aligner_prompt_dict(aligner_prompt, user_id)
+	game.add_to_aligner_prompt_dict(bot_prompt, user_id)
 	game.add_to_bot_names(bot_name, user_id,current_prompt[:281])
 	return {"user_id": user_id}
 
@@ -225,7 +227,7 @@ def game_status(game_id: str):
 	return{"status": status, "bots": bots}
 
 
-@app.get("/user_status?game_id={game_id}&user_id={user_id}")
+@app.get("/user_status?game_id={game_id}&user_id={user_id}") #CDC UPDATE HERE
 def user_status(game_id:str, user_id:str):
 	"""Returns the status of the user with the specified user ID"""
 	game = all_running_games.get(game_id)
@@ -233,8 +235,11 @@ def user_status(game_id:str, user_id:str):
 		raise HTTPException(status_code=404, detail="Game not found")
 	if user_id not in game.user_ids:
 		raise HTTPException(status_code=404, detail="User not found")
-	points = game.user_bots[user_id]["score"]
-	return{"points":points}
+	user_bot = game.user_bots[user_id]
+	points = user_bot["score"]
+	prompts_remaining = user_bot["prompts_remaining"]
+	submitted_prompts = user_bot["submitted_prompts"]
+	return{"points":points,"bot_prompts_remaining":prompts_remaining,"submitted_prompts":submitted_prompts}
 
 
 @app.post("/start?game_id={game_id}&creator_id={creator_id}")
@@ -248,17 +253,16 @@ def start_game(game_id: str, creator_id: str):
 	game.game_status = "STARTED"
 	game.aligner_prompt = game.make_full_aligner_prompt()
 
-	
-@app.get("/turn?game_id={game_id}&user_id={user_id}") ##TODO UPDATE POST CALL
+
+@app.get("/turn?game_id={game_id}")
 def turn(game_id:str,user_id:str):
 	"""Returns the turn prompt and turn ID""" 
 	game = all_running_games.get(game_id)
 	if game is None:
 		raise HTTPException(status_code=404, detail="Game not found")
 	game.turn_prompt = game.turn_prompts.random.choice()
-	current_prompt = game.user_bot_names[user_id]['current_prompt']
-	changes_remaining = game.user_bot_names[user_id]['changes_remaining']
-	return{ "alignment_prompt": game.turn_prompt, "turn_id":game.turn_id,"current_prompt":current_prompt,"changes_remaining":changes_remaining}
+	return{ "alignment_prompt": game.turn_prompt, "turn_id":game.turn_id}
+
 
 @app.post("alignment?game_id={game_id}&suggestion={suggestion}&turn_id={turn_id}&user_id={user_id}")##TODO send user name
 def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,user_id:str):
@@ -268,20 +272,20 @@ def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,u
 		pass
 	elif bot["changes_remaining"]>0:
 		bot["current_prompt"]=suggestion[:281]
+		bot["submitted_prompts"] = bot["current_prompt"]
 		bot["changes_remaining"] -=1
 	bot_response = run_chatGPT_call_suggestion(bot["current_prompt"],game.turn_prompt)
 	game.turn_responses[user_id]= bot_response
-
-@app.get("/alignment?game_id={game_id}&turn_id={turn_id}") ##TODO NO USER ID
-def get_alignment(game_id:str,turn_id:str):
-	game = all_running_games.get(game_id)
-	turn_responses = game.turn_responses[user_id]= bot_response	
-	return {"alignment_response": turn_responses.items()}
 
 		
 @app.get("/turn_finale?game_id={game_id}&turn_id={turn_id}")
 def turn_finale(game_id:str,turn_id:str):
 	game = all_running_games.get(game_id)
+	
+	messages,user_id_to_num = construct_aligner_prompt(game.aligner_prompt,game.turn_prompt, game.turn_responses)
+	response = run_chatGPT_call(messages)
+	winner = parse_response_for_winner(response,user_id_to_num)
+	game.user_bot_names[winner]["score"] +=1
 	alignment_responses = game.build_alignment_reponse()
 	return {"alignment_responses": alignment_responses}
 
@@ -289,4 +293,4 @@ def turn_finale(game_id:str,turn_id:str):
 @app.get("/game_finale?game_id={game_id}")
 def game_finale(game_id:str):
 	alignment_responses = game.build_alignment_reponse()
-	return{"aligner_responses": alignment_responses ,"aligner_prompt":aligner_prompt}#TODO we should tell them what the aligner prompt was
+	return{"aligner_responses": alignment_responses ,"aligner_prompt":game.aligner_prompt}#TODO we should tell them what the aligner prompt was
