@@ -1,0 +1,5 @@
+services:
+- type: web
+  name: my-fastapi-app
+  env: docker
+  port: 8000
