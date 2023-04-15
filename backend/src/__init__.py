@@ -59,8 +59,8 @@ class Game:
 	def add_to_aligner_prompt_dict(self, user_aligner_prompt: str, user_id: str):
 		user_aligner_prompts[user_id] = user_aligner_prompt
 	
-	def add_to_bot_names(self, bot_name: str, user_id: str):
-		user_bots[user_id] = {"name":bot_name, "score":"0"}
+	def add_to_bot_names(self, bot_name: str, user_id: str,current_prompt:str):
+		user_bots[user_id] = {"name":bot_name, "score":"0","current_prompt":current_prompt,"prompt_rewrites_remaining":2}
 	
 	def bots_to_list(self):
 		bots = []
@@ -107,15 +107,15 @@ def config_game(game_id: str, creator_id: str, aligner: AlignerType, points: int
 	game.points = points
 	return {"game_id": game_id, "aligner": aligner, "points": points}
 
-@app.post("/user?game_id={game_id}&aligner_prompt={aligner_prompt}&bot_name={bot_name}")
-def join_game(game_id: str, aligner_prompt: str, bot_name: str):
+@app.post("/user?game_id={game_id}&aligner_prompt={aligner_prompt}&bot_name={bot_name}&current_prompt={current_prompt}")
+def join_game(game_id: str, aligner_prompt: str, bot_name: str,current_prompt:str):
 	"""Joins the game with the specified game ID and returns the user ID"""
 	game = all_running_games.get(game_id)
 	if game is None:
 		raise HTTPException(status_code=404, detail="Game not found")
 	user_id = game.new_user()
 	game.add_to_aligner_prompt_dict(aligner_prompt, user_id)
-	game.add_to_bot_names(bot_name, user_id)
+	game.add_to_bot_names(bot_name, user_id,current_prompt)
 	return {"user_id": user_id}
 
 
@@ -154,12 +154,15 @@ def start_game(game_id: str, creator_id: str):
 	game.aligner_prompt = game.make_full_aligner_prompt()
 
 	
-@app.get("/turn?game_id={game_id}")
-def turn(game_id:str):
+@app.get("/turn?game_id={game_id}&user_id={user_id}")
+def turn(game_id:str,user_id:str):
 	"""Returns the turn prompt and turn ID"""
 	game = all_running_games.get(game_id)
 	if game is None:
 		raise HTTPException(status_code=404, detail="Game not found")
 	game.turn_prompt = game.turn_prompts.random.choice()
-	return{ "alignment_prompt": game.turn_prompt, "turn_id":game.turn_id}
+	current_prompt = game.user_bot_names[user_id]['current_prompt']
+	changes_remaining = game.user_bot_names[user_id]['changes_remaining']
+	return{ "alignment_prompt": game.turn_prompt, "turn_id":game.turn_id,"current_prompt":current_prompt,"changes_remaining":changes_remaining}
+	
 	
