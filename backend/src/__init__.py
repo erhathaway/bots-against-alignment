@@ -291,9 +291,10 @@ def turn(game_id:str):
 	if game.turn_started==False:
 		game.turn_started = True
 		game.turn_prompt = random.choice(game.turn_prompts)
+		for user_id in game.user_bots.keys():
+			game.user_bots[user_id]['turn_complete']=False
 		
-	for user_id in game.user_bots.keys():
-		game.user_bots[user_id]['turn_complete']=False
+
 	return{ "alignment_prompt": game.turn_prompt, "turn_id":game.turn_id}
 
 @app.post("/completeturn")
