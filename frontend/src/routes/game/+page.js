@@ -3,6 +3,8 @@ import { redirect } from '@sveltejs/kit';
 const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 
 import { page } from '$app/stores'
+import { globalStore } from '$lib/store.js';
+  
 
 export async function load({ params, fetch,  url}) {
     console.log('CALLING LOAD', BACKEND_API, url)
@@ -37,6 +39,8 @@ export async function load({ params, fetch,  url}) {
             
 
             // goto('/', { replaceState: true, state: { errorMessage } });
+        } else {
+            globalStore.set({ game_id: gameID, creator_id: null, user_id: null })
         }
     } else {
         console.log('NO GAME ID FOUND')
@@ -57,6 +61,7 @@ export async function load({ params, fetch,  url}) {
             gameID = newGameID;
             creatorID = creator_id;
             console.log('NEW GAME ID', newGameID, creator_id)
+            globalStore.set({ game_id: gameID, creator_id: creator_id, user_id: null })
             // goto(`?game_id=${newGameID}`, { replaceState: true });
             // throw redirect(302, `?game_id=${newGameID}`);
 

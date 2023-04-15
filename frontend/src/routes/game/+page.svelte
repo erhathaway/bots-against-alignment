@@ -1,52 +1,9 @@
-<!-- <script context="module">
-	import { goto } from '$app/navigation';
-
-	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
-
-	export async function load({ page }) {
-        console.log('CALLING LOAD', page)
-		const gameID = page.query.get('game_id');
-		let errorMessage;
-
-		if (gameID) {
-			const response = await fetch(`${BACKEND_API}/game/${gameID}`);
-
-			if (!response.ok) {
-				errorMessage = 'No game exists.';
-                goto('/', { replaceState: true, state: { errorMessage } });
-			}
-		} else {
-			const response = await fetch(`${BACKEND_API}/game`, {
-				method: 'POST',
-			});
-
-            console.log('NEW GAME ID', response)
-			if (response.ok) {
-				const { game_id: newGameID } = await response.json();
-				goto(`?game_id=${newGameID}`, { replaceState: true });
-			} else {
-				errorMessage = 'Failed to create a new game.';
-			}
-		}
-
-		return {
-			props: {
-				gameID,
-				errorMessage,
-                navigate: goto,
-			},
-		};
-	}
-</script> -->
-
 <script>
+	import { globalStore } from '$lib/store.js';
 
-    export let data;
-    import { page } from '$app/stores'
+	export let data;
+	import { page } from '$app/stores';
 
-	// export let gameID;
-	// // export let errorMessage;
-    // export let navigate;
 	import { goto } from '$app/navigation'; // Ensure you have this import
 	import { writable } from 'svelte/store';
 	import { browser } from '$app/environment'; // Import browser from $app/env
@@ -55,39 +12,49 @@
 	let gameLink;
 
 	if (browser) {
-        $page.url.searchParams.set('game_id',data.gameID); 
-    goto(`?${$page.url.searchParams.toString()}`);
+		$page.url.searchParams.set('game_id', data.gameID);
+		goto(`?${$page.url.searchParams.toString()}`);
 		gameLink = `${window.location.href}?game_id=${data.gameID}`; // Use window.location.href inside browser conditional
 	}
 	let botName = '';
 	let alignerPrompt = '';
+	let botPrompt = '';
 	let openAPIKey = '';
 	let joinError = '';
 	let errorField = '';
 
 	const globalUserId = writable(null);
 
-    // $page.url.set('game_id',data.gameID); 
-    // goto(`?${$page.url.toString()}`);
-
 	async function joinGame() {
-		const response = await fetch(
-			`${BACKEND_API}/join_game?game_id=${data.gameID}&aligner_prompt=${alignerPrompt}&bot_name=${botName}`,
-			{
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					openAPIKey
-				})
+		const url = `${BACKEND_API}/join_game?game_id=${data.gameID}&aligner_prompt=${alignerPrompt}&bot_name=${botName}&bot_prompt=${botPrompt}`;
+		console.log('*** url', url);
+
+		// globalStore.update({ 'openai_api_key': openAPIKey });
+
+		const response = await fetch(url, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Access-Control-Allow-Origin': '*'
 			}
-		);
+		});
 
 		if (response.ok) {
 			const data = await response.json();
-			globalUserId.set(data.user_id);
-			localStorage.setItem('user_id', data.user_id);
+
+			// globalUserId.set(data.user_id);
+			// localStorage.setItem('user_id', data.user_id);
+			globalStore.update((state) => {
+				return {
+					...state,
+					openai_api_key: openAPIKey,
+					current_bot_prompt: botPrompt,
+					aligner_prompt: alignerPrompt,
+					bot_name: botName,
+					user_id: data.user_id
+				};
+			});
+
 			goto('/game');
 		} else {
 			const error = await response.json();
@@ -155,6 +122,19 @@
 			<input type="text" bind:value={alignerPrompt} aria-label="Aligner Prompt" />
 		</div>
 		{#if errorField === 'alignerPrompt'}
+			<p role="alert">{joinError}</p>
+		{/if}
+	</section>
+	<section>
+		<h2>Bot Prompt</h2>
+		<p>
+			The Bot guides your bot's response. You have 2 additonal chances to chnage this prompt over
+			the course of the game
+		</p>
+		<div>
+			<input type="text" bind:value={botPrompt} aria-label="Bot Prompt" />
+		</div>
+		{#if errorField === 'botPrompt'}
 			<p role="alert">{joinError}</p>
 		{/if}
 	</section>
