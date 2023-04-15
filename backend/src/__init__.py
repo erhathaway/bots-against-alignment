@@ -42,7 +42,7 @@ class Game:
 	turn_responses: dict
 	alignment_responses: dict
 	emergence_mode: bool
-	changes_remaining: 2
+	changes_remaining: int
 	
 	def __init__(self):
 		self.game_id = uuid.uuid4()
@@ -60,7 +60,7 @@ class Game:
 		self.turn_responses ={}
 		self.alignment_responses = {}
 		self.emergence_mode=True
-		self.changes_remaining
+		self.changes_remaining = 2
 
 	def load_turn_prompts(self):
 		with open('CAHreponses.csv', mode='r') as csv_file:
