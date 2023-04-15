@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store';
-import { localStorageWritable } from 'svelte-local-storage-store';
+import { persisted } from 'svelte-local-storage-store';
 
 const defaultData = {
     game_id: null,
@@ -7,5 +7,5 @@ const defaultData = {
     creator_id: null,
   };
   
-  export const globalStore = localStorageWritable('bots-against-alignment', writable(defaultData));
+  export const globalStore = persisted('settings', writable(defaultData));
   
