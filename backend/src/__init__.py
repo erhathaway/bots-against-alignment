@@ -182,8 +182,15 @@ def run_chatGPT_call_suggestion(bot_prompt,turn_prompt):
 	if 'sorry' in response:
 		response = 'bad bot'
 	return response
-def parse_response_for_winner(response,user_id_to_num):
-	return(random.choice(list(user_id_to_num.values()))) #TEMP update with Don
+
+
+def parse_response_for_winner(response, user_id_to_num):
+    for num, user_id in user_id_to_num.items():
+        if num in response:
+            return user_id
+        else:
+            return (random.choice(list(user_id_to_num.values()))) #This is hilarious and dirty haha
+
 	
 
 	
