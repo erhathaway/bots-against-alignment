@@ -112,7 +112,7 @@ class Game:
 		for user_id in self.user_aligner_prompts.keys():
 			alignment_response = {}
 			alignment_response[user_id]={}
-			alignment_response[user_id]['bot_name'] = self.user_bots[user_id]["bot_name"]
+			alignment_response[user_id]['name'] = self.user_bots[user_id]["name"]
 			alignment_response[user_id]["user_id"] = user_id
 			alignment_response["text"] = self.turn_responses[user_id]
 			alignment_response['is_round_winner'] = False
