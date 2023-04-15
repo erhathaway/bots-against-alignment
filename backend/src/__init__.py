@@ -15,9 +15,9 @@ app = FastAPI()
 all_running_games: dict[str, any] = {} 
 
 
- load_dotenv()  # take environment variables from .env.
+load_dotenv()  # take environment variables from .env.
 
- OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 
 class AlignerType(str, Enum):
@@ -40,6 +40,7 @@ class Game:
 	turn_prompts: list
 	turn_id: int
 	turn_responses: dict
+	alignment_responses: dict
 	
 	def __init__(self):
 		self.game_id = uuid.uuid4()
@@ -55,6 +56,7 @@ class Game:
 		self.turn_prompts = ["a cat", "a hat","a bat","a mat"] #TODO grab from core list of CAH prompts
 		self.turn_id = 1
 		self.turn_responses ={}
+		self.alignment_responses = {}
 		
 	def new_user(self):
 		user_id = uuid.uuid4()
@@ -79,6 +81,21 @@ class Game:
 			full_aligner_prompt.append(user_aligner_prompts[user])
 		random.shuffle(full_aligner_prompt)
 		self.aligner_prompt =self.aligner_prompt+' '+' '.joint(full_aligner_prompt)
+
+	def build_alignment_reponse(self):
+		aligntment_repsonses = []
+		for user_id in self.user_aligner_prompts.keys():
+			aligment_reponse[user_id]={}
+			alignment_response[user_id]['bot_name'] = self.user_bots[user_id]["bot_name"]
+			aligment_reponse[user_id]["user_id"] = user_id
+			aligment_reponse["text"] = self.turn_responses[user_id]
+			if self.user_bots[user_id]["score"]>=10:
+				aligment_reponse["is_winner"] = True
+			else:
+				alignment_response["is_winner"] = False
+			aligment_reponses.append(alignment_response)
+		return alignment_reponses
+		
 
 def run_chatGPT_call_suggestion(bot_prompt,turn_prompt):
 	completion = openai.ChatCompletion.create(
@@ -188,19 +205,27 @@ def turn(game_id:str,user_id:str):
 	changes_remaining = game.user_bot_names[user_id]['changes_remaining']
 	return{ "alignment_prompt": game.turn_prompt, "turn_id":game.turn_id,"current_prompt":current_prompt,"changes_remaining":changes_remaining}
 
-@app.post("alignment?game_id={game_id}&suggestion={suggestion}&turn_id={turn_id}&user_id={user_id}")
+@app.post("alignment?game_id={game_id}&suggestion={suggestion}&turn_id={turn_id}&user_id={user_id}")##TODO send user name
 def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,user_id:str):
 	game = all_running_games.get(game_id)
 	bot = game.user_bot_names[user_id]
 	if suggestion=="":
 		pass
-	else if bot["changes_remaining"]>0:
+	elif bot["changes_remaining"]>0:
 		bot["current_prompt"]=suggestion
 		bot["changes_remaining"] -=1
 	bot_response = run_chatGPT_call_suggestion(bot["current_prompt"],game.turn_prompt)
+	game.turn_responses[user_id]= bot_response
 
 		
-	
+@app.get("/turn_finale?game_id={game_id}&turn_id={turn_id}")
+def turn_finale(game_id:str,turn_id:str):
+	game = all_running_games.get(game_id)
+	alignment_responses = game.build_alignment_reponse()
+	return {"alignment_responses": alignment_responses}
 
-	
-	
+
+@app.get("/game_finale?game_id={game_id}")
+def game_finale(game_id:str):
+	alignment_responses = game.build_alignment_reponse()
+	return{"aligner_responses": alignment_responses }
