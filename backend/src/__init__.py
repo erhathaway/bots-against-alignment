@@ -308,10 +308,10 @@ def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,u
 	bot = game.user_bots[user_id]
 	if suggestion=="":
 		pass
-	elif bot["changes_remaining"]>0:
+	elif bot["prompts_remaining"]>0:
 		bot["current_prompt"]=suggestion[:281]
 		bot["submitted_prompts"] = bot["current_prompt"]
-		bot["changes_remaining"] -=1
+		bot["prompts_remaining"] -=1
 	bot_response = run_chatGPT_call_suggestion(bot["current_prompt"],game.turn_prompt)
 	game.turn_responses[user_id]= bot_response
 
