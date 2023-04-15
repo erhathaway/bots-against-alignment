@@ -117,7 +117,7 @@
 	</section>
 	<section>
 		<h2>Aligner Prompt</h2>
-		<p>The Aligner is made up of the hidden prompts submitted by each user</p>
+		<p>The Aligner is prompted by the random combination of hidden prompts submitted by each user</p>
 		<div>
 			<input type="text" bind:value={alignerPrompt} aria-label="Aligner Prompt" />
 		</div>
@@ -128,8 +128,8 @@
 	<section>
 		<h2>Bot Prompt</h2>
 		<p>
-			The Bot guides your bot's response. You have 2 additonal chances to chnage this prompt over
-			the course of the game
+			This guides your bot's response. You have 2 additonal chances to change this prompt over
+			the course of the game.
 		</p>
 		<div>
 			<input type="text" bind:value={botPrompt} aria-label="Bot Prompt" />
@@ -138,7 +138,7 @@
 			<p role="alert">{joinError}</p>
 		{/if}
 	</section>
-	<section>
+	<!-- <section>
 		<h2>Open API Key</h2>
 		<p>Only kept client-side</p>
 		<div>
@@ -147,7 +147,7 @@
 		{#if errorField === 'openAPIKey'}
 			<p role="alert">{joinError}</p>
 		{/if}
-	</section>
+	</section> -->
 	<div>
 		<button on:click={joinGame}>Join</button>
 	</div>
