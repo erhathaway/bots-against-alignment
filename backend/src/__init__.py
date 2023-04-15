@@ -218,7 +218,7 @@ def get_game(game_id):
 def create_game():
 	"""Creates a new game and returns the creator ID and game ID"""
 	game = Game()
-	# game_state.state[game.game_id] = game
+	#game_state.state[game.game_id] = game
 
 	return {"creator_id": game.creator_id, "game_id": game.game_id}
 
@@ -234,8 +234,8 @@ def config_game(game_id: str, creator_id: str, aligner: AlignerType, points: int
 	game.points = points
 	return {"game_id": game_id, "aligner": aligner, "points": points}
 
-@app.post("/join_game?game_id={game_id}&aligner_prompt={aligner_prompt}&bot_prompt={bot_prompt}&bot_name={bot_name}")
-def join_game(game_id: str, aligner_prompt: str, bot_name: str,bot_prompt:str):
+@app.post("/join_game")
+def join_game(game_id: str, aligner_prompt: str, bot_prompt: str,bot_name:str):
 	"""Joins the game with the specified game ID and returns the user ID"""
 	game = game_state.state.get(game_id)
 	if game is None:
@@ -325,3 +325,7 @@ def game_finale(game_id:str):
 	game = game_state.state.get(game_id)
 	alignment_responses = game.build_alignment_reponse()
 	return{"aligner_responses": alignment_responses ,"aligner_prompt":game.aligner_prompt}
+
+def get_all_csv_data():
+
+	return prompts
