@@ -68,7 +68,8 @@ class Game:
 		self.bots = {}
 		self.aligner_prompt = '' #TODO we need to add the base string to this
 		self.turn_prompt = ''
-		self.turn_prompts = self.load_turn_prompts()
+		#self.turn_prompts = self.load_turn_prompts()
+		self.turn_prompts = ['a','b','c']
 		self.turn_id = 1
 		self.turn_responses ={}
 		self.alignment_responses = {}
@@ -186,7 +187,7 @@ def run_chatGPT_call_suggestion(bot_prompt,turn_prompt):
 
 def parse_response_for_winner(response, user_id_to_num):
     for num, user_id in user_id_to_num.items():
-        if num in response:
+        if num+'.' in response:
             return user_id
         else:
             return (random.choice(list(user_id_to_num.values()))) #This is hilarious and dirty haha
