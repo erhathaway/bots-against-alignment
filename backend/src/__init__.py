@@ -305,7 +305,7 @@ def complete_turn(game_id:str,user_id:str):
 @app.post("/alignment")
 def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,user_id:str):
 	game = game_state.state.get(game_id)
-	bot = game.user_bot_names[user_id]
+	bot = game.user_bots[user_id]
 	if suggestion=="":
 		pass
 	elif bot["changes_remaining"]>0:
@@ -323,7 +323,7 @@ def turn_finale(game_id:str,turn_id:str):
 	messages,user_id_to_num = build_aligner_prompt(game.aligner_prompt,game.turn_prompt, game.turn_responses)
 	response = run_chatGPT_call(messages)
 	winner = parse_response_for_winner(response,user_id_to_num)
-	game.user_bot_names[winner]["score"] +=1
+	game.user_bots[winner]["score"] +=1
 	alignment_responses = game.build_alignment_reponse(winner)
 	game.turn_started=False
 	return {"alignment_responses": alignment_responses}
