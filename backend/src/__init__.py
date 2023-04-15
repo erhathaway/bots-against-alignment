@@ -21,7 +21,6 @@ class Game:
 	user_aligner_prompts : dict
 	user_bot_names : dict 
 	game_status: str
-	bots : dict
 	
 	def __init__(self):
 		self.game_id = uuid.uuid4()
@@ -111,4 +110,4 @@ def user_status(game_id:str, user_id:str):
 	if user_id not in game.user_ids:
 		raise HTTPException(status_code=404, detail="User not found")
 	points = game.user_bots[user_id]["score"]
-	return{"points":points,"is_aligner":is_aligner}
+	return{"points":points}
