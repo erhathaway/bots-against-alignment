@@ -1,14 +1,13 @@
 from enum import Enum
 from dataclasses import dataclass
 from fastapi import FastAPI, HTTPException
+import os
+from pathlib import Path
+import csv
 import uuid
-
 import random
 from dotenv import load_dotenv
-
-import os
 import openai
-import csv
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,6 +26,8 @@ app.add_middleware(
 
 all_running_games: dict[str, any] = {} 
 
+root_dir = Path.cwd().anchor
+src_dir = Path(root_dir) / "backend" / "src"
 
 load_dotenv()  # take environment variables from .env.
 
@@ -49,13 +50,15 @@ class Game:
 	aligner_prompt: str
 	user_bot_names : dict 
 	game_status: str
+	bots_list: list
 	turn_prompt: str
 	turn_prompts: list
 	turn_id: int
 	turn_responses: dict
 	alignment_responses: dict
 	emergence_mode: bool
-	changes_remaining: int
+	prompts_remaining: int
+
 	
 	def __init__(self):
 		self.game_id = uuid.uuid4()
@@ -65,10 +68,10 @@ class Game:
 		self.user_aligner_prompts = {}
 		self.user_bots = {}
 		self.game_status = "LOBBY"  #LOBBY|STARTED|WAITING_ON_ALIGNMENT_RATING|ENDED
-		self.bots = {}
+		self.bots_list = []
 		self.aligner_prompt = '' #TODO we need to add the base string to this
 		self.turn_prompt = ''
-		#self.turn_prompts = self.load_turn_prompts()
+		self.turn_prompts = self.load_turn_prompts()
 		self.turn_prompts = ['a','b','c']
 		self.turn_id = 1
 		self.turn_responses ={}
@@ -77,7 +80,7 @@ class Game:
 		self.prompts_remaining = 2
 
 	def load_turn_prompts(self):
-		with open('CAHreponses.csv', mode='r') as csv_file:
+		with open(str(src_dir / "CAHreponses.csv"), mode='r') as csv_file:
 			# Create a CSV reader
 			csv_reader = csv.reader(csv_file)
 			# Load CSV content into a list
@@ -90,43 +93,44 @@ class Game:
 		return user_id
 	
 	def add_to_aligner_prompt_dict(self, user_aligner_prompt: str, user_id: str):
-		user_aligner_prompts[user_id] = user_aligner_prompt
+		self.user_aligner_prompts[user_id] = user_aligner_prompt
 	
 	def add_to_bot_names(self, bot_name: str, user_id: str,current_prompt:str):
-		user_bots[user_id] = {"name":bot_name, "score":"0","current_prompt":current_prompt,"prompts_remaining":prompts_remaining,"submitted_prompts":current_prompt}
+		self.user_bots[user_id] = {"name":bot_name, "score":"0","current_prompt":current_prompt,"prompts_remaining":self.prompts_remaining,"submitted_prompts":current_prompt}
 	
 	def bots_to_list(self):
 		bots = []
 		for bot in self.user_bots:
-			bots_list.append(bot)
+			self.bots_list.append(bot)
 		return bots
 		
 	def make_full_aligner_prompt(self):
 		full_aligner_prompt = []
 		for user in self.user_aligner_prompts.keys():
-			full_aligner_prompt.append(user_aligner_prompts[user])
+			full_aligner_prompt.append(self.user_aligner_prompts[user])
 		random.shuffle(full_aligner_prompt)
 		self.aligner_prompt =self.aligner_prompt+' '+' '.joint(full_aligner_prompt)
 
 	def build_alignment_reponse(self,winner):
-		aligntment_repsonses = []
+		alignment_responses = []
 		for user_id in self.user_aligner_prompts.keys():
-			aligment_reponse[user_id]={}
+			alignment_response = {}
+			alignment_response[user_id]={}
 			alignment_response[user_id]['bot_name'] = self.user_bots[user_id]["bot_name"]
-			aligment_reponse[user_id]["user_id"] = user_id
-			aligment_reponse["text"] = self.turn_responses[user_id]
-			aligment_reponse['is_round_winner'] = False
+			alignment_response[user_id]["user_id"] = user_id
+			alignment_response["text"] = self.turn_responses[user_id]
+			alignment_response['is_round_winner'] = False
 			if user_id == winner:
-				aligment_reponse["is_round_winner"] = True
+				alignment_response["is_round_winner"] = True
 			if self.user_bots[user_id]["score"]>=10:
-				aligment_reponse["is_global_winner"] = True
+				alignment_response["is_global_winner"] = True
 			else:
 				alignment_response["is_global_winner"] = False
-			aligment_reponses.append(alignment_response)
-		return alignment_reponses
+			alignment_responses.append(alignment_response)
+		return alignment_responses
 		
 
-def construct_player_prompt(bot_prompt, turn_prompt, extra_context):
+def build_player_prompt(bot_prompt, turn_prompt, extra_context):
     messages = [
         {"role": "system", "content" : "You are playing CardGPT you are playing an alignment game. You will answer under 5 words to a prompt. Use no racist, sexist, or homophobic language."},
         {"role": "user", "content" : "You will answer with the funniest possible answer to the following prompt: What Killed our food delivery startup."},
@@ -143,7 +147,7 @@ def construct_player_prompt(bot_prompt, turn_prompt, extra_context):
     return messages
 
 
-def construct_aligner_prompt(aligner_prompt,turn_prompt, user_prompts):
+def build_aligner_prompt(aligner_prompt,turn_prompt, user_prompts):
     messages = [
         {"role": "system", "content" : "You are playing the aligner you are playing an alignment game. You will select the proper response based on your alignment goal."},
         {"role": "user", "content" : '''You will answer with the best response out of (response) value for this alignment goal: 'funniest response for the prompt: What Killed our food delivery startup.
@@ -306,7 +310,7 @@ def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,u
 def turn_finale(game_id:str,turn_id:str):
 	game = all_running_games.get(game_id)
 	
-	messages,user_id_to_num = construct_aligner_prompt(game.aligner_prompt,game.turn_prompt, game.turn_responses)
+	messages,user_id_to_num = build_aligner_prompt(game.aligner_prompt,game.turn_prompt, game.turn_responses)
 	response = run_chatGPT_call(messages)
 	winner = parse_response_for_winner(response,user_id_to_num)
 	game.user_bot_names[winner]["score"] +=1
