@@ -107,7 +107,7 @@ class Game:
 		for user in self.user_aligner_prompts.keys():
 			full_aligner_prompt.append(self.user_aligner_prompts[user])
 		random.shuffle(full_aligner_prompt)
-		self.aligner_prompt =self.aligner_prompt+' '+' '.joint(full_aligner_prompt)
+		self.aligner_prompt =self.aligner_prompt+' '+' '.join(full_aligner_prompt)
 
 	def build_alignment_reponse(self,winner):
 		alignment_responses = []
@@ -241,8 +241,8 @@ def join_game(game_id: str, aligner_prompt: str, bot_name: str,bot_prompt:str):
 	if game is None:
 		raise HTTPException(status_code=404, detail="Game not found")
 	user_id = game.new_user()
-	game.add_to_aligner_prompt_dict(bot_prompt, user_id)
-	game.add_to_bot_names(bot_name, user_id,current_prompt[:281])
+	game.add_to_aligner_prompt_dict(aligner_prompt, user_id)
+	game.add_to_bot_names(bot_name, user_id,bot_prompt[:281])
 	return {"user_id": user_id}
 
 
