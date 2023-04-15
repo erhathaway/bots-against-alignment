@@ -1,5 +1,6 @@
 services:
 - type: web
   name: my-fastapi-app
+  healthCheckPath: /health_check
   env: docker
   port: 8000
