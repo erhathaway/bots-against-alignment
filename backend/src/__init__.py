@@ -195,8 +195,10 @@ def parse_response_for_winner(response, user_id_to_num):
             return (random.choice(list(user_id_to_num.values()))) #This is hilarious and dirty haha
 
 	
-
-	
+# TODO disable me when not debugging game state
+@app.get("/state")
+def state():
+    return { "game_ids": game_state.state.keys() }
 
 @app.get("/health_check")
 async def health_check():
