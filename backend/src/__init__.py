@@ -198,7 +198,7 @@ def parse_response_for_winner(response, user_id_to_num):
 # TODO disable me when not debugging game state
 @app.get("/state")
 def state():
-    return { "game_ids": game_state.state.keys() }
+    return { "game_ids": list(game_state.state.keys()) }
 
 @app.get("/health_check")
 async def health_check():
