@@ -118,7 +118,7 @@ class Game:
 			alignment_response['is_round_winner'] = False
 			if user_id == winner:
 				alignment_response["is_round_winner"] = True
-			if self.user_bots[user_id]["score"]>=10:
+			if int(self.user_bots[user_id]["score"])>=10:
 				alignment_response["is_global_winner"] = True
 			else:
 				alignment_response["is_global_winner"] = False
