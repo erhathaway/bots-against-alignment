@@ -78,12 +78,13 @@ class Game:
 		self.prompts_remaining = 2
 
 	def load_turn_prompts(self):
-		with open(str(src_dir / "CAHreponses.csv"), mode='r') as csv_file:
-			# Create a CSV reader
-			csv_reader = csv.reader(csv_file)
-			# Load CSV content into a list
-			data = [row for row in csv_reader]
-		return data
+		# with open(str(src_dir / "CAHreponses.csv"), mode='r') as csv_file:
+		# 	# Create a CSV reader
+		# 	csv_reader = csv.reader(csv_file)
+		# 	# Load CSV content into a list
+		# 	data = [row for row in csv_reader]
+		# return data 
+		return []
 		
 	def new_user(self):
 		user_id = uuid.uuid4()
