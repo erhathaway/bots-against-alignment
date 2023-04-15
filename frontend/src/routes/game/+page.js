@@ -19,7 +19,7 @@ export async function load({ params, fetch,  url}) {
 
     if (gameID) {
         console.log('GAME ID FOUND', gameID)
-        const response = await fetch(`${BACKEND_API}/game?game_id=${gameID}`,
+        const response = await fetch(`${BACKEND_API}/game/${gameID}`,
             {
                 method: 'GET',
                 headers: {
@@ -31,8 +31,9 @@ export async function load({ params, fetch,  url}) {
 
         console.log('GAME ID FOUND', response)
         if (!response.ok) {
+            
             errorMessage = 'No game exists.';
-            // throw redirect(302, '/');
+            throw redirect(302, '/');
             
 
             // goto('/', { replaceState: true, state: { errorMessage } });
@@ -44,6 +45,7 @@ export async function load({ params, fetch,  url}) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
                 
             },
         });

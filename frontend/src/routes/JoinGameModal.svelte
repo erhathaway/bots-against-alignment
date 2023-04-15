@@ -13,7 +13,7 @@
 	async function joinGame() {
 		try {
 			// const response = await fetch(`${BACKEND_API}/game/${gameId}`);
-			const response = await fetch(`${BACKEND_API}/game?game_id=${gameId}`, {
+			const response = await fetch(`${BACKEND_API}/game/${gameId}`, {
 				method: 'GET',
 				headers: {
 					'Content-Type': 'application/json',
@@ -23,7 +23,7 @@
 			console.log('response', response);
 
 			if (response.ok) {
-				goto('/game');
+				goto('/game?game_id=' + gameId);
 			} else {
 				showError = true;
 			}
