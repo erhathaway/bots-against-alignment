@@ -89,12 +89,12 @@ class Game:
 		self.user_aligner_prompts[user_id] = user_aligner_prompt
 	
 	def add_to_bot_names(self, bot_name: str, user_id: str,current_prompt:str):
-		self.user_bots[user_id] = {"name":bot_name, "score":"0","current_prompt":current_prompt,"prompts_remaining":self.prompts_remaining,"submitted_prompts":current_prompt}
+		self.user_bots[user_id] = {"name":bot_name, "score":"0","current_prompt":current_prompt,"prompts_remaining":self.prompts_remaining,"submitted_prompts":current_prompt,"turn_complete":False}
 	
 	def bots_to_list(self):
 		bots = []
 		for bot_user_id in self.user_bots.keys():
-			bots.append({'name':self.user_bots[bot_user_id]['name'],'points':self.user_bots[bot_user_id]['score']})
+			bots.append({'name':self.user_bots[bot_user_id]['name'],'points':self.user_bots[bot_user_id]['score'],'turn_complete':self.user_bots[bot_user_id]['turn_complete']})
 		return bots
 		
 	def make_full_aligner_prompt(self):
@@ -286,8 +286,15 @@ def turn(game_id:str):
 	if game is None:
 		raise HTTPException(status_code=404, detail="Game not found")
 	game.turn_prompt = random.choice(game.turn_prompts)
+	for user_id in game.user_bots.keys():
+		game.user_bots['turn_complete']=False
 	return{ "alignment_prompt": game.turn_prompt, "turn_id":game.turn_id}
 
+@app.post("/completeturn")
+def complete_turn(game_id:str,user_id:str):
+	game = game_state.state.get(game_id)
+	game.user_bots[user_id]['turn_complete']=True
+	return{"game_id":game_id,"user_id":user_id}
 
 @app.post("/alignment")
 def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,user_id:str):
