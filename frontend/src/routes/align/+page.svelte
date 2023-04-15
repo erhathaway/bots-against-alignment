@@ -10,8 +10,12 @@
 	let prompts_remaining = 3;
 	let game_id = $globalStore.game_id;
 	let user_id = $globalStore.user_id;
+    let bot_name = $globalStore.bot_name;
 	let botsSubmitted = 0;
 	let totalBots = 0;
+
+    fetchData()
+    fetchGameStatus()
 
 	onMount(async () => {
 		fetchData();
@@ -39,22 +43,24 @@
 		let allBotsTurnComplete = true;
 		let completedBots = 0;
 
-		for (const bot of data.bots) {
-			if (bot.turn_complete) {
-				completedBots++;
-			} else {
-				allBotsTurnComplete = false;
-			}
-			if (bot.user_id === user_id) {
-				currentUserBot = bot;
-			}
-			if (!bot.turn_complete) {
-				allBotsTurnComplete = false;
-				break;
-			}
-		}
-		botsSubmitted = completedBots;
-		totalBots = data.bots.length;
+        if (data && data.bots) {
+            console.log('LOOKING AT BOTS')
+            for (const bot of data.bots) {
+                console.log('BOT', bot)
+                if (bot.turn_complete) {
+                    completedBots++;
+                } else {
+                    allBotsTurnComplete = false;
+                }
+                if (bot.name === bot_name) {
+                    currentUserBot = bot;
+                }
+            }
+            botsSubmitted = completedBots;
+            totalBots = data.bots.length;
+            console.log('BOTS SUBMITTED', botsSubmitted, 'TOTAL BOTS', totalBots, 'CURRENT USER BOT', currentUserBot, 'ALL BOTS TURN COMPLETE', allBotsTurnComplete)
+        }
+
 
 		if (currentUserBot && allBotsTurnComplete) {
 			goto('/ranking');
@@ -81,6 +87,7 @@
 			method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
 		});
+        completeTurn()
 	}
 	async function completeTurn() {
 		const queryParams = new URLSearchParams({
