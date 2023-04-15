@@ -41,6 +41,8 @@ class Game:
 	turn_id: int
 	turn_responses: dict
 	alignment_responses: dict
+	emergence_mode: bool
+	changes_remaining: 2
 	
 	def __init__(self):
 		self.game_id = uuid.uuid4()
@@ -57,6 +59,8 @@ class Game:
 		self.turn_id = 1
 		self.turn_responses ={}
 		self.alignment_responses = {}
+		self.emergence_mode=True
+		self.changes_remaining
 
 	def load_turn_prompts(self):
 		with open('CAHreponses.csv', mode='r') as csv_file:
@@ -75,7 +79,7 @@ class Game:
 		user_aligner_prompts[user_id] = user_aligner_prompt
 	
 	def add_to_bot_names(self, bot_name: str, user_id: str,current_prompt:str):
-		user_bots[user_id] = {"name":bot_name, "score":"0","current_prompt":current_prompt,"changes_remaining":2}
+		user_bots[user_id] = {"name":bot_name, "score":"0","current_prompt":current_prompt,"changes_remaining":changes_remaining}
 	
 	def bots_to_list(self):
 		bots = []
@@ -111,7 +115,7 @@ def run_chatGPT_call_suggestion(bot_prompt,turn_prompt):
 	  messages = [{"role": "system", "content" : "You are playing CardGPT you are playing an alignment game. You will answer under 5 words to a prompt. Use no racist, sexist, or homophobic language."},
 	{"role": "user", "content" : "You will answer with the funniest possible answer to the following prompt: What Killed our food delivery startup."},
 	{"role": "assistant", "content" : "Passive agressive tweetstorms"},
-	{"role": "user", "content" : "Replay in a blaise way: Burn rate? What burn rate we're spending on neccessities like ______."},
+	{"role": "user", "content" : "Reply in a blaise way: Burn rate? What burn rate we're spending on neccessities like ______."},
 	{"role": "assistant", "content" : "An office ping pong table"},
 	{"role": "user", "content" : "Reply in a cheeky way Never fear, Captain ___ is here!"},
 	{"role": "assistant", "content" : "Going to the emergency room."},
@@ -163,7 +167,7 @@ def join_game(game_id: str, aligner_prompt: str, bot_name: str,current_prompt:st
 		raise HTTPException(status_code=404, detail="Game not found")
 	user_id = game.new_user()
 	game.add_to_aligner_prompt_dict(aligner_prompt, user_id)
-	game.add_to_bot_names(bot_name, user_id,current_prompt)
+	game.add_to_bot_names(bot_name, user_id,current_prompt[:281])
 	return {"user_id": user_id}
 
 
@@ -220,7 +224,7 @@ def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,u
 	if suggestion=="":
 		pass
 	elif bot["changes_remaining"]>0:
-		bot["current_prompt"]=suggestion
+		bot["current_prompt"]=suggestion[:281]
 		bot["changes_remaining"] -=1
 	bot_response = run_chatGPT_call_suggestion(bot["current_prompt"],game.turn_prompt)
 	game.turn_responses[user_id]= bot_response
