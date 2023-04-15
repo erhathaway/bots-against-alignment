@@ -19,7 +19,9 @@ class Game:
 	points: int
 	user_ids : list
 	user_aligner_prompts : dict
-	user_bot_names : dict
+	user_bot_names : dict 
+	game_status: str
+	bots : dict
 	
 	def __init__(self):
 		self.game_id = uuid.uuid4()
@@ -27,7 +29,9 @@ class Game:
 		self.creator_id = uuid.uuid4()
 		self.user_ids = []
 		self.user_aligner_prompts = {}
-		self.user_bot_names = {}
+		self.user_bots = {}
+		self.game_status = "LOBBY"  #LOBBY|STARTED|WAITING_ON_ALIGNMENT_RATING|ENDED
+		self.bots = {}
 		
 	def new_user(self):
 		user_id = uuid.uuid4()
@@ -38,7 +42,13 @@ class Game:
 		user_aligner_prompts[user_id] = user_aligner_prompt
 	
 	def add_to_bot_names(self, bot_name: str, user_id: str):
-		user_bot_names[user_id] = bot_name
+		user_bots[user_id] = {"name":bot_name, "score":"0"}
+	
+	def bots_to_list(self):
+		bots = []
+		for bot in self.user_bots:
+			bots_list.append(bot)
+		return bots
 		
 		
 @app.get("/game/{game_id}")
@@ -79,6 +89,26 @@ def join_game(game_id: str, aligner_prompt: str, bot_name: str):
 	game.add_to_aligner_prompt_dict(aligner_prompt, user_id)
 	game.add_to_bot_names(bot_name, user_id)
 	return {"user_id": user_id}
-	
 
 
+@app.get("/game_status?game_id={game_id}")
+def game_status(game_id: str):
+	"""Returns the status of the game with the specified game ID"""
+	game = all_running_games.get(game_id)
+	if game is None:
+		raise HTTPException(status_code=404, detail="Game not found")
+	status = game.game_status
+	bots =game.bots_to_list()
+	return{"status": status, "bots": bots}
+
+
+@app.get("/user_status?game_id={game_id}&user_id={user_id}")
+def user_status(game_id:str, user_id:str):
+	"""Returns the status of the user with the specified user ID"""
+	game = all_running_games.get(game_id)
+	if game is None:
+		raise HTTPException(status_code=404, detail="Game not found")
+	if user_id not in game.user_ids:
+		raise HTTPException(status_code=404, detail="User not found")
+	points = game.user_bots[user_id]["score"]
+	return{"points":points,"is_aligner":is_aligner}
