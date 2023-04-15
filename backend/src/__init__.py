@@ -25,12 +25,8 @@ app.add_middleware(
 )
 
 all_running_games: dict[str, any] = {} 
-
-root_dir = Path.cwd().anchor
-src_dir = Path(root_dir) / "backend" / "src"
-
+src_dir = Path(Path.cwd().anchor) / "backend" / "src"
 load_dotenv()  # take environment variables from .env.
-
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 
