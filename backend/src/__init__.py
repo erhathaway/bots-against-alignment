@@ -55,7 +55,7 @@ class Game:
 		self.bots = {}
 		self.aligner_prompt = '' #TODO we need to add the base string to this
 		self.turn_prompt = ''
-		self.turn_prompts = load_turn_prompts()
+		self.turn_prompts = self.load_turn_prompts()
 		self.turn_id = 1
 		self.turn_responses ={}
 		self.alignment_responses = {}
