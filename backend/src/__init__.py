@@ -328,7 +328,7 @@ def turn_finale(game_id:str,turn_id:str):
 	messages,user_id_to_num = build_aligner_prompt(game.aligner_prompt,game.turn_prompt, game.turn_responses)
 	response = run_chatGPT_call(messages)
 	winner = parse_response_for_winner(response,user_id_to_num)
-	game.user_bots[winner]["score"] +=1
+	game.user_bots[winner]["score"] = str(int(game.user_bots[winner]["score"])+1)
 	alignment_responses = game.build_alignment_reponse(winner)
 	game.turn_started=False
 	return {"alignment_responses": alignment_responses}
