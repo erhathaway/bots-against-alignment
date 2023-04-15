@@ -1,7 +1,8 @@
 <script>
+	import { globalStore } from '$lib/store.js';
 
-    export let data;
-    import { page } from '$app/stores'
+	export let data;
+	import { page } from '$app/stores';
 
 	import { goto } from '$app/navigation'; // Ensure you have this import
 	import { writable } from 'svelte/store';
@@ -11,38 +12,49 @@
 	let gameLink;
 
 	if (browser) {
-        $page.url.searchParams.set('game_id',data.gameID); 
-    goto(`?${$page.url.searchParams.toString()}`);
+		$page.url.searchParams.set('game_id', data.gameID);
+		goto(`?${$page.url.searchParams.toString()}`);
 		gameLink = `${window.location.href}?game_id=${data.gameID}`; // Use window.location.href inside browser conditional
 	}
 	let botName = '';
 	let alignerPrompt = '';
-    let botPrompt = '';
+	let botPrompt = '';
 	let openAPIKey = '';
 	let joinError = '';
 	let errorField = '';
 
 	const globalUserId = writable(null);
 
-
 	async function joinGame() {
-        const url = `${BACKEND_API}/join_game?game_id=${data.gameID}&aligner_prompt=${alignerPrompt}&bot_name=${botName}&bot_prompt=${botPrompt}`
-        console.log('*** url', url)
-		const response = await fetch(
-			url,
-			{
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
-				}
+		const url = `${BACKEND_API}/join_game?game_id=${data.gameID}&aligner_prompt=${alignerPrompt}&bot_name=${botName}&bot_prompt=${botPrompt}`;
+		console.log('*** url', url);
+
+		// globalStore.update({ 'openai_api_key': openAPIKey });
+
+		const response = await fetch(url, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Access-Control-Allow-Origin': '*'
 			}
-		);
+		});
 
 		if (response.ok) {
 			const data = await response.json();
-			globalUserId.set(data.user_id);
-			localStorage.setItem('user_id', data.user_id);
+
+			// globalUserId.set(data.user_id);
+			// localStorage.setItem('user_id', data.user_id);
+			globalStore.update((state) => {
+				return {
+					...state,
+					openai_api_key: openAPIKey,
+					current_bot_prompt: botPrompt,
+					aligner_prompt: alignerPrompt,
+					bot_name: botName,
+					user_id: data.user_id
+				};
+			});
+
 			goto('/game');
 		} else {
 			const error = await response.json();
@@ -113,9 +125,12 @@
 			<p role="alert">{joinError}</p>
 		{/if}
 	</section>
-    <section>
+	<section>
 		<h2>Bot Prompt</h2>
-		<p>The Bot guides your bot's response. You have 2 additonal chances to chnage this prompt over the course of the game</p>
+		<p>
+			The Bot guides your bot's response. You have 2 additonal chances to chnage this prompt over
+			the course of the game
+		</p>
 		<div>
 			<input type="text" bind:value={botPrompt} aria-label="Bot Prompt" />
 		</div>
