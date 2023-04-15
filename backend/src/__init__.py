@@ -17,12 +17,30 @@ class Game:
 	creator_id: str
 	aligner: AlignerType
 	points: int
-
+	user_ids : list
+	user_aligner_prompts : dict
+	user_bot_names : dict
+	
 	def __init__(self):
 		self.game_id = uuid.uuid4()
 		all_running_games[self.game_id] = self
 		self.creator_id = uuid.uuid4()
-
+		self.user_ids = []
+		self.user_aligner_prompts = {}
+		self.user_bot_names = {}
+		
+	def new_user(self):
+		user_id = uuid.uuid4()
+		self.user_ids.append(user_id)
+		return user_id
+	
+	def add_to_aligner_prompt_dict(self, user_aligner_prompt: str, user_id: str):
+		user_aligner_prompts[user_id] = user_aligner_prompt
+	
+	def add_to_bot_names(self, bot_name: str, user_id: str):
+		user_bot_names[user_id] = bot_name
+		
+		
 @app.get("/game/{game_id}")
 def get_game(game_id: str):
 	"""Returns a valid game object id if it exists, otherwise returns an error"""
@@ -50,3 +68,17 @@ def config_game(game_id: str, creator_id: str, aligner: AlignerType, points: int
 	game.aligner = aligner
 	game.points = points
 	return {"game_id": game_id, "aligner": aligner, "points": points}
+
+@app.post("/user?game_id={game_id}&aligner_prompt={aligner_prompt}&bot_name={bot_name}")
+def join_game(game_id: str, aligner_prompt: str, bot_name: str):
+	"""Joins the game with the specified game ID and returns the user ID"""
+	game = all_running_games.get(game_id)
+	if game is None:
+		raise HTTPException(status_code=404, detail="Game not found")
+	user_id = game.new_user()
+	game.add_to_aligner_prompt_dict(aligner_prompt, user_id)
+	game.add_to_bot_names(bot_name, user_id)
+	return {"user_id": user_id}
+	
+
+
