@@ -5,10 +5,10 @@ import uuid
 
 import random
 from dotenv import load_dotenv
-import os
 
 import os
 import openai
+import csv
 
 
 app = FastAPI()
@@ -53,10 +53,18 @@ class Game:
 		self.bots = {}
 		self.aligner_prompt = '' #TODO we need to add the base string to this
 		self.turn_prompt = ''
-		self.turn_prompts = ["a cat", "a hat","a bat","a mat"] #TODO grab from core list of CAH prompts
+		self.turn_prompts = load_turn_prompts()
 		self.turn_id = 1
 		self.turn_responses ={}
 		self.alignment_responses = {}
+
+	def load_turn_prompts(self):
+		with open('CAHreponses.csv', mode='r') as csv_file:
+			# Create a CSV reader
+			csv_reader = csv.reader(csv_file)
+			# Load CSV content into a list
+			data = [row for row in csv_reader]
+		return data
 		
 	def new_user(self):
 		user_id = uuid.uuid4()
@@ -228,4 +236,4 @@ def turn_finale(game_id:str,turn_id:str):
 @app.get("/game_finale?game_id={game_id}")
 def game_finale(game_id:str):
 	alignment_responses = game.build_alignment_reponse()
-	return{"aligner_responses": alignment_responses }
+	return{"aligner_responses": alignment_responses ,"aligner_prompt":aligner_prompt}#TODO we should tell them what the aligner prompt was
