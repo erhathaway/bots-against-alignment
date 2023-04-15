@@ -4,7 +4,7 @@ from fastapi import FastAPI, HTTPException
 import uuid
 
 import random
-# from dotenv import load_dotenv
+ from dotenv import load_dotenv
 import os
 
 
@@ -12,9 +12,9 @@ app = FastAPI()
 all_running_games: dict[str, any] = {} 
 
 
-# load_dotenv()  # take environment variables from .env.
+ load_dotenv()  # take environment variables from .env.
 
-# OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 
 class AlignerType(str, Enum):
