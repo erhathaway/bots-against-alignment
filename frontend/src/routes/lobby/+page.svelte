@@ -66,10 +66,10 @@
 			{#each bots as bot}
 				<div class="bot-card">
 					<span>Name: {bot.name}</span>
-					<span>Score: {bot.score}</span>
-					<span>Current Prompt: {bot.current_prompt}</span>
-					<span>Prompts Remaining: {bot.prompts_remaining}</span>
-					<span>Submitted Prompts: {bot.submitted_prompts}</span>
+					<!-- <span>Score: {bot.score}</span> -->
+					<!-- <span>Current Prompt: {bot.current_prompt}</span> -->
+					<!-- <span>Prompts Remaining: {bot.prompts_remaining}</span> -->
+					<!-- <span>Submitted Prompts: {bot.submitted_prompts}</span> -->
 				</div>
 			{/each}
 		</div>
