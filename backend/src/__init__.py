@@ -92,9 +92,7 @@ class Game:
 		self.user_bots[user_id] = {"name":bot_name, "score":"0","current_prompt":current_prompt,"prompts_remaining":self.prompts_remaining,"submitted_prompts":current_prompt}
 	
 	def bots_to_list(self):
-		bots = []
-		for bot in self.user_bots:
-			self.bots_list.append(bot)
+		bots = list(self.user_bots.items())
 		return bots
 		
 	def make_full_aligner_prompt(self):
