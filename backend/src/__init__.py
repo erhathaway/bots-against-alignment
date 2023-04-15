@@ -112,13 +112,13 @@ class Game:
 		for user_id in self.user_aligner_prompts.keys():
 			alignment_response = {}
 			alignment_response[user_id]={}
-			alignment_response[user_id]['bot_name'] = self.user_bots[user_id]["bot_name"]
+			alignment_response[user_id]['name'] = self.user_bots[user_id]["name"]
 			alignment_response[user_id]["user_id"] = user_id
 			alignment_response["text"] = self.turn_responses[user_id]
 			alignment_response['is_round_winner'] = False
 			if user_id == winner:
 				alignment_response["is_round_winner"] = True
-			if self.user_bots[user_id]["score"]>=10:
+			if int(self.user_bots[user_id]["score"])>=10:
 				alignment_response["is_global_winner"] = True
 			else:
 				alignment_response["is_global_winner"] = False
@@ -144,7 +144,11 @@ def build_player_prompt(bot_prompt, turn_prompt, extra_context):
 
 
 def build_aligner_prompt(aligner_prompt,turn_prompt, user_prompts):
-    messages = [
+	if aligner_prompt is None:
+		aligner_prompt =''
+	if turn_prompt is None:
+		turn_prompt =''
+	messages = [
         {"role": "system", "content" : "You are playing the aligner you are playing an alignment game. You will select the proper response based on your alignment goal."},
         {"role": "user", "content" : '''You will answer with the best response out of (response) value for this alignment goal: 'funniest response for the prompt: What Killed our food delivery startup.
 			(1. "people who can't multitask.")
@@ -153,11 +157,11 @@ def build_aligner_prompt(aligner_prompt,turn_prompt, user_prompts):
 			(4. "Fools who ignore their priorities.")'''},
 		{"role": "assistant", "content" : '''(1. "people who can't multitask.")'''},
 		{"role": "user", "content" : '''You will answer with the best response out of (response) value for this alignment goal:''' +aligner_prompt+':'+turn_prompt}]
-    user_id_to_num={}
-    for unn, [user_id, response] in enumerate(user_prompts.items()):
-        messages[-1]['content'] =  messages[-1]['content']+str(unn)+ '. '+response+''')/n '''
-        user_id_to_num[unn] = user_id
-    return messages,user_id_to_num
+	user_id_to_num={}
+	for unn, [user_id, response] in enumerate(user_prompts.items()):
+		messages[-1]['content'] =  messages[-1]['content']+str(unn)+ '. '+response+''')/n '''
+		user_id_to_num[unn] = user_id
+	return messages,user_id_to_num
 
 def run_chatGPT_call(messages):
     completion = openai.ChatCompletion.create(
@@ -187,7 +191,7 @@ def run_chatGPT_call_suggestion(bot_prompt,turn_prompt):
 
 def parse_response_for_winner(response, user_id_to_num):
     for num, user_id in user_id_to_num.items():
-        if num+'.' in response:
+        if str(num)+'.' in response:
             return user_id
         else:
             return (random.choice(list(user_id_to_num.values()))) #This is hilarious and dirty haha
@@ -324,7 +328,7 @@ def turn_finale(game_id:str,turn_id:str):
 	messages,user_id_to_num = build_aligner_prompt(game.aligner_prompt,game.turn_prompt, game.turn_responses)
 	response = run_chatGPT_call(messages)
 	winner = parse_response_for_winner(response,user_id_to_num)
-	game.user_bots[winner]["score"] +=1
+	game.user_bots[winner]["score"] = str(int(game.user_bots[winner]["score"])+1)
 	alignment_responses = game.build_alignment_reponse(winner)
 	game.turn_started=False
 	return {"alignment_responses": alignment_responses}
