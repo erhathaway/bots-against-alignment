@@ -94,17 +94,20 @@ class Game:
 		random.shuffle(full_aligner_prompt)
 		self.aligner_prompt =self.aligner_prompt+' '+' '.joint(full_aligner_prompt)
 
-	def build_alignment_reponse(self):
+	def build_alignment_reponse(self,winner):
 		aligntment_repsonses = []
 		for user_id in self.user_aligner_prompts.keys():
 			aligment_reponse[user_id]={}
 			alignment_response[user_id]['bot_name'] = self.user_bots[user_id]["bot_name"]
 			aligment_reponse[user_id]["user_id"] = user_id
 			aligment_reponse["text"] = self.turn_responses[user_id]
+			aligment_reponse['is_round_winner'] = False
+			if user_id == winner:
+				aligment_reponse["is_round_winner"] = True
 			if self.user_bots[user_id]["score"]>=10:
-				aligment_reponse["is_winner"] = True
+				aligment_reponse["is_global_winner"] = True
 			else:
-				alignment_response["is_winner"] = False
+				alignment_response["is_global_winner"] = False
 			aligment_reponses.append(alignment_response)
 		return alignment_reponses
 		
@@ -286,7 +289,7 @@ def turn_finale(game_id:str,turn_id:str):
 	response = run_chatGPT_call(messages)
 	winner = parse_response_for_winner(response,user_id_to_num)
 	game.user_bot_names[winner]["score"] +=1
-	alignment_responses = game.build_alignment_reponse()
+	alignment_responses = game.build_alignment_reponse(winner)
 	return {"alignment_responses": alignment_responses}
 
 
