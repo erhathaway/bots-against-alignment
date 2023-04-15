@@ -94,11 +94,6 @@ class Game:
 	def bots_to_list(self):
 		bots = []
 		for bot_user_id in self.user_bots.keys():
-			print(f"Processing bot_user_id: {bot_user_id}")
-			print(f"Processing bot_user_id: {bot_user_id}")
-			print(f"Current user_bots: {self.user_bots}")
-			bot_data = self.user_bots[bot_user_id]
-			print(f"Current bot_data: {bot_data}")
 			bots.append({'name':self.user_bots[bot_user_id]['name'],'points':self.user_bots[bot_user_id]['score'],'turn_complete':self.user_bots[bot_user_id]['turn_complete']})
 		return bots
 		
@@ -292,7 +287,7 @@ def turn(game_id:str):
 		raise HTTPException(status_code=404, detail="Game not found")
 	game.turn_prompt = random.choice(game.turn_prompts)
 	for user_id in game.user_bots.keys():
-		game.user_bots['turn_complete']=False
+		game.user_bots[user_id]['turn_complete']=False
 	return{ "alignment_prompt": game.turn_prompt, "turn_id":game.turn_id}
 
 @app.post("/completeturn")
