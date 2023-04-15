@@ -2,6 +2,7 @@ from enum import Enum
 from dataclasses import dataclass
 from fastapi import FastAPI, HTTPException
 import uuid
+import random
 
 app = FastAPI()
 all_running_games: dict[str, any] = {} 
@@ -19,8 +20,12 @@ class Game:
 	points: int
 	user_ids : list
 	user_aligner_prompts : dict
+	aligner_prompt: str
 	user_bot_names : dict 
 	game_status: str
+	turn_prompt: str
+	turn_prompts: list
+	turn_id: int
 	
 	def __init__(self):
 		self.game_id = uuid.uuid4()
@@ -31,6 +36,10 @@ class Game:
 		self.user_bots = {}
 		self.game_status = "LOBBY"  #LOBBY|STARTED|WAITING_ON_ALIGNMENT_RATING|ENDED
 		self.bots = {}
+		self.aligner_prompt = '' #TODO we need to add the base string to this
+		self.turn_prompt = ''
+		self.turn_prompts = ["a cat", "a hat","a bat","a mat"] #TODO grab from core list of CAH prompts
+		self.turn_id = 0
 		
 	def new_user(self):
 		user_id = uuid.uuid4()
@@ -49,7 +58,17 @@ class Game:
 			bots_list.append(bot)
 		return bots
 		
-		
+	def make_full_aligner_prompt(self):
+		full_aligner_prompt = []
+		for user in self.user_aligner_prompts.keys():
+			full_aligner_prompt.append(user_aligner_prompts[user])
+		random.shuffle(full_aligner_prompt)
+		self.aligner_prompt =self.aligner_prompt+' '+' '.joint(full_aligner_prompt)
+
+@app.get("/health_check")
+	async def health_check():
+    return {"status": "OK"}
+	
 @app.get("/game/{game_id}")
 def get_game(game_id: str):
 	"""Returns a valid game object id if it exists, otherwise returns an error"""
@@ -122,4 +141,16 @@ def start_game(game_id: str, creator_id: str):
 	if game.creator_id != creator_id:
 		raise HTTPException(status_code=403, detail="Forbidden")
 	game.game_status = "STARTED"
+	game.aligner_prompt = game.make_full_aligner_prompt()
 
+'''
+@app.get("/turn?game_id={game_id}")
+def turn(game_id:str):
+	"""Returns the turn prompt and turn ID"""
+	game = all_running_games.get(game_id)
+	if game is None:
+		raise HTTPException(status_code=404, detail="Game not found")
+	game.turn_prompt = game.turn_prompts.random.choice()
+	return{ "alignment_prompt": game.turn_prompt, "turn_id":game.turn_id}
+	
+'''
