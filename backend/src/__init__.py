@@ -320,5 +320,6 @@ def turn_finale(game_id:str,turn_id:str):
 
 @app.get("/game_finale?game_id={game_id}")
 def game_finale(game_id:str):
+	game = all_running_games.get(game_id)
 	alignment_responses = game.build_alignment_reponse()
 	return{"aligner_responses": alignment_responses ,"aligner_prompt":game.aligner_prompt}
