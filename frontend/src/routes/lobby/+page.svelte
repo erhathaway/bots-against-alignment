@@ -55,6 +55,9 @@
 	onMount(() => {
 		fetchStatus();
 		fetchStatusInterval = setInterval(fetchStatus, 3000);
+        return () => {
+            clearInterval(fetchStatusInterval);
+        }
 	});
 </script>
 

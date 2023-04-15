@@ -9,6 +9,7 @@ const defaultData = {
     current_bot_prompt: null,
     aligner_prompt: null,
     bot_name: null,
+    last_turn_id: null,
   };
   
   export const globalStore = persisted('settings', writable(defaultData));

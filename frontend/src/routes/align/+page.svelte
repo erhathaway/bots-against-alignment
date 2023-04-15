@@ -19,8 +19,12 @@
 
 	onMount(async () => {
 		fetchData();
-		setInterval(fetchData, 3000);
-		setInterval(fetchGameStatus, 3000);
+		const fdId = setInterval(fetchData, 3000);
+		const fgsId = setInterval(fetchGameStatus, 3000);
+        return () => {
+            clearInterval(fdId);
+            clearInterval(fgsId);
+        }
 	});
 
 	async function fetchData() {
@@ -28,6 +32,11 @@
 		const data = await response.json();
 		alignment_prompt = data.alignment_prompt;
 		turn_id = data.turn_id;
+        console.log('TURN ID', turn_id)
+        globalStore.update((state) => ({
+            ...state,
+            last_turn_id: turn_id
+        }));
 		const statusResponse = await fetch(
 			`${BACKEND_API}/user_status?game_id=${game_id}&user_id=${user_id}`
 		);
