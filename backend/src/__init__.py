@@ -2,9 +2,17 @@ from enum import Enum
 from dataclasses import dataclass
 from fastapi import FastAPI, HTTPException
 import uuid
+# from dotenv import load_dotenv
+import os
 
 app = FastAPI()
 all_running_games: dict[str, any] = {} 
+
+
+# load_dotenv()  # take environment variables from .env.
+
+# OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
 
 class AlignerType(str, Enum):
 	USER_ROUND_ROBIN = "USER_ROUND_ROBIN"
