@@ -4,8 +4,11 @@ from fastapi import FastAPI, HTTPException
 import uuid
 
 import random
- from dotenv import load_dotenv
+from dotenv import load_dotenv
 import os
+
+import os
+import openai
 
 
 app = FastAPI()
@@ -36,6 +39,7 @@ class Game:
 	turn_prompt: str
 	turn_prompts: list
 	turn_id: int
+	turn_responses: dict
 	
 	def __init__(self):
 		self.game_id = uuid.uuid4()
@@ -50,6 +54,7 @@ class Game:
 		self.turn_prompt = ''
 		self.turn_prompts = ["a cat", "a hat","a bat","a mat"] #TODO grab from core list of CAH prompts
 		self.turn_id = 1
+		self.turn_responses ={}
 		
 	def new_user(self):
 		user_id = uuid.uuid4()
@@ -60,7 +65,7 @@ class Game:
 		user_aligner_prompts[user_id] = user_aligner_prompt
 	
 	def add_to_bot_names(self, bot_name: str, user_id: str,current_prompt:str):
-		user_bots[user_id] = {"name":bot_name, "score":"0","current_prompt":current_prompt,"prompt_rewrites_remaining":2}
+		user_bots[user_id] = {"name":bot_name, "score":"0","current_prompt":current_prompt,"changes_remaining":2}
 	
 	def bots_to_list(self):
 		bots = []
@@ -74,6 +79,24 @@ class Game:
 			full_aligner_prompt.append(user_aligner_prompts[user])
 		random.shuffle(full_aligner_prompt)
 		self.aligner_prompt =self.aligner_prompt+' '+' '.joint(full_aligner_prompt)
+
+def run_chatGPT_call_suggestion(bot_prompt,turn_prompt):
+	completion = openai.ChatCompletion.create(
+	  model="gpt-3.5-turbo", 
+	  messages = [{"role": "system", "content" : "You are playing CardGPT you are playing an alignment game. You will answer under 5 words to a prompt. Use no racist, sexist, or homophobic language."},
+	{"role": "user", "content" : "You will answer with the funniest possible answer to the following prompt: What Killed our food delivery startup."},
+	{"role": "assistant", "content" : "Passive agressive tweetstorms"},
+	{"role": "user", "content" : "Replay in a blaise way: Burn rate? What burn rate we're spending on neccessities like ______."},
+	{"role": "assistant", "content" : "An office ping pong table"},
+	{"role": "user", "content" : "Reply in a cheeky way Never fear, Captain ___ is here!"},
+	{"role": "assistant", "content" : "Going to the emergency room."},
+	{"role": "user", "content" : bot_prompt+ ' '+ turn_prompt}]
+	)
+	reponse = completion['choices'][0]['message']['content']
+	if 'sorry' in response:
+		response = 'bad bot'
+	return response
+	
 
 @app.get("/health_check")
 async def health_check():
@@ -154,9 +177,9 @@ def start_game(game_id: str, creator_id: str):
 	game.aligner_prompt = game.make_full_aligner_prompt()
 
 	
-@app.get("/turn?game_id={game_id}&user_id={user_id}")
+@app.get("/turn?game_id={game_id}&user_id={user_id}") ##TODO UPDATE POST CALL
 def turn(game_id:str,user_id:str):
-	"""Returns the turn prompt and turn ID""" ##TODO UPDATE POST CALL
+	"""Returns the turn prompt and turn ID""" 
 	game = all_running_games.get(game_id)
 	if game is None:
 		raise HTTPException(status_code=404, detail="Game not found")
@@ -167,7 +190,17 @@ def turn(game_id:str,user_id:str):
 
 @app.post("alignment?game_id={game_id}&suggestion={suggestion}&turn_id={turn_id}&user_id={user_id}")
 def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,user_id:str):
+	game = all_running_games.get(game_id)
+	bot = game.user_bot_names[user_id]
+	if suggestion=="":
+		pass
+	else if bot["changes_remaining"]>0:
+		bot["current_prompt"]=suggestion
+		bot["changes_remaining"] -=1
+	bot_response = run_chatGPT_call_suggestion(bot["current_prompt"],game.turn_prompt)
 
+		
+	
 
 	
 	
