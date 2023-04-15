@@ -111,3 +111,15 @@ def user_status(game_id:str, user_id:str):
 		raise HTTPException(status_code=404, detail="User not found")
 	points = game.user_bots[user_id]["score"]
 	return{"points":points}
+
+
+@app.post("/start?game_id={game_id}&creator_id={creator_id}")
+def start_game(game_id: str, creator_id: str):
+	"""Starts the game with the specified game ID"""
+	game = all_running_games.get(game_id)
+	if game is None:
+		raise HTTPException(status_code=404, detail="Game not found")
+	if game.creator_id != creator_id:
+		raise HTTPException(status_code=403, detail="Forbidden")
+	game.game_status = "STARTED"
+
