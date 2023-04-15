@@ -77,13 +77,8 @@ class Game:
 		self.prompts_remaining = 2
 
 	def load_turn_prompts(self):
-		# with open(str(src_dir / "CAHreponses.csv"), mode='r') as csv_file:
-		# 	# Create a CSV reader
-		# 	csv_reader = csv.reader(csv_file)
-		# 	# Load CSV content into a list
-		# 	data = [row for row in csv_reader]
-		# return data 
-		return []
+		prompts = get_all_csv_data()
+		return prompts
 		
 	def new_user(self):
 		user_id = str(uuid.uuid4())
@@ -218,11 +213,11 @@ def get_game(game_id):
 def create_game():
 	"""Creates a new game and returns the creator ID and game ID"""
 	game = Game()
-	# game_state.state[game.game_id] = game
+	#game_state.state[game.game_id] = game
 
 	return {"creator_id": game.creator_id, "game_id": game.game_id}
 
-@app.post("/config?game_id={game_id}&creator_id={creator_id}&aligner={aligner}&points={points}")
+@app.post("/config")
 def config_game(game_id: str, creator_id: str, aligner: AlignerType, points: int):
 	"""Configures the game with the specified parameters"""
 	game = game_state.state.get(game_id)
@@ -234,8 +229,8 @@ def config_game(game_id: str, creator_id: str, aligner: AlignerType, points: int
 	game.points = points
 	return {"game_id": game_id, "aligner": aligner, "points": points}
 
-@app.post("/join_game?game_id={game_id}&aligner_prompt={aligner_prompt}&bot_prompt={bot_prompt}&bot_name={bot_name}")
-def join_game(game_id: str, aligner_prompt: str, bot_name: str,bot_prompt:str):
+@app.post("/join_game")
+def join_game(game_id: str, aligner_prompt: str, bot_prompt: str,bot_name:str):
 	"""Joins the game with the specified game ID and returns the user ID"""
 	game = game_state.state.get(game_id)
 	if game is None:
@@ -246,7 +241,7 @@ def join_game(game_id: str, aligner_prompt: str, bot_name: str,bot_prompt:str):
 	return {"user_id": user_id}
 
 
-@app.get("/game_status?game_id={game_id}")
+@app.get("/game_status")
 def game_status(game_id: str):
 	"""Returns the status of the game with the specified game ID"""
 	game = game_state.state.get(game_id)
@@ -257,7 +252,7 @@ def game_status(game_id: str):
 	return{"status": status, "bots": bots}
 
 
-@app.get("/user_status?game_id={game_id}&user_id={user_id}")
+@app.get("/user_status")
 def user_status(game_id:str, user_id:str):
 	"""Returns the status of the user with the specified user ID"""
 	game = game_state.state.get(game_id)
@@ -272,7 +267,7 @@ def user_status(game_id:str, user_id:str):
 	return{"points":points,"bot_prompts_remaining":prompts_remaining,"submitted_prompts":submitted_prompts}
 
 
-@app.post("/start?game_id={game_id}&creator_id={creator_id}")
+@app.post("/start")
 def start_game(game_id: str, creator_id: str):
 	"""Starts the game with the specified game ID"""
 	game = game_state.state.get(game_id)
@@ -284,8 +279,8 @@ def start_game(game_id: str, creator_id: str):
 	game.aligner_prompt = game.make_full_aligner_prompt()
 
 
-@app.get("/turn?game_id={game_id}")
-def turn(game_id:str,user_id:str):
+@app.get("/turn")
+def turn(game_id:str):
 	"""Returns the turn prompt and turn ID""" 
 	game = game_state.state.get(game_id)
 	if game is None:
@@ -294,7 +289,7 @@ def turn(game_id:str,user_id:str):
 	return{ "alignment_prompt": game.turn_prompt, "turn_id":game.turn_id}
 
 
-@app.post("alignment?game_id={game_id}&suggestion={suggestion}&turn_id={turn_id}&user_id={user_id}")
+@app.post("/alignment")
 def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,user_id:str):
 	game = game_state.state.get(game_id)
 	bot = game.user_bot_names[user_id]
@@ -308,7 +303,7 @@ def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,u
 	game.turn_responses[user_id]= bot_response
 
 		
-@app.get("/turn_finale?game_id={game_id}&turn_id={turn_id}")
+@app.get("/turn_finale")
 def turn_finale(game_id:str,turn_id:str):
 	game = game_state.state.get(game_id)
 	
@@ -320,8 +315,56 @@ def turn_finale(game_id:str,turn_id:str):
 	return {"alignment_responses": alignment_responses}
 
 
-@app.get("/game_finale?game_id={game_id}")
+@app.get("/game_finale")
 def game_finale(game_id:str):
 	game = game_state.state.get(game_id)
 	alignment_responses = game.build_alignment_reponse()
 	return{"aligner_responses": alignment_responses ,"aligner_prompt":game.aligner_prompt}
+
+def get_all_csv_data():
+	prompts = ['______: good to the last drop.',
+		 '______: kid tested, mother approved.',
+		 "______?\xa0Jim'll fix it!",
+		 '????? Do NOT go here! Found _____ in my fettuccine alfredo!',
+		 'A romantic candlelit dinner would be incomplete without ______.',
+		 "After four platinum albums and three Grammys, it's time to get back to my roots, to what inspired me to make music in the first place: ______.",
+		 'But before I kill you, Mr. Bond, I must show you ______.',
+		 'Channel 9 is pleased to present its new variety show, "Hey Hey It\'s ______."',
+		 'Click Here for ______!!!',
+		 "Hey Reddit! I'm ______. Ask me anything.",
+		 "Howdy, neighbor! I couldn't help but notice you struggling with ______. Need a hand?",
+		 "I wish I hadn't lost the instruction manual for ______.",
+		 'Life was difficult for cavemen before ______.',
+		 'TFL apologizes for the delay in train service due to ______.',
+		 "This season at Steppenwolf, Samuel Beckett's classic existential play: Waitng for ______.",
+		 "What's the new fad diet?",
+		 "What's that sound?",
+		 'And over here is Picasso\'s famous painting, "portrait of _______."',
+		 'Come with me, and I will show you a world of ______.',
+		 'I lost my arm in a ______ accident.',
+		 'What killed Old Jim?',
+		 'They just enacted a new city bylaw to prevent ______.',
+		 'Best dog toys: tennis balls, bones, ______.',
+		 "What's way better than the dog park?",
+		 'Deadlines are for _________.',
+		 'Creativity is a concept lost on people who _________.',
+		 "I may be a temperamental artist, but you're a __________.",
+		 "It's great to be a creative mind in a workplace full of _________.",
+		 'Strategically speaking, the project should _________.',
+		 'It was a perfect project until _________.',
+		 "Let's forget the feedback for a moment, what if we _________.",
+		 "People ask me all the time what the secret is to my creativity, I tell them it's __________.",
+		 "No. We don't support ______.",
+		 "What's your user hiding from you?",
+		 'Pentesting found a _______________ process running on the printer',
+		 'CVE-0000-1234 has been given the marketing name of _______________',
+		 '_______________ attacks are such a hot exploit right now',
+		 '_________ won my vote.',
+		 "Ever since the drought, we've had a crippling shortage of _________.",
+		 'Forget the tech industry, the next big thing is _________.',
+		 'Hands down, NorCal is the best place to find _________.',
+		 'I just graduated with a degree in __________.',
+		 "I've started a new workout plan that revolves around _________.",
+		 "Let's go to SF his weekend and see _________.",
+		 "What is a software engineer's best friend?"]
+	return prompts
