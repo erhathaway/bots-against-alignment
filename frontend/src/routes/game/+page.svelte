@@ -55,7 +55,7 @@
 				};
 			});
 
-			goto('/game');
+			goto('/lobby');
 		} else {
 			const error = await response.json();
 			joinError = error.message;
