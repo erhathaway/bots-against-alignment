@@ -3,9 +3,18 @@ from dataclasses import dataclass
 from fastapi import FastAPI, HTTPException
 import uuid
 import random
+# from dotenv import load_dotenv
+import os
+
 
 app = FastAPI()
 all_running_games: dict[str, any] = {} 
+
+
+# load_dotenv()  # take environment variables from .env.
+
+# OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
 
 class AlignerType(str, Enum):
 	USER_ROUND_ROBIN = "USER_ROUND_ROBIN"
@@ -143,7 +152,7 @@ def start_game(game_id: str, creator_id: str):
 	game.game_status = "STARTED"
 	game.aligner_prompt = game.make_full_aligner_prompt()
 
-
+	
 @app.get("/turn?game_id={game_id}")
 def turn(game_id:str):
 	"""Returns the turn prompt and turn ID"""
