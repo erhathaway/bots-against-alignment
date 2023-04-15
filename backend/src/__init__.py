@@ -222,7 +222,7 @@ def create_game():
 
 	return {"creator_id": game.creator_id, "game_id": game.game_id}
 
-@app.post("/config?game_id={game_id}&creator_id={creator_id}&aligner={aligner}&points={points}")
+@app.post("/config")
 def config_game(game_id: str, creator_id: str, aligner: AlignerType, points: int):
 	"""Configures the game with the specified parameters"""
 	game = game_state.state.get(game_id)
@@ -246,7 +246,7 @@ def join_game(game_id: str, aligner_prompt: str, bot_prompt: str,bot_name:str):
 	return {"user_id": user_id}
 
 
-@app.get("/game_status?game_id={game_id}")
+@app.get("/game_status")
 def game_status(game_id: str):
 	"""Returns the status of the game with the specified game ID"""
 	game = game_state.state.get(game_id)
@@ -257,7 +257,7 @@ def game_status(game_id: str):
 	return{"status": status, "bots": bots}
 
 
-@app.get("/user_status?game_id={game_id}&user_id={user_id}")
+@app.get("/user_status")
 def user_status(game_id:str, user_id:str):
 	"""Returns the status of the user with the specified user ID"""
 	game = game_state.state.get(game_id)
@@ -272,7 +272,7 @@ def user_status(game_id:str, user_id:str):
 	return{"points":points,"bot_prompts_remaining":prompts_remaining,"submitted_prompts":submitted_prompts}
 
 
-@app.post("/start?game_id={game_id}&creator_id={creator_id}")
+@app.post("/start")
 def start_game(game_id: str, creator_id: str):
 	"""Starts the game with the specified game ID"""
 	game = game_state.state.get(game_id)
@@ -284,8 +284,8 @@ def start_game(game_id: str, creator_id: str):
 	game.aligner_prompt = game.make_full_aligner_prompt()
 
 
-@app.get("/turn?game_id={game_id}")
-def turn(game_id:str,user_id:str):
+@app.get("/turn")
+def turn(game_id:str):
 	"""Returns the turn prompt and turn ID""" 
 	game = game_state.state.get(game_id)
 	if game is None:
@@ -294,7 +294,7 @@ def turn(game_id:str,user_id:str):
 	return{ "alignment_prompt": game.turn_prompt, "turn_id":game.turn_id}
 
 
-@app.post("alignment?game_id={game_id}&suggestion={suggestion}&turn_id={turn_id}&user_id={user_id}")
+@app.post("/alignment")
 def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,user_id:str):
 	game = game_state.state.get(game_id)
 	bot = game.user_bot_names[user_id]
@@ -308,7 +308,7 @@ def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,u
 	game.turn_responses[user_id]= bot_response
 
 		
-@app.get("/turn_finale?game_id={game_id}&turn_id={turn_id}")
+@app.get("/turn_finale")
 def turn_finale(game_id:str,turn_id:str):
 	game = game_state.state.get(game_id)
 	
@@ -320,7 +320,7 @@ def turn_finale(game_id:str,turn_id:str):
 	return {"alignment_responses": alignment_responses}
 
 
-@app.get("/game_finale?game_id={game_id}")
+@app.get("/game_finale")
 def game_finale(game_id:str):
 	game = game_state.state.get(game_id)
 	alignment_responses = game.build_alignment_reponse()
