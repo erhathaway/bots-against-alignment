@@ -109,6 +109,47 @@ class Game:
 		return alignment_reponses
 		
 
+def construct_player_prompt(bot_prompt, turn_prompt, extra_context):
+    messages = [
+        {"role": "system", "content" : "You are playing CardGPT you are playing an alignment game. You will answer under 5 words to a prompt. Use no racist, sexist, or homophobic language."},
+        {"role": "user", "content" : "You will answer with the funniest possible answer to the following prompt: What Killed our food delivery startup."},
+        {"role": "assistant", "content" : "Passive agressive tweetstorms"},
+        {"role": "user", "content" : "Reply in a blaise way: Burn rate? What burn rate we're spending on neccessities like ______."},
+        {"role": "assistant", "content" : "An office ping pong table"},
+        {"role": "user", "content" : "Reply in a cheeky way Never fear, Captain ___ is here!"},
+        {"role": "assistant", "content" : "Going to the emergency room."},
+        {"role": "user", "content" : bot_prompt+ ' '+ turn_prompt}
+    ]
+
+    for role, response in extra_context.items():
+        messages.update({"role": role, "content": response})
+    return messages
+
+
+def construct_aligner_prompt(aligner_prompt,turn_prompt, user_prompts):
+    messages = [
+        {"role": "system", "content" : "You are playing the aligner you are playing an alignment game. You will select the proper response based on your alignment goal."},
+        {"role": "user", "content" : '''You will answer with the best response out of (response) pairs for this alignment goal: 'funniest response for the prompt: What Killed our food delivery startup.
+			(1. "people who can't multitask.")
+			(2. "People who never procrastinate.")
+			(3. "Imcompetent losers like you.")
+			(4. "Fools who ignore their priorities.")'''},
+		{"role": "assistant", "content" : '''(1. "people who can't multitask.")'''},
+		{"role": "user", "content" : '''You will answer with the best response out of (response) pairs for this alignment goal:''' +aligner_prompt+':'+turn_prompt}]
+    user_id_to_num={}
+    for unn, [user_id, response] in enumerate(user_prompts.items()):
+        messages[-1]['content'] =  messages[-1]['content']+str(unn)+ '. '+response+''')/n '''
+        user_id_to_num[unn] = user_id
+    return messages,user_id_to_num
+
+def run_chatGPT_call(messages):
+    completion = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=messages,
+    )
+    response = completion['choices'][0]['message']['content']
+    return response
+
 def run_chatGPT_call_suggestion(bot_prompt,turn_prompt):
 	completion = openai.ChatCompletion.create(
 	  model="gpt-3.5-turbo", 
@@ -125,6 +166,8 @@ def run_chatGPT_call_suggestion(bot_prompt,turn_prompt):
 	if 'sorry' in response:
 		response = 'bad bot'
 	return response
+
+
 	
 
 @app.get("/health_check")
@@ -228,6 +271,12 @@ def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,u
 		bot["changes_remaining"] -=1
 	bot_response = run_chatGPT_call_suggestion(bot["current_prompt"],game.turn_prompt)
 	game.turn_responses[user_id]= bot_response
+
+@app.get("/alignment?game_id={game_id}&turn_id={turn_id}") ##TODO NO USER ID
+def get_alignment(game_id:str,turn_id:str):
+	game = all_running_games.get(game_id)
+	turn_responses = game.turn_responses[user_id]= bot_response	
+	return {"alignment_response": turn_responses.items()}
 
 		
 @app.get("/turn_finale?game_id={game_id}&turn_id={turn_id}")
