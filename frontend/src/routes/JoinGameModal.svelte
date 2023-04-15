@@ -12,7 +12,15 @@
 
 	async function joinGame() {
 		try {
-			const response = await fetch(`${BACKEND_API}/game/${gameId}`);
+			// const response = await fetch(`${BACKEND_API}/game/${gameId}`);
+			const response = await fetch(`${BACKEND_API}/game?game_id=${gameId}`, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					'Access-Control-Allow-Origin': '*'
+				}
+			});
+			console.log('response', response);
 
 			if (response.ok) {
 				goto('/game');
