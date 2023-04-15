@@ -25,7 +25,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-all_running_games = game_state
 
 src_dir = Path(Path.cwd().anchor) / "backend" / "src"
 load_dotenv()  # take environment variables from .env.
@@ -60,7 +59,7 @@ class Game:
 	
 	def __init__(self):
 		self.game_id = uuid.uuid4()
-		all_running_games.state[self.game_id] = self
+		game_state.state[self.game_id] = self
 		self.creator_id = uuid.uuid4()
 		self.user_ids = []
 		self.user_aligner_prompts = {}
@@ -206,7 +205,7 @@ async def health_check():
 @app.get("/game/{game_id}")
 def get_game(game_id: str):
 	"""Returns a valid game object id if it exists, otherwise returns an error"""
-	game_id = all_running_games.state.get(game_id)
+	game_id = game_state.state.get(game_id)
 	if game_id is None:
 		raise HTTPException(status_code=404, detail="Game not found")
 	else:
@@ -216,14 +215,14 @@ def get_game(game_id: str):
 def create_game():
 	"""Creates a new game and returns the creator ID and game ID"""
 	game = Game()
-	all_running_games.state[game.game_id] = game
+	game_state.state[game.game_id] = game
 
 	return {"creator_id": game.creator_id, "game_id": game.game_id}
 
 @app.post("/config?game_id={game_id}&creator_id={creator_id}&aligner={aligner}&points={points}")
 def config_game(game_id: str, creator_id: str, aligner: AlignerType, points: int):
 	"""Configures the game with the specified parameters"""
-	game = all_running_games.state.get(game_id)
+	game = game_state.state.get(game_id)
 	if game is None:
 		raise HTTPException(status_code=404, detail="Game not found")
 	if game.creator_id != creator_id:
@@ -235,7 +234,7 @@ def config_game(game_id: str, creator_id: str, aligner: AlignerType, points: int
 @app.post("/join_game?game_id={game_id}&aligner_prompt={aligner_prompt}&bot_prompt={bot_prompt}&bot_name={bot_name}")
 def join_game(game_id: str, aligner_prompt: str, bot_name: str,bot_prompt:str):
 	"""Joins the game with the specified game ID and returns the user ID"""
-	game = all_running_games.state.get(game_id)
+	game = game_state.state.get(game_id)
 	if game is None:
 		raise HTTPException(status_code=404, detail="Game not found")
 	user_id = game.new_user()
@@ -247,7 +246,7 @@ def join_game(game_id: str, aligner_prompt: str, bot_name: str,bot_prompt:str):
 @app.get("/game_status?game_id={game_id}")
 def game_status(game_id: str):
 	"""Returns the status of the game with the specified game ID"""
-	game = all_running_games.state.get(game_id)
+	game = game_state.state.get(game_id)
 	if game is None:
 		raise HTTPException(status_code=404, detail="Game not found")
 	status = game.game_status
@@ -258,7 +257,7 @@ def game_status(game_id: str):
 @app.get("/user_status?game_id={game_id}&user_id={user_id}")
 def user_status(game_id:str, user_id:str):
 	"""Returns the status of the user with the specified user ID"""
-	game = all_running_games.state.get(game_id)
+	game = game_state.state.get(game_id)
 	if game is None:
 		raise HTTPException(status_code=404, detail="Game not found")
 	if user_id not in game.user_ids:
@@ -273,7 +272,7 @@ def user_status(game_id:str, user_id:str):
 @app.post("/start?game_id={game_id}&creator_id={creator_id}")
 def start_game(game_id: str, creator_id: str):
 	"""Starts the game with the specified game ID"""
-	game = all_running_games.state.get(game_id)
+	game = game_state.state.get(game_id)
 	if game is None:
 		raise HTTPException(status_code=404, detail="Game not found")
 	if game.creator_id != creator_id:
@@ -285,7 +284,7 @@ def start_game(game_id: str, creator_id: str):
 @app.get("/turn?game_id={game_id}")
 def turn(game_id:str,user_id:str):
 	"""Returns the turn prompt and turn ID""" 
-	game = all_running_games.state.get(game_id)
+	game = game_state.state.get(game_id)
 	if game is None:
 		raise HTTPException(status_code=404, detail="Game not found")
 	game.turn_prompt = game.turn_prompts.random.choice()
@@ -294,7 +293,7 @@ def turn(game_id:str,user_id:str):
 
 @app.post("alignment?game_id={game_id}&suggestion={suggestion}&turn_id={turn_id}&user_id={user_id}")
 def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,user_id:str):
-	game = all_running_games.state.get(game_id)
+	game = game_state.state.get(game_id)
 	bot = game.user_bot_names[user_id]
 	if suggestion=="":
 		pass
@@ -308,7 +307,7 @@ def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,u
 		
 @app.get("/turn_finale?game_id={game_id}&turn_id={turn_id}")
 def turn_finale(game_id:str,turn_id:str):
-	game = all_running_games.state.get(game_id)
+	game = game_state.state.get(game_id)
 	
 	messages,user_id_to_num = build_aligner_prompt(game.aligner_prompt,game.turn_prompt, game.turn_responses)
 	response = run_chatGPT_call(messages)
@@ -320,6 +319,6 @@ def turn_finale(game_id:str,turn_id:str):
 
 @app.get("/game_finale?game_id={game_id}")
 def game_finale(game_id:str):
-	game = all_running_games.state.get(game_id)
+	game = game_state.state.get(game_id)
 	alignment_responses = game.build_alignment_reponse()
 	return{"aligner_responses": alignment_responses ,"aligner_prompt":game.aligner_prompt}
