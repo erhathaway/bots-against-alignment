@@ -76,14 +76,16 @@
 		left: 0;
 		width: 100%;
 		height: 100%;
-		background-color: rgba(0, 0, 0, 0.5);
+		/* background-color: rgba(0, 0, 0, 0.5); */
+		background-color: rgb(0 255 51);
+
 		display: flex;
 		align-items: center;
 		justify-content: center;
 	}
 
 	.modal {
-		background-color: white;
+		/* background-color: white; */
 		/* padding: 2rem; */
 		border-radius: 8px;
 		max-width: 500px;
@@ -103,6 +105,9 @@
 		flex-direction: column;
 		align-items: center;
 		padding: 2rem;
+		border: 2px solid black;
+		background-color: white;
+		border-radius: 0.7rem;
 	}
 
 	input {
@@ -153,6 +158,7 @@
 		padding: 2rem;
 		border-bottom-left-radius: 8px;
 		border-bottom-right-radius: 8px;
+		border-radius: 7px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
