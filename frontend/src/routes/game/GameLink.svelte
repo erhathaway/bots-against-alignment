@@ -49,6 +49,7 @@ on:mouseout={() => (gameLinkHover = false)} -->
 		color: white;
 		color: rgb(123, 255, 0);
 		cursor: pointer;
+		box-shadow: 0px 10px 15px -3px rgba(0,0,0,0.1),0px 10px 15px -3px rgba(0,0,0,0.1);
 	}
 	
 	span:hover {
