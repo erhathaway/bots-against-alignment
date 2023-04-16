@@ -6,11 +6,8 @@
 	import { goto } from '$app/navigation'; // Ensure you have this import
 	import { browser } from '$app/environment'; // Import browser from $app/env
 	import Chat from './Chat.svelte';
-	import GameLink from './GameLink.svelte';
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
-	// import { spring } from 'svelte/motion';
 
-	// import animate from 'svelte/animate';
 
 	if (browser) {
 		$page.url.searchParams.set('game_id', $globalStore.game_id);
@@ -65,9 +62,7 @@
 
 <div id="screen" role="region" aria-label="Game">
 	<section id="left">
-		<section id="game-link">
-			<GameLink />
-		</section>
+
 		<section id="bot-name">
 			<div class="config-left">
 				<h2>Bot Name</h2>
@@ -143,12 +138,13 @@
 		margin: 0;
 		padding: 0;
 	}
-
+	
 	#left {
 		display: flex;
 		flex-direction: column;
 		/* flex-grow: 2; */
 		/* background-color: blue; */
+		overflow-y: scroll;
 		max-width: 50%;
 	}
 
@@ -222,6 +218,7 @@
 		height: 100%;
 		display: flex;
 		align-items: center;
+		margin-right: 1rem;
 		/* width: 100%; */
 		
 	}
@@ -239,4 +236,24 @@
 	.config-right textarea {
 		height: 10rem;
 	}
+
+	button {
+		font-size: 1.5rem;
+		font-weight: bold;
+		padding: 0.75rem 1.5rem;
+		margin: 0.5rem 0.5rem;
+		margin-top: 2rem;
+		margin-bottom: 3rem;
+		cursor: pointer;
+		border: 1px solid rgb(0, 0, 0);
+		background-color: rgb(0, 0, 0);
+		border-radius: 2rem;
+		color: white;
+		box-shadow: 0px 10px 15px -3px rgba(0,0,0,0.1);
+
+		}
+		button:hover {
+			background-color: rgb(123, 255, 0);
+			color: rgb(0, 0, 0);
+		}
 </style>
