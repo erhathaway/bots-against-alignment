@@ -27,7 +27,7 @@
 	<h1>Bots Against Alignment</h1>
 	<h2>
 		A turn-based multiplayer game. 
-		Users compete to align their bot to the massively unaligned Aligner
+		Users compete to align their bot to the Aligner
 	</h2>
 
 	{#if errorMessage}
