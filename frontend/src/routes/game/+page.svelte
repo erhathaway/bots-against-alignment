@@ -8,11 +8,20 @@
 	import Chat from './Chat.svelte';
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 	let gameLink;
+	// import { spring } from 'svelte/motion';
+
+	// import animate from 'svelte/animate';
+
+	let gameLinkHover = false;
 
 	if (browser) {
 		$page.url.searchParams.set('game_id', data.gameID);
+
+		gameLink = window.location.href //`${window.location.href}?game_id=${data.gameID}`; // Use window.location.href inside browser conditional
+		if (!gameLink.includes('game_id')) {
+			gameLink = `${gameLink}?game_id=${data.gameID}`;
+		}
 		goto(`?${$page.url.searchParams.toString()}`, { replaceState: true,  });
-		gameLink = `${window.location.href}?game_id=${data.gameID}`; // Use window.location.href inside browser conditional
 	}
 	let botName = '';
 	let alignerPrompt = '';
@@ -66,39 +75,28 @@
 
 <div id="screen" role="region" aria-label="Game">
 	<section id="left">
-		<section>
-			<h2>Game Link</h2>
-			<div>
-				<input type="text" readonly value={gameLink} aria-label="Game Link" />
-				<button on:click={() => copyToClipboard(gameLink)}>
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-						<path fill="none" d="M0 0h24v24H0z" />
-						<path
-							d="M8 12h8a4 4 0 0 1 4 4v1h2v3a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-3h2v-1a4 4 0 0 1 4-4zm0 2H6a2 2 0 0 0-2 2v1H1v3h22v-3h-3v-1a2 2 0 0 0-2-2h-2V5a1 1 0 0 1 1-1h3V1h2v3h3a1 1 0 0 1 1 1v9h-2V6h-3V5H8v9zm5-8h2v2h-2V6zM4 6h2v2H4V6z"
-						/>
-					</svg>
-					Copy
-				</button>
-			</div>
+		<section id="game-link">
+			<span
+				tabindex="0"
+				on:mouseover={() => (gameLinkHover = true)}
+				on:mouseout={() => (gameLinkHover = false)}
+				on:click={() => copyToClipboard(gameLink)}
+			>
+				<h2>Game # {data.gameID}</h2>
+				{#if gameLinkHover}
+					<button>
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+							<path fill="none" d="M0 0h24v24H0z" />
+							<path
+								d="M8 12h8a4 4 0 0 1 4 4v1h2v3a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-3h2v-1a4 4 0 0 1 4-4zm0 2H6a2 2 0 0 0-2 2v1H1v3h22v-3h-3v-1a2 2 0 0 0-2-2h-2V5a1 1 0 0 1 1-1h3V1h2v3h3a1 1 0 0 1 1 1v9h-2V6h-3V5H8v9zm5-8h2v2h-2V6zM4 6h2v2H4V6z"
+							/>
+						</svg>
+						Copy
+					</button>
+				{/if}
+			</span>
+			<div></div>
 			{#if errorField === 'gameLink'}
-				<p role="alert">{joinError}</p>
-			{/if}
-		</section>
-		<section>
-			<h2>Game ID</h2>
-			<div>
-				<input type="text" readonly value={data.gameID} aria-label="Game ID" />
-				<button on:click={() => copyToClipboard(data.gameID)}>
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-						<path fill="none" d="M0 0h24v24H0z" />
-						<path
-							d="M8 12h8a4 4 0 0 1 4 4v1h2v3a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-3h2v-1a4 4 0 0 1 4-4zm0 2H6a2 2 0 0 0-2 2v1H1v3h22v-3h-3v-1a2 2 0 0 0-2-2h-2V5a1 1 0 0 1 1-1h3V1h2v3h3a1 1 0 0 1 1 1v9h-2V6h-3V5H8v9zm5-8h2v2h-2V6zM4 6h2v2H4V6z"
-						/>
-					</svg>
-					Copy
-				</button>
-			</div>
-			{#if errorField === 'gameID'}
 				<p role="alert">{joinError}</p>
 			{/if}
 		</section>
@@ -187,4 +185,19 @@
 		max-width: 50%;
 		border-left: 2px solid black;
 	}
+
+	#game-link {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		border: 2px solid black;
+
+	}
+
+	#game-link h2 {
+		font-size: 0.8rem;
+	}
+	#game-link h2:host(:hover) {
+	font-weight: bold;
+}
 </style>
