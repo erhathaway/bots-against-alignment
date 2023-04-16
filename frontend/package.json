@@ -36,6 +36,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"gun": "^0.2020.1239",
 		"svelte-local-storage-store": "^0.4.0"
 	}
 }

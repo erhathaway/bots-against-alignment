@@ -40,7 +40,14 @@ export async function load({ params, fetch,  url}) {
 
             // goto('/', { replaceState: true, state: { errorMessage } });
         } else {
-            globalStore.set({ game_id: gameID, creator_id: null, user_id: null })
+            globalStore.update((data) => {
+                const oldGameID = data.game_id;
+                if (oldGameID !== gameID) {
+                    return { ...data, game_id: gameID, creator_id: null, user_id: null };
+                } else {
+                    return data;
+                }
+            });
         }
     } else {
         console.log('NO GAME ID FOUND')

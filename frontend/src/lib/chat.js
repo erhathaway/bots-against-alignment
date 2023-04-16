@@ -1,4 +1,5 @@
 import GUN from 'gun';
+import { writable } from 'svelte/store';
 
 
 class Chat {
@@ -7,25 +8,44 @@ class Chat {
         this.messages = [];
         this.gameId = null;
         this.botName = null;
+        this.subscribers = [];
+        this.lastMessage = null;
     }
 
     joinGame(gameID, botName) {
         this.gameId = gameID;
         this.botName = botName;
-        this.sendMessage('joined the game');
-        this.gun.get('game').get(gameID).get('messages').on((data, key) => {
+        this.gun.get(gameID).on((data, key) => {
+            console.log('GUN MESSAGE', data, 'key', key);
+            // if (key === this.lastMessage) {
+            //     return;
+            // }
+            this.lastMessage = key;
             this.messages.push(data);
+
+            this.subscribers.forEach((callback) => callback(data, this.messages));
+            
         });
+        this.sendMessage('joined the game');
     }
+
+    subscribe(callback) {
+        this.subscribers.push(callback);
+        console.log('SUBSCRIBING', this.subscribers.length)
+
+    }
+
 
     leaveGame() {
         this.sendMessage('left the game');
-        this.gun.get('game').get(this.gameId).get('messages').off();
+        this.gun.get(this.gameId).off();
+        this.subscribers = [];
     }
 
     
     sendMessage(message) {
-        this.gun.get('game').get(this.gameId).get('messages').set({
+        // console.log('setting message', message, this.botName, this.gameId, )
+        this.gun.get(this.gameId).put({
             message,
             timestamp: Date.now(),
             botName: this.botName,
