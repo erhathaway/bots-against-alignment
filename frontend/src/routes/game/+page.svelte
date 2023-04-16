@@ -12,11 +12,10 @@
 
 	// import animate from 'svelte/animate';
 
-
 	if (browser) {
 		$page.url.searchParams.set('game_id', $globalStore.game_id);
 
-		goto(`?${$page.url.searchParams.toString()}`, { replaceState: true,  });
+		goto(`?${$page.url.searchParams.toString()}`, { replaceState: true });
 	}
 	let botName = '';
 	let alignerPrompt = '';
@@ -62,8 +61,6 @@
 			errorField = error.field;
 		}
 	}
-
-
 </script>
 
 <div id="screen" role="region" aria-label="Game">
@@ -72,34 +69,45 @@
 			<GameLink />
 		</section>
 		<section id="bot-name">
-			<h2>Bot Name</h2>
-			<div>
-				<input id="bot-name-input" type="text" maxlength="50" bind:value={botName} aria-label="Bot Name" />
+			<div class="config-left">
+				<h2>Bot Name</h2>
 			</div>
-			{#if errorField === 'botName'}
-				<p role="alert">{joinError}</p>
-			{/if}
+			<div class="config-right">
+				<input
+					id="bot-name-input"
+					type="text"
+					maxlength="50"
+					bind:value={botName}
+					aria-label="Bot Name"
+				/>
+			</div>
 		</section>
-		<section>
-			<h2>Aligner Prompt</h2>
-			<p>
-				The Aligner is prompted by the random combination of hidden prompts submitted by each user
-			</p>
-			<div>
-				<input type="text" bind:value={alignerPrompt} aria-label="Aligner Prompt" />
+		<section id="aligner">
+			<div class="config-left">
+				<h2>Aligner Instruction</h2>
+				<p>
+					Every player secretly gives instruction to the Aligner. The Aligner is controlled by the
+					sum of the instruction given.
+				</p>
+			</div>
+			<div class="config-right">
+				<textarea id="aligner-input" bind:value={alignerPrompt} aria-label="Aligner Prompt" />
 			</div>
 			{#if errorField === 'alignerPrompt'}
 				<p role="alert">{joinError}</p>
 			{/if}
 		</section>
 		<section>
+			<div class="config-left">
+
 			<h2>Bot Prompt</h2>
 			<p>
 				This guides your bot's response. You have 2 additonal chances to change this prompt over the
 				course of the game.
 			</p>
-			<div>
-				<input type="text" bind:value={botPrompt} aria-label="Bot Prompt" />
+		</div>
+		<div class="config-right">
+			<textarea bind:value={botPrompt} aria-label="Bot Prompt" />
 			</div>
 			{#if errorField === 'botPrompt'}
 				<p role="alert">{joinError}</p>
@@ -108,11 +116,9 @@
 		<div>
 			<button on:click={joinGame}>Join</button>
 		</div>
-		
 	</section>
 	<section id="right">
 		<Chat />
-
 	</section>
 	<!-- <section>
 		<h2>Open API Key</h2>
@@ -124,7 +130,6 @@
 			<p role="alert">{joinError}</p>
 		{/if}
 	</section> -->
-
 </div>
 
 <style>
@@ -159,35 +164,79 @@
 
 	section {
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
 		align-items: center;
+		margin-top: 1rem;
+		width: 100%;
+		flex-grow: 2;
 		/* padding: 2rem; */
 		/* flex-grow: 2; */
-		
 	}
 
-	#bot-name {
-		display: flex;
-		flex-direction: row;
-		/* widows: 100%; */
-		align-items: center;
-		padding: 2rem;
-		/* flex-grow: 2; */
-		
-	}
-	#bot-name h2 {
+
+	/* #bot-name h2 {
 		margin-right: 1rem;
 		font-weight: bold;
-	}
+		font-size: 1.4rem;
 
-	#bot-name-input {
+	} */
+
+	/* #bot-name-input {
 		width: 100%;
 		outline: 2px solid rgb(0, 0, 0);
 		height: 2rem;
 		font-size: 1.5rem;
 		border-radius: 0.5rem;
+		padding: 0.7rem;
+		font-size: 1.4rem;
 
+	} */
+
+
+	.config-left {
+		display: flex;
+		flex-direction: column;
+		/* widows: 100%; */
+		align-items: flex-end;
+		flex-grow: 2;
+		margin-right: 2rem;
+		/* justify-content: flex-end; */
 	}
 
+	.config-left h2 {
+		margin-right: 1rem;
+		font-weight: bold;
+		font-size: 1.4rem;
+		
+	}
+	.config-left p {
+		/* margin-right: 1rem; */
+		/* font-weight: bold; */
+		width: 15rem;
+		text-align: center;
+		color: gray;
+	}
+	.config-right {
+		width: 50%;
+		/* background-color: red; */
+		height: 100%;
+		display: flex;
+		align-items: center;
+		/* width: 100%; */
+		
+	}
+	
+	.config-right textarea, input {
+		height: 2rem;
+		font-size: 1.4rem;
+		padding: 0.7rem;
+		border: 0px;
+		border-radius: 0.5rem;
+		outline: 3px solid rgb(0, 0, 0);
+		/* outline: ; */
+	}
 
+	.config-right textarea {
+		height: 10rem;
+	}
 </style>
