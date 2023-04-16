@@ -6,21 +6,16 @@
 	import { goto } from '$app/navigation'; // Ensure you have this import
 	import { browser } from '$app/environment'; // Import browser from $app/env
 	import Chat from './Chat.svelte';
+	import GameLink from './GameLink.svelte';
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
-	let gameLink;
 	// import { spring } from 'svelte/motion';
 
 	// import animate from 'svelte/animate';
 
-	let gameLinkHover = false;
 
 	if (browser) {
-		$page.url.searchParams.set('game_id', data.gameID);
+		$page.url.searchParams.set('game_id', $globalStore.game_id);
 
-		gameLink = window.location.href //`${window.location.href}?game_id=${data.gameID}`; // Use window.location.href inside browser conditional
-		if (!gameLink.includes('game_id')) {
-			gameLink = `${gameLink}?game_id=${data.gameID}`;
-		}
 		goto(`?${$page.url.searchParams.toString()}`, { replaceState: true,  });
 	}
 	let botName = '';
@@ -68,42 +63,18 @@
 		}
 	}
 
-	function copyToClipboard(text) {
-		navigator.clipboard.writeText(text);
-	}
+
 </script>
 
 <div id="screen" role="region" aria-label="Game">
 	<section id="left">
 		<section id="game-link">
-			<span
-				tabindex="0"
-				on:mouseover={() => (gameLinkHover = true)}
-				on:mouseout={() => (gameLinkHover = false)}
-				on:click={() => copyToClipboard(gameLink)}
-			>
-				<h2>Game # {data.gameID}</h2>
-				{#if gameLinkHover}
-					<button>
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-							<path fill="none" d="M0 0h24v24H0z" />
-							<path
-								d="M8 12h8a4 4 0 0 1 4 4v1h2v3a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-3h2v-1a4 4 0 0 1 4-4zm0 2H6a2 2 0 0 0-2 2v1H1v3h22v-3h-3v-1a2 2 0 0 0-2-2h-2V5a1 1 0 0 1 1-1h3V1h2v3h3a1 1 0 0 1 1 1v9h-2V6h-3V5H8v9zm5-8h2v2h-2V6zM4 6h2v2H4V6z"
-							/>
-						</svg>
-						Copy
-					</button>
-				{/if}
-			</span>
-			<div></div>
-			{#if errorField === 'gameLink'}
-				<p role="alert">{joinError}</p>
-			{/if}
+			<GameLink />
 		</section>
-		<section>
+		<section id="bot-name">
 			<h2>Bot Name</h2>
 			<div>
-				<input type="text" maxlength="50" bind:value={botName} aria-label="Bot Name" />
+				<input id="bot-name-input" type="text" maxlength="50" bind:value={botName} aria-label="Bot Name" />
 			</div>
 			{#if errorField === 'botName'}
 				<p role="alert">{joinError}</p>
@@ -186,18 +157,37 @@
 		border-left: 2px solid black;
 	}
 
-	#game-link {
+	section {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		/* padding: 2rem; */
+		/* flex-grow: 2; */
+		
+	}
+
+	#bot-name {
 		display: flex;
 		flex-direction: row;
-		justify-content: space-between;
-		border: 2px solid black;
+		/* widows: 100%; */
+		align-items: center;
+		padding: 2rem;
+		/* flex-grow: 2; */
+		
+	}
+	#bot-name h2 {
+		margin-right: 1rem;
+		font-weight: bold;
+	}
+
+	#bot-name-input {
+		width: 100%;
+		outline: 2px solid rgb(0, 0, 0);
+		height: 2rem;
+		font-size: 1.5rem;
+		border-radius: 0.5rem;
 
 	}
 
-	#game-link h2 {
-		font-size: 0.8rem;
-	}
-	#game-link h2:host(:hover) {
-	font-weight: bold;
-}
+
 </style>
