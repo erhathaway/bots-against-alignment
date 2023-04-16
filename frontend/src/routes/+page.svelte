@@ -26,8 +26,8 @@
 <main>
 	<h1>Bots Against Alignment</h1>
 	<h2>
-		A turn-based multiplayer game where users compete to align their bot to the massively unaligned
-		Aligner
+		A turn-based multiplayer game. 
+		Users compete to align their bot to the massively unaligned Aligner
 	</h2>
 
 	{#if errorMessage}
@@ -47,26 +47,54 @@
 </main>
 
 <style>
+	main {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		font: 1.5rem/1.5 'Roboto', sans-serif;
+		height: 100vh;
+	}
 	h1 {
 		font-size: 3rem;
 		margin-bottom: 1rem;
+		color: rgb(0, 0, 0);
 	}
 
 	h2 {
-		font-size: 2rem;
+		margin-top: 3rem;
+		font-size: 1.4rem;
+		max-width: 40rem;
 		margin-bottom: 2rem;
+		text-align: center;
+		padding: 0 6rem;
+		font-weight: 100;
+		color: #6c757d;
 	}
 
 	button {
 		font-size: 1.5rem;
+		font-weight: bold;
 		padding: 0.75rem 1.5rem;
-		margin: 0 0.5rem;
+		margin: 0.5rem 0.5rem;
 		cursor: pointer;
-	}
+		border: 1px solid rgb(0, 0, 0);
+		background-color: rgb(0, 0, 0);
+		border-radius: 2rem;
+		color: white;
+		box-shadow: 0px 10px 15px -3px rgba(0,0,0,0.1);
+
+		}
+		button:hover {
+			background-color: rgb(123, 255, 0);
+			color: rgb(0, 0, 0);
+		}
 
 	.buttons-container {
 		display: flex;
 		justify-content: center;
+		flex-direction: column;
+		margin-top: 1rem;
 	}
 
 	.error-message {

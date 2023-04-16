@@ -6,9 +6,17 @@
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 
 	let gameId = '';
+	let oldgameId = '';
 	let showError = false;
 
 	const dispatch = createEventDispatcher();
+
+	$: {
+		if (gameId !== oldgameId) {
+			showError = false;
+			oldgameId = gameId;
+		}
+	}
 
 	async function joinGame() {
 		try {
@@ -42,7 +50,9 @@
 	<div class="modal" on:click={(e) => e.stopPropagation()}>
 		<div class="join-game-container">
 			<p>Enter Game ID</p>
-			<input type="text" bind:value={gameId} placeholder="Game ID" />
+			<input type="text" bind:value={gameId} placeholder="45210b0a-12cc-4be9-9bd3-69896b58dfad" />
+			<span class="subtext">This is a UUID that the game creator should share with you</span>
+
 			<button
 				role="button"
 				on:click={joinGame}
@@ -50,10 +60,12 @@
 					if (e.keyCode === 13) joinGame();
 				}}>Join Game</button
 			>
-			{#if showError}
-				<p class="error">Invalid Game ID. Please try again.</p>
-			{/if}
 		</div>
+		{#if showError}
+			<section>
+				<p class="error">Invalid Game ID. Please try again.</p>
+			</section>
+		{/if}
 	</div>
 </div>
 
@@ -72,14 +84,15 @@
 
 	.modal {
 		background-color: white;
-		padding: 2rem;
+		/* padding: 2rem; */
 		border-radius: 8px;
 		max-width: 500px;
 	}
 
 	h3 {
-		margin-top: 0;
+		padding-top: 2rem;
 		margin-bottom: 1rem;
+		padding-left: 5rem;
 	}
 
 	button {
@@ -89,12 +102,20 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
+		padding: 2rem;
 	}
 
 	input {
 		font-size: 1rem;
 		padding: 0.5rem;
 		margin-bottom: 1rem;
+		width: 100%;
+		max-width: 20rem;
+		/* border: 1px solid rgb(0, 0, 0); */
+		outline: 2px solid rgb(0, 0, 0);
+		border: 1px solid black;
+		border-radius: 0.5rem;
+		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
 	}
 
 	button {
@@ -102,8 +123,65 @@
 		padding: 0.5rem 1rem;
 		cursor: pointer;
 	}
+	button {
+		font-size: 1.5rem;
+		font-weight: bold;
+		padding: 0.75rem 1.5rem;
+		margin: 0.5rem 0.5rem;
+		cursor: pointer;
+		border: 1px solid rgb(0, 0, 0);
+		background-color: rgb(0, 0, 0);
+		border-radius: 2rem;
+		color: white;
+		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+	}
 
+	button:hover {
+		background-color: rgb(123, 255, 0);
+		color: rgb(0, 0, 0);
+	}
 	.error {
-		color: red;
+		/* color: red; */
+		color: rgb(123, 255, 0);
+	}
+
+	section {
+		margin-top: 1rem;
+		height: 3rem;
+		/* width: 100%; */
+		background-color: black;
+		padding: 2rem;
+		border-bottom-left-radius: 8px;
+		border-bottom-right-radius: 8px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.subtext {
+		font-size: 0.8rem;
+		color: grey;
+		margin-bottom: 0.5rem;
+	}
+
+	::-webkit-input-placeholder {
+		color: #edc5c5;
+		opacity: 1 !important; /* for older chrome versions. may no longer apply. */
+	}
+
+	:-moz-placeholder {
+		/* Firefox 18- */
+		color: #edc5c5;
+		opacity: 1 !important;
+	}
+
+	::-moz-placeholder {
+		/* Firefox 19+ */
+		color: #edc5c5;
+		opacity: 1 !important;
+	}
+
+	:-ms-input-placeholder {
+		color: #edc5c5;
 	}
 </style>
