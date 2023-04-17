@@ -14,9 +14,9 @@
 <div id="lobby">
 
     {#if $globalStore.creator_id === null}
-	<p>Waiting for creator to start game<LoadingCommas /></p>
+	<p class="non-creator">Waiting for creator to start game<LoadingCommas /></p>
     {:else}
-	<p>Invite others to join and then click the Start Game button</p>
+	<p class="creator">Invite others to join</p> <p class="creator highlight">and then</p> 
 	<button on:click={startGame} disabled={$globalStore.is_game_started}>
 		Start Game
 	</button>
@@ -31,11 +31,25 @@
         justify-content: center;
         height: 100%;
     }
-    p {
+    p.non-creator {
         font-size: 3rem;
         width: 20rem;
 		text-align: center;
 		color: gray;
+    }
+    p.creator {
+        font-size: 2rem;
+        width: 30rem;
+		text-align: center;
+		color: black;
+        font-weight: bold;
+
+    }
+
+    p.highlight {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: gray;
     }
     button {
 		font-size: 1.5rem;
