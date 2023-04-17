@@ -209,18 +209,36 @@ def run_random_aligner_prompt():
 	word_site = "https://www.mit.edu/~ecprice/wordlist.10000"
 	response = requests.get(word_site)
 	WORDS = response.content.splitlines()
-	bot_name = random.choice(WORDS).decode("utf-8")+ ' , ' + random.choice(WORDS).decode("utf-8"
+	bot_name = random.choice(WORDS).decode("utf-8")+ ' , ' + random.choice(WORDS).decode("utf-8")
 
 	completion = openai.ChatCompletion.create(
 		model="gpt-3.5-turbo", 
 		messages = [{"role": "system", "content" : "You will be the judge of a game of cards against humanity  come up with a consistent rule you will use to judge related to concepts related to a single word make it under 10 words. If the word is offenisve replace it with 'funny'. Use no racist, sexist, or homophobic language. "},
 		{"role": "user", "content" : "Your words are theoretical , posters."},
-		{"role": "assistant", "content" : "The most \"philosophical\" and abstract answer will win in this game.",},
+		{"role": "assistant", "content" : "The most \"philosophical\" and abstract answer will win in this game."},
 		{"role": "user", "content" : "You words are"+bot_name}]
 		)
 	response = completion['choices'][0]['message']['content']
 	return response
 
+def run_random_bot_prompt():
+
+	word_site = "https://www.mit.edu/~ecprice/wordlist.10000"
+	response = requests.get(word_site)
+	WORDS = response.content.splitlines()
+	bot_name = random.choice(WORDS).decode("utf-8")+ ' , ' + random.choice(WORDS).decode("utf-8")
+
+	completion = openai.ChatCompletion.create(
+		  model="gpt-3.5-turbo", 
+		  messages = [{"role": "system", "content" : "You will be playing of a game of cards against humanity come up with a consistent rule you will use to pick a few words to reply to  prompts. Make it related to concepts related to two words I'm giving you. Make it under 20 words. If the word is offenisve replace it with 'funny'. Use no racist, sexist, or homophobic language. "},
+		{"role": "user", "content" : "Your words are cowboy , truth."},
+		{"role": "assistant", "content" : "I will respond with super honest responses in language from the old west."},
+		{"role": "user", "content" : "Your words are we , flex."},
+		{"role": "assistant", "content" : "I will respond in the third person like a muscle bro."},
+		{"role": "user", "content" : "You words are"+bot_name}]
+		)
+	response = completion['choices'][0]['message']['content']
+	return response
 
 
 
@@ -385,7 +403,14 @@ def random_bot_name(game_id:str):
 def random_aligner_prompt(game_id:str):
 	game = game_state.state.get(game_id)
 	aligner_prompt = run_random_aligner_prompt():
-	return {"aligner_prompt": game.aligner_prompt, "game_id": game_id}
+	return {"aligner_prompt": aligner_prompt, "game_id": game_id}
+	
+
+@app.get('/randomize_bot_prompt')
+def random_aligner_prompt(game_id:str):
+	game = game_state.state.get(game_id)
+	bot_prompt = run_random_bot_prompt():
+	return {"aligner_prompt": bot_prompt, "game_id": game_id}
 
 
 def get_all_csv_data():
