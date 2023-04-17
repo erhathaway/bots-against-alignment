@@ -18,6 +18,10 @@
 
 	let botPrompt = '';
 
+	$: {
+		botPrompt = $globalStore.current_bot_prompt;
+	}
+
 
 	async function fetchData() {
 		const response = await fetch(`${BACKEND_API}/turn?game_id=${game_id}&creator_id=${user_id}`);
