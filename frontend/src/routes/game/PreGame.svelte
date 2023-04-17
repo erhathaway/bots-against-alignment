@@ -4,6 +4,7 @@
 	import { browser } from '$app/environment'; // Import browser from $app/env
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 
+	export let data;
 
 	let botName = '';
 	let alignerPrompt = '';
