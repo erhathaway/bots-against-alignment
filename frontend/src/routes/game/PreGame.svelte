@@ -14,67 +14,67 @@
 	let errorField = '';
 
 	let errorMessages = {
-    botName: '',
-    alignerPrompt: '',
-    botPrompt: ''
-  };
+		botName: '',
+		alignerPrompt: '',
+		botPrompt: ''
+	};
 
-  $: {
-	if (botName !== '' && document) {
-		document.getElementById('bot-name-input').style.outlineColor = 'black';
-		errorMessages.botName = '';
-	}
-	if (alignerPrompt !== '' && document) {
-		document.getElementById('aligner-input').style.outlineColor = 'black';
-		errorMessages.alignerPrompt = '';
-	}
-	if (botPrompt !== '' && document) {
-		document.getElementById('bot-prompt-input').style.outlineColor = 'black';
-		errorMessages.botPrompt = '';
-  }
-}
-
-  function validateInputs() {
-    let isValid = true;
-
-	if (!browser) {
-		isValid = false;
+	$: {
+		if (botName !== '' && document) {
+			document.getElementById('bot-name-input').style.outlineColor = 'black';
+			errorMessages.botName = '';
+		}
+		if (alignerPrompt !== '' && document) {
+			document.getElementById('aligner-input').style.outlineColor = 'black';
+			errorMessages.alignerPrompt = '';
+		}
+		if (botPrompt !== '' && document) {
+			document.getElementById('bot-prompt-input').style.outlineColor = 'black';
+			errorMessages.botPrompt = '';
+		}
 	}
 
-    if (botName.trim() === '') {
-      errorMessages.botName = 'Missing';
-      document.getElementById('bot-name-input').style.outlineColor = 'yellow';
-      isValid = false;
-    } else {
-      errorMessages.botName = '';
-      document.getElementById('bot-name-input').style.outlineColor = 'black';
-    }
+	function validateInputs() {
+		let isValid = true;
 
-    if (alignerPrompt.trim() === '') {
-      errorMessages.alignerPrompt = 'Missing';
-      document.getElementById('aligner-input').style.outlineColor = 'yellow';
-      isValid = false;
-    } else {
-      errorMessages.alignerPrompt = '';
-      document.getElementById('aligner-input').style.outlineColor = 'black';
-    }
+		if (!browser) {
+			isValid = false;
+		}
 
-    if (botPrompt.trim() === '') {
-      errorMessages.botPrompt = 'Missing';
-      document.getElementById('bot-prompt-input').style.outlineColor = 'yellow';
-      isValid = false;
-    } else {
-      errorMessages.botPrompt = '';
-      document.getElementById('bot-prompt-input').style.outlineColor = 'black';
-    }
+		if (botName.trim() === '') {
+			errorMessages.botName = 'Missing';
+			document.getElementById('bot-name-input').style.outlineColor = 'yellow';
+			isValid = false;
+		} else {
+			errorMessages.botName = '';
+			document.getElementById('bot-name-input').style.outlineColor = 'black';
+		}
 
-    return isValid;
-  }
+		if (alignerPrompt.trim() === '') {
+			errorMessages.alignerPrompt = 'Missing';
+			document.getElementById('aligner-input').style.outlineColor = 'yellow';
+			isValid = false;
+		} else {
+			errorMessages.alignerPrompt = '';
+			document.getElementById('aligner-input').style.outlineColor = 'black';
+		}
+
+		if (botPrompt.trim() === '') {
+			errorMessages.botPrompt = 'Missing';
+			document.getElementById('bot-prompt-input').style.outlineColor = 'yellow';
+			isValid = false;
+		} else {
+			errorMessages.botPrompt = '';
+			document.getElementById('bot-prompt-input').style.outlineColor = 'black';
+		}
+
+		return isValid;
+	}
 
 	async function joinGame() {
 		if (!validateInputs()) {
-      return;
-    }
+			return;
+		}
 		const url = `${BACKEND_API}/join_game?game_id=${data.gameID}&aligner_prompt=${alignerPrompt}&bot_name=${botName}&bot_prompt=${botPrompt}`;
 		console.log('*** join game', url);
 
@@ -108,61 +108,67 @@
 	}
 </script>
 
-	<!-- <section id="left"> -->
-		<section id="bot-name">
-			<div class="config-left">
-			  <h2>Bot Name</h2>
-			</div>
-			<div class="config-right">
-			  <input
-				id="bot-name-input"
-				type="text"
-				maxlength="50"
-				bind:value={botName}
-				aria-label="Bot Name"
-			  />
-			  {#if errorMessages.botName}
-				<p style="color:red">{errorMessages.botName}</p>
-			  {/if}
-			</div>
-		  </section>
-		<section id="aligner">
-			<div class="config-left">
-				<h2>Aligner Instruction</h2>
-				<p>
-					Every player secretly gives instruction to the Aligner. The Aligner is controlled by the
-					sum of the instruction given.
-				</p>
-			</div>
-			<div class="config-right">
-				<textarea id="aligner-input" bind:value={alignerPrompt} aria-label="Aligner Prompt" />
-				{#if errorMessages.alignerPrompt}
-				  <p style="color:red">{errorMessages.alignerPrompt}</p>
-				{/if}
-			</div>
-		</section>
-		<section>
-			<div class="config-left">
-				<h2>Bot Prompt</h2>
-				<p>
-					This guides your bot's response. You have 2 additonal chances to change this prompt over
-					the course of the game.
-				</p>
-			</div>
-			<div class="config-right">
-				<textarea id="bot-prompt-input" bind:value={botPrompt} aria-label="Bot Prompt" />
-				{#if errorMessages.botPrompt}
-				  <p style="color:red">{errorMessages.botPrompt}</p>
-				{/if}
-			  </div>
-		</section>
-		<div>
-			<button on:click={joinGame}>Join</button>
-		</div>
-	<!-- </section> -->
+<!-- <section id="left"> -->
+<section id="bot-name">
+	<div class="config-left">
+		<h2>Bot Name</h2>
+	</div>
+	<div class="config-right">
+		<input
+			id="bot-name-input"
+			type="text"
+			maxlength="50"
+			bind:value={botName}
+			aria-label="Bot Name"
+		/>
+		{#if errorMessages.botName}
+			<p style="color:red">{errorMessages.botName}</p>
+		{/if}
+	</div>
+</section>
+<section id="aligner">
+	<div class="config-left">
+		<h2>Aligner Instruction</h2>
+		<p>
+			Every player secretly gives instruction to the Aligner. The Aligner is controlled by the sum
+			of the instruction given.
+		</p>
+	</div>
+	<div class="config-right">
+		<textarea id="aligner-input" bind:value={alignerPrompt} aria-label="Aligner Prompt" />
+		{#if errorMessages.alignerPrompt}
+			<p style="color:red">{errorMessages.alignerPrompt}</p>
+		{/if}
+	</div>
+</section>
+<section>
+	<div class="config-left">
+		<h2>Bot Prompt</h2>
+		<p>
+			This guides your bot's response. You have 2 additonal chances to change this prompt over the
+			course of the game.
+		</p>
+	</div>
+	<div class="config-right">
+		<textarea id="bot-prompt-input" bind:value={botPrompt} aria-label="Bot Prompt" />
+		{#if errorMessages.botPrompt}
+			<p style="color:red">{errorMessages.botPrompt}</p>
+		{/if}
+	</div>
+</section>
+<div id="button-container">
+	<button on:click={joinGame}>Join</button>
+</div>
 
+<!-- </section> -->
 
 <style>
+	#button-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+	}
 	#screen {
 		display: flex;
 		flex-direction: row;
@@ -171,9 +177,6 @@
 		margin: 0;
 		padding: 0;
 	}
-
-
-
 
 	section {
 		display: flex;

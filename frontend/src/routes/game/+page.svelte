@@ -41,7 +41,7 @@
 	import Chat from './Chat.svelte';
 	import PreGame1 from './PreGame.svelte';
 	import PreGame2 from './Lobby.svelte';
-	import PreGame3 from './PreGame.svelte';
+	import PreGame3 from './AlignerSays.svelte';
 	import { fly } from 'svelte/transition'; // New import
 
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
@@ -59,7 +59,7 @@
 	const customFly = (direction) => ({
 		delay: direction === 'in' ? 300 : 0,
 		duration: 300,
-		easing: t => --t * t * t + 1,
+		easing: (t) => --t * t * t + 1,
 		y: direction === 'in' ? -100 : 100
 	});
 
@@ -104,18 +104,18 @@
 <div id="screen" role="region" aria-label="Game">
 	<section id="left">
 		{#if currentPreGame === 1}
-			<div in:fly="{customFly('in')}" out:fly="{customFly('out')}">
-				<PreGame1 data={data} />
+			<div in:fly={customFly('in')} out:fly={customFly('out')}>
+				<PreGame3 {data} />
 			</div>
 		{/if}
 		{#if currentPreGame === 2}
-			<div in:fly="{customFly('in')}" out:fly="{customFly('out')}">
-				<PreGame2 data={data} />
+			<div in:fly={customFly('in')} out:fly={customFly('out')}>
+				<PreGame2 {data} />
 			</div>
 		{/if}
 		{#if currentPreGame === 3}
-			<div in:fly="{customFly('in')}" out:fly="{customFly('out')}">
-				<PreGame3 data={data} />
+			<div in:fly={customFly('in')} out:fly={customFly('out')}>
+				<PreGame1 {data} />
 			</div>
 		{/if}
 	</section>
