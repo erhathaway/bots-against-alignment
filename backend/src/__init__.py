@@ -407,10 +407,10 @@ def random_aligner_prompt(game_id:str):
 	
 
 @app.get('/randomize_bot_prompt')
-def random_aligner_prompt(game_id:str):
+def random_bot_prompt(game_id:str):
 	game = game_state.state.get(game_id)
 	bot_prompt = run_random_bot_prompt()
-	return {"aligner_prompt": bot_prompt, "game_id": game_id}
+	return {"bot_prompt": bot_prompt, "game_id": game_id}
 
 
 def get_all_csv_data():
