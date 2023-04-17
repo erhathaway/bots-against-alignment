@@ -12,6 +12,7 @@ import openai
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .game_state import game_state
+import requests
 
 app = FastAPI()
 
@@ -171,6 +172,7 @@ def run_chatGPT_call(messages):
     response = completion['choices'][0]['message']['content']
     return response
 
+
 def run_chatGPT_call_suggestion(bot_prompt,turn_prompt):
 	completion = openai.ChatCompletion.create(
 	  model="gpt-3.5-turbo", 
@@ -187,6 +189,39 @@ def run_chatGPT_call_suggestion(bot_prompt,turn_prompt):
 	if 'sorry' in response:
 		response = 'bad bot'
 	return response
+def run_random_bot_name_prompt():
+	word_site = "https://www.mit.edu/~ecprice/wordlist.10000"
+	response = requests.get(word_site)
+	WORDS = response.content.splitlines()
+	bot_name = random.choice(WORDS).decode("utf-8")+ ' ' + random.choice(WORDS).decode("utf-8") + ' ' + random.choice(WORDS).decode("utf-8")
+
+	completion = openai.ChatCompletion.create(
+		  model="gpt-3.5-turbo", 
+		  messages = [{"role": "system", "content" : "You are NameGPT, you will come up with funny names based on three words  make it like the name of a terrible startup with vaguely non real words. Use no racist, sexist, or homophobic language."},
+			{"role": "user", "content" : "Your three words are dog, fish, truth."},
+			{"role": "assistant", "content" : "[CaninAquEataly]"},
+			{"role": "user", "content" : "You three words are:"+ bot_name}]
+			)
+	response = completion['choices'][0]['message']['content']
+	return response
+
+def run_random_aligner_prompt():
+	word_site = "https://www.mit.edu/~ecprice/wordlist.10000"
+	response = requests.get(word_site)
+	WORDS = response.content.splitlines()
+	bot_name = random.choice(WORDS).decode("utf-8")+ ' , ' + random.choice(WORDS).decode("utf-8"
+
+	completion = openai.ChatCompletion.create(
+		model="gpt-3.5-turbo", 
+		messages = [{"role": "system", "content" : "You will be the judge of a game of cards against humanity  come up with a consistent rule you will use to judge related to concepts related to a single word make it under 10 words. If the word is offenisve replace it with 'funny'. Use no racist, sexist, or homophobic language. "},
+		{"role": "user", "content" : "Your words are theoretical , posters."},
+		{"role": "assistant", "content" : "The most \"philosophical\" and abstract answer will win in this game.",},
+		{"role": "user", "content" : "You words are"+bot_name}]
+		)
+	response = completion['choices'][0]['message']['content']
+	return response
+
+
 
 
 def parse_response_for_winner(response, user_id_to_num):
@@ -339,6 +374,19 @@ def game_finale(game_id:str):
 	game = game_state.state.get(game_id)
 	alignment_responses = game.build_alignment_reponse()
 	return{"aligner_responses": alignment_responses ,"aligner_prompt":game.aligner_prompt}
+
+@app.get('/randomize_bot_name')
+def random_bot_name(game_id:str):
+	game = game_state.state.get(game_id)
+	bot_name =run_random_bot_name_prompt()
+	return {"bot_name": bot_name, "game_id": game_id}
+
+@app.get('/randomize_aligner_prompt')
+def random_aligner_prompt(game_id:str):
+	game = game_state.state.get(game_id)
+	aligner_prompt = run_random_aligner_prompt():
+	return {"aligner_prompt": game.aligner_prompt, "game_id": game_id}
+
 
 def get_all_csv_data():
 	prompts = ['______: good to the last drop.',
