@@ -1,14 +1,50 @@
 <script>
 	import { globalStore } from '$lib/store.js';
     import LoadingCommas from "./LoadingCommas.svelte";
+	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 
-	const startGame = () => {
-		globalStore.update((store) => ({
+	// const startGame = () => {
+	// 	globalStore.update((store) => ({
+    //         ...store,
+    //         is_game_started: true
+            
+    //     }));
+	// };
+	
+
+	async function startGame() {
+		if ($globalStore.creator_id === null) {
+			console.error('Only the creator can start the game');
+			throw new Error('Only the creator can start the game');
+		}
+		if ($globalStore.is_game_started) {
+			console.error('Game already started');
+			throw new Error('Game already started');
+		}
+		if ($globalStore.game_id === null) {
+			console.error('Game ID is null');
+			throw new Error('Game ID is null');
+		}
+		const url = `${BACKEND_API}/start?game_id=${$globalStore.game_id}&creator_id=${$globalStore.creator_id}`;
+		const response = await fetch(url, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Access-Control-Allow-Origin': '*'
+			}
+		});
+
+		if (response.ok) {
+			globalStore.update((store) => ({
             ...store,
             is_game_started: true
             
         }));
-	};
+		} else {
+			// Show an error message or handle the error accordingly
+			console.error('Failed to start the game');
+		}
+	}
 </script>
 
 <div id="lobby">

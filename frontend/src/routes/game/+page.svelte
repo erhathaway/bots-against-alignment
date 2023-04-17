@@ -105,7 +105,7 @@
 	<section id="left">
 		{#if currentPreGame === 1}
 			<div in:fly={customFly('in')} out:fly={customFly('out')}>
-				<PreGame3 {data} />
+				<PreGame1 {data} />
 			</div>
 		{/if}
 		{#if currentPreGame === 2}
@@ -115,7 +115,7 @@
 		{/if}
 		{#if currentPreGame === 3}
 			<div in:fly={customFly('in')} out:fly={customFly('out')}>
-				<PreGame1 {data} />
+				<PreGame3 {data} />
 			</div>
 		{/if}
 	</section>
