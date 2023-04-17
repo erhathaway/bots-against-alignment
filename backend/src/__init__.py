@@ -202,7 +202,7 @@ def run_random_bot_name_prompt():
 			{"role": "assistant", "content" : "[CaninAquEataly]"},
 			{"role": "user", "content" : "You three words are:"+ bot_name}]
 			)
-	response = completion['choices'][0]['message']['content']
+	response = completion['choices'][0]['message']['content'][1:-1]
 	return response
 
 def run_random_aligner_prompt():
