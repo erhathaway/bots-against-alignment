@@ -402,7 +402,7 @@ def random_bot_name(game_id:str):
 @app.get('/randomize_aligner_prompt')
 def random_aligner_prompt(game_id:str):
 	game = game_state.state.get(game_id)
-	aligner_prompt = run_random_aligner_prompt():
+	aligner_prompt = run_random_aligner_prompt()
 	return {"aligner_prompt": aligner_prompt, "game_id": game_id}
 	
 
