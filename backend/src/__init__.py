@@ -11,7 +11,7 @@ import openai
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .game_state import game_state
+import game_state
 import requests
 
 app = FastAPI()
@@ -226,16 +226,16 @@ def run_random_bot_prompt():
 	word_site = "https://www.mit.edu/~ecprice/wordlist.10000"
 	response = requests.get(word_site)
 	WORDS = response.content.splitlines()
-	bot_name = random.choice(WORDS).decode("utf-8")+ ' , ' + random.choice(WORDS).decode("utf-8")
+	bot_name = random.choice(WORDS).decode("utf-8")#+ ' , ' + random.choice(WORDS).decode("utf-8")
 
 	completion = openai.ChatCompletion.create(
-		  model="gpt-3.5-turbo", 
-		  messages = [{"role": "system", "content" : "You will be playing of a game of cards against humanity come up with a consistent rule you will use to pick a few words to reply to  prompts. Make it related to concepts related to two words I'm giving you. Make it under 20 words. If the word is offenisve replace it with 'funny'. Use no racist, sexist, or homophobic language. "},
-		{"role": "user", "content" : "Your words are cowboy , truth."},
+		model="gpt-3.5-turbo", 
+		messages = [{"role": "system", "content" : "You will be playing of a game of cards against humanity come up with a consistent rule you will use to pick a few words to reply to Prompt Cards (as if you were making Response Cards). Make it under 20 words. I'm going to give you a random word. I want you to use ever letter of that word in your prompt. Use no racist, sexist, or homophobic language. "},
+		{"role": "user", "content" : "Give me a prompt hornet"},
 		{"role": "assistant", "content" : "I will respond with super honest responses in language from the old west."},
-		{"role": "user", "content" : "Your words are we , flex."},
+		{"role": "user", "content" : "Give me a prompt milk."},
 		{"role": "assistant", "content" : "I will respond in the third person like a muscle bro."},
-		{"role": "user", "content" : "You words are"+bot_name}]
+		{"role": "user", "content" : "Give me a prompt "+bot_name}]
 		)
 	response = completion['choices'][0]['message']['content']
 	return response
