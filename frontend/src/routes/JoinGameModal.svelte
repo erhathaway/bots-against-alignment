@@ -1,10 +1,11 @@
-<script>
+<script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 
 	import { goto } from '$app/navigation';
 
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 
+	let rawGameId = '';
 	let gameId = '';
 	let oldgameId = '';
 	let showError = false;
@@ -15,6 +16,31 @@
 		if (gameId !== oldgameId) {
 			showError = false;
 			oldgameId = gameId;
+		}
+	}
+
+	function extractGameIdFromString(str: string) {
+		const gameIdRegex = /(?:\?|&)game_id=([^&]+)/;
+		const uuidRegex =
+			/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
+		const gameIdMatch = str.match(gameIdRegex);
+
+		if (gameIdMatch) {
+			return gameIdMatch[1];
+		} else if (uuidRegex.test(str)) {
+			return str;
+		} else {
+			return null;
+		}
+	}
+
+	$: {
+		const _gameId = extractGameIdFromString(rawGameId);
+		if (_gameId) {
+			gameId = _gameId;
+		} else {
+			gameId = '';
 		}
 	}
 
@@ -50,7 +76,7 @@
 	<div class="modal" on:click={(e) => e.stopPropagation()}>
 		<div class="join-game-container">
 			<p>Enter Game ID</p>
-			<input type="text" bind:value={gameId} placeholder="45210b0a-12cc-4be9-9bd3-69896b58dfad" />
+			<input type="text" bind:value={rawGameId} placeholder="45210b0a-12cc-4be9-9bd3-69896b58dfad" />
 			<span class="subtext">This is a UUID that the game creator should share with you</span>
 
 			<button
