@@ -11,7 +11,7 @@ import openai
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import src.game_state as game_state
+from src.game_state import game_state
 import requests
 
 app = FastAPI()
