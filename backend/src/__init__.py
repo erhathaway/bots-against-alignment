@@ -350,7 +350,7 @@ def start_game(game_id: str, creator_id: str):
 
 @app.get("/turn")
 def turn(game_id:str):
-	"""Returns the turn prompt and turn ID""" 
+	"""Returns the turn prompt and turn ID also sets turn_started to true""" 
 	game = game_state.state.get(game_id)
 	if game is None:
 		raise HTTPException(status_code=404, detail="Game not found")
@@ -359,18 +359,24 @@ def turn(game_id:str):
 		game.turn_prompt = random.choice(game.turn_prompts)
 		for user_id in game.user_bots.keys():
 			game.user_bots[user_id]['turn_complete']=False
-		
 
 	return{ "alignment_prompt": game.turn_prompt, "turn_id":game.turn_id}
 
 @app.post("/completeturn")
 def complete_turn(game_id:str,user_id:str):
+	'''sets the turn_complete to true for the user_id'''
 	game = game_state.state.get(game_id)
 	game.user_bots[user_id]['turn_complete']=True
+	'''if creator_id is the same as user_id the complete all is_auto player turns'''
+	if game.creator_id == user_id:
+		for user_id in game.user_bots.keys():
+			if game.user_bots[user_id]['is_auto']:
+				game.user_bots[user_id]['turn_complete']=True
 	return{"game_id":game_id,"user_id":user_id}
 
 @app.post("/alignment")
 def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,user_id:str):
+	'''takes the suggestion and generates a response and adds it to the turn_responses'''
 	game = game_state.state.get(game_id)
 	bot = game.user_bots[user_id]
 	if suggestion=="":
@@ -385,8 +391,13 @@ def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,u
 		
 @app.get("/turn_finale")
 def turn_finale(game_id:str,turn_id:str):
+	'''runs the finale of the turn and returns the alignment responses'''
 	game = game_state.state.get(game_id)
-	
+	'''return error if not all players are complete'''
+	for user_id in game.user_bots.keys():
+		if game.user_bots[user_id]['turn_complete']==False:
+			raise HTTPException(status_code=404, detail="Not all players have completed their turn")
+		
 	messages,user_id_to_num = build_aligner_prompt(game.aligner_prompt,game.turn_prompt, game.turn_responses)
 	response = run_chatGPT_call(messages)
 	winner = parse_response_for_winner(response,user_id_to_num)
