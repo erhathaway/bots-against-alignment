@@ -30,6 +30,7 @@ app.add_middleware(
 src_dir = Path(Path.cwd().anchor) / "backend" / "src"
 load_dotenv()  # take environment variables from .env.
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+openai.api_key = OPENAI_API_KEY
 
 
 class AlignerType(str, Enum):
@@ -189,6 +190,7 @@ def run_chatGPT_call_suggestion(bot_prompt,turn_prompt):
 	if 'sorry' in response:
 		response = 'bad bot'
 	return response
+
 def run_random_bot_name_prompt():
 	word_site = "https://www.mit.edu/~ecprice/wordlist.10000"
 	response = requests.get(word_site)
