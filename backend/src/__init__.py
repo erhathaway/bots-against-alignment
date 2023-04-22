@@ -11,7 +11,7 @@ import openai
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .game_state import game_state
+from src.game_state import game_state
 import requests
 
 app = FastAPI()
@@ -84,7 +84,7 @@ class Game:
 		prompts = get_all_csv_data()
 		return prompts
 		
-	def new_user(self):
+	def new_user(self,bot=False):
 		user_id = str(uuid.uuid4())
 		self.user_ids.append(user_id)
 		return user_id
@@ -92,8 +92,8 @@ class Game:
 	def add_to_aligner_prompt_dict(self, user_aligner_prompt: str, user_id: str):
 		self.user_aligner_prompts[user_id] = user_aligner_prompt
 	
-	def add_to_bot_names(self, bot_name: str, user_id: str,current_prompt:str):
-		self.user_bots[user_id] = {"name":bot_name, "score":"0","current_prompt":current_prompt,"prompts_remaining":self.prompts_remaining,"submitted_prompts":current_prompt,"turn_complete":False}
+	def add_to_bot_names(self, bot_name: str, user_id: str,current_prompt:str,is_auto = False):
+		self.user_bots[user_id] = {"name":bot_name, "score":"0","current_prompt":current_prompt,"prompts_remaining":self.prompts_remaining,"submitted_prompts":current_prompt,"turn_complete":False,"is_bot":is_auto}
 	
 	def bots_to_list(self):
 		bots = []
@@ -202,7 +202,7 @@ def run_random_bot_name_prompt():
 			{"role": "assistant", "content" : "[CaninAquEataly]"},
 			{"role": "user", "content" : "You three words are:"+ bot_name}]
 			)
-	response = completion['choices'][0]['message']['content']
+	response = completion['choices'][0]['message']['content'][1:-1]
 	return response
 
 def run_random_aligner_prompt():
@@ -226,16 +226,16 @@ def run_random_bot_prompt():
 	word_site = "https://www.mit.edu/~ecprice/wordlist.10000"
 	response = requests.get(word_site)
 	WORDS = response.content.splitlines()
-	bot_name = random.choice(WORDS).decode("utf-8")+ ' , ' + random.choice(WORDS).decode("utf-8")
+	bot_name = random.choice(WORDS).decode("utf-8")#+ ' , ' + random.choice(WORDS).decode("utf-8")
 
 	completion = openai.ChatCompletion.create(
-		  model="gpt-3.5-turbo", 
-		  messages = [{"role": "system", "content" : "You will be playing of a game of cards against humanity come up with a consistent rule you will use to pick a few words to reply to  prompts. Make it related to concepts related to two words I'm giving you. Make it under 20 words. If the word is offenisve replace it with 'funny'. Use no racist, sexist, or homophobic language. "},
-		{"role": "user", "content" : "Your words are cowboy , truth."},
+		model="gpt-3.5-turbo", 
+		messages = [{"role": "system", "content" : "You will be playing of a game of cards against humanity come up with a consistent rule you will use to pick a few words to reply to Prompt Cards (as if you were making Response Cards). Make it under 20 words. I'm going to give you a random word. I want you to use ever letter of that word in your prompt. Use no racist, sexist, or homophobic language. "},
+		{"role": "user", "content" : "Give me a prompt hornet"},
 		{"role": "assistant", "content" : "I will respond with super honest responses in language from the old west."},
-		{"role": "user", "content" : "Your words are we , flex."},
+		{"role": "user", "content" : "Give me a prompt milk."},
 		{"role": "assistant", "content" : "I will respond in the third person like a muscle bro."},
-		{"role": "user", "content" : "You words are"+bot_name}]
+		{"role": "user", "content" : "Give me a prompt "+bot_name}]
 		)
 	response = completion['choices'][0]['message']['content']
 	return response
@@ -336,12 +336,21 @@ def start_game(game_id: str, creator_id: str):
 	if game.creator_id != creator_id:
 		raise HTTPException(status_code=403, detail="Forbidden")
 	game.game_status = "STARTED"
+	'''Add bots if not 4 users'''
+	if len(game.user_ids) < 4:
+		for i in range(4-len(game.user_ids)):
+			user_id = game.new_user()
+			bot_name =run_random_bot_name_prompt()
+			bot_prompt = run_random_bot_prompt()
+			aligner_prompt = run_random_aligner_prompt()
+			game.add_to_aligner_prompt_dict(aligner_prompt, user_id)
+			game.add_to_bot_names(bot_name, user_id,bot_prompt[:281],is_auto=True)
 	game.aligner_prompt = game.make_full_aligner_prompt()
 
 
 @app.get("/turn")
 def turn(game_id:str):
-	"""Returns the turn prompt and turn ID""" 
+	"""Returns the turn prompt and turn ID also sets turn_started to true""" 
 	game = game_state.state.get(game_id)
 	if game is None:
 		raise HTTPException(status_code=404, detail="Game not found")
@@ -350,18 +359,24 @@ def turn(game_id:str):
 		game.turn_prompt = random.choice(game.turn_prompts)
 		for user_id in game.user_bots.keys():
 			game.user_bots[user_id]['turn_complete']=False
-		
 
 	return{ "alignment_prompt": game.turn_prompt, "turn_id":game.turn_id}
 
 @app.post("/completeturn")
 def complete_turn(game_id:str,user_id:str):
+	'''sets the turn_complete to true for the user_id'''
 	game = game_state.state.get(game_id)
 	game.user_bots[user_id]['turn_complete']=True
+	'''if creator_id is the same as user_id the complete all is_auto player turns'''
+	if game.creator_id == user_id:
+		for user_id in game.user_bots.keys():
+			if game.user_bots[user_id]['is_auto']:
+				game.user_bots[user_id]['turn_complete']=True
 	return{"game_id":game_id,"user_id":user_id}
 
 @app.post("/alignment")
 def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,user_id:str):
+	'''takes the suggestion and generates a response and adds it to the turn_responses'''
 	game = game_state.state.get(game_id)
 	bot = game.user_bots[user_id]
 	if suggestion=="":
@@ -376,8 +391,13 @@ def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,u
 		
 @app.get("/turn_finale")
 def turn_finale(game_id:str,turn_id:str):
+	'''runs the finale of the turn and returns the alignment responses'''
 	game = game_state.state.get(game_id)
-	
+	'''return error if not all players are complete'''
+	for user_id in game.user_bots.keys():
+		if game.user_bots[user_id]['turn_complete']==False:
+			raise HTTPException(status_code=404, detail="Not all players have completed their turn")
+		
 	messages,user_id_to_num = build_aligner_prompt(game.aligner_prompt,game.turn_prompt, game.turn_responses)
 	response = run_chatGPT_call(messages)
 	winner = parse_response_for_winner(response,user_id_to_num)
@@ -407,10 +427,10 @@ def random_aligner_prompt(game_id:str):
 	
 
 @app.get('/randomize_bot_prompt')
-def random_aligner_prompt(game_id:str):
+def random_bot_prompt(game_id:str):
 	game = game_state.state.get(game_id)
 	bot_prompt = run_random_bot_prompt()
-	return {"aligner_prompt": bot_prompt, "game_id": game_id}
+	return {"bot_prompt": bot_prompt, "game_id": game_id}
 
 
 def get_all_csv_data():
