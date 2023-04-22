@@ -84,7 +84,7 @@ class Game:
 		prompts = get_all_csv_data()
 		return prompts
 		
-	def new_user(self):
+	def new_user(self,bot=False):
 		user_id = str(uuid.uuid4())
 		self.user_ids.append(user_id)
 		return user_id
@@ -92,8 +92,8 @@ class Game:
 	def add_to_aligner_prompt_dict(self, user_aligner_prompt: str, user_id: str):
 		self.user_aligner_prompts[user_id] = user_aligner_prompt
 	
-	def add_to_bot_names(self, bot_name: str, user_id: str,current_prompt:str):
-		self.user_bots[user_id] = {"name":bot_name, "score":"0","current_prompt":current_prompt,"prompts_remaining":self.prompts_remaining,"submitted_prompts":current_prompt,"turn_complete":False}
+	def add_to_bot_names(self, bot_name: str, user_id: str,current_prompt:str,is_auto = False):
+		self.user_bots[user_id] = {"name":bot_name, "score":"0","current_prompt":current_prompt,"prompts_remaining":self.prompts_remaining,"submitted_prompts":current_prompt,"turn_complete":False,"is_bot":is_auto}
 	
 	def bots_to_list(self):
 		bots = []
@@ -336,6 +336,15 @@ def start_game(game_id: str, creator_id: str):
 	if game.creator_id != creator_id:
 		raise HTTPException(status_code=403, detail="Forbidden")
 	game.game_status = "STARTED"
+	'''Add bots if not 4 users'''
+	if len(game.user_ids) < 4:
+		for i in range(4-len(game.user_ids)):
+			user_id = game.new_user()
+			bot_name =run_random_bot_name_prompt()
+			bot_prompt = run_random_bot_prompt()
+			aligner_prompt = run_random_aligner_prompt()
+			game.add_to_aligner_prompt_dict(aligner_prompt, user_id)
+			game.add_to_bot_names(bot_name, user_id,bot_prompt[:281],is_auto=True)
 	game.aligner_prompt = game.make_full_aligner_prompt()
 
 
