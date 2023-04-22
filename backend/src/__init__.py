@@ -369,9 +369,6 @@ def start_game(game_id: str, creator_id: str):
 		else:
 			for i in range(4-len(game.user_ids)):
 				make_auto_player_single_thread(game)
-		
-
-
 	game.aligner_prompt = game.make_full_aligner_prompt()
 
 
@@ -399,6 +396,8 @@ def complete_turn(game_id:str,user_id:str):
 		for user_id in game.user_bots.keys():
 			if game.user_bots[user_id]['is_auto']:
 				game.user_bots[user_id]['turn_complete']=True
+				bot_response = run_chatGPT_call_suggestion(bot["current_prompt"],game.turn_prompt)
+				game.turn_responses[user_id]= bot_response
 	return{"game_id":game_id,"user_id":user_id}
 
 @app.post("/alignment")
