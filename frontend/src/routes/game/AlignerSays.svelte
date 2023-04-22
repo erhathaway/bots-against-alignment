@@ -1,5 +1,5 @@
 <script>
-	import { globalStore } from '$lib/store';
+	import { NotificationKind, addNotification, globalStore } from '$lib/store';
 	import { onMount } from 'svelte';
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 
@@ -24,8 +24,12 @@
 
 
 	async function fetchData() {
-		const response = await fetch(`${BACKEND_API}/turn?game_id=${game_id}&creator_id=${user_id}`);
+		const turn_url = `${BACKEND_API}/turn?game_id=${game_id}&creator_id=${user_id}`;
+		const response = await fetch(turn_url);
 		const data = await response.json();
+
+		if (!response.ok) {
+		
 		alignment_prompt = data.alignment_prompt;
 		turn_id = data.turn_id;
         console.log('TURN ID', turn_id)
@@ -33,12 +37,42 @@
             ...state,
             last_turn_id: turn_id
         }));
+		
+	
+		} else {
+			console.error('Failed to get turn');
+			addNotification({
+				source_url: 'aligner says',
+				title: 'Error getting turn',
+				body: data,
+				kind: NotificationKind.ERROR,
+				action_url: turn_url,
+				action_text: 'get turn'
+			});
+		}
+
+		const user_status_url = `${BACKEND_API}/user_status?game_id=${game_id}&user_id=${user_id}`;
 		const statusResponse = await fetch(
-			`${BACKEND_API}/user_status?game_id=${game_id}&user_id=${user_id}`
+			user_status_url
 		);
 		const statusData = await statusResponse.json();
-		points = statusData.points;
-		prompts_remaining = statusData.bot_prompts_remaining;
+
+		if (statusResponse.ok) {
+
+			points = statusData.points;
+			prompts_remaining = statusData.bot_prompts_remaining;
+		} else {
+			console.error('Failed to get user status');
+			addNotification({
+				source_url: 'aligner says',
+				title: 'Error getting user status',
+				body: statusData,
+				kind: NotificationKind.ERROR,
+				action_url: user_status_url,
+				action_text: 'get user status'
+			});
+		}
+
 	}
 
 	onMount(async () => {
@@ -55,12 +89,33 @@
 			user_id
 		});
 
-		const response = await fetch(`${BACKEND_API}/completeturn?${queryParams}`, {
+		const url = `${BACKEND_API}/completeturn?${queryParams}`;
+
+		const response = await fetch(url, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
 		});
 
 		console.log('COMPLETED TURN', response)
+
+		if (response.ok) {
+			// globalStore.update((store) => ({
+			// 	...store,
+			// 	is_game_started: true
+			// }));
+		} else {
+			// Show an error message or handle the error accordingly
+			const data = await response.json();
+			console.error('Failed to start the game');
+			addNotification({
+				source_url: 'aligner says',
+				title: 'Error completing turn',
+				body: data,
+				kind: NotificationKind.ERROR,
+				action_url: url,
+				action_text: 'complete turn'
+			});
+		}
 		
 
 		// await fetch(`${BACKEND_API}/completeturn?${queryParams}`, {

@@ -1,5 +1,5 @@
 <script>
-	import { globalStore } from '$lib/store';
+	import { NotificationKind, addNotification, globalStore } from '$lib/store';
 
 	import { browser } from '$app/environment'; // Import browser from $app/env
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
@@ -68,6 +68,17 @@
 			document.getElementById('bot-prompt-input').style.outlineColor = 'black';
 		}
 
+		if (!isValid) {
+			addNotification({
+				source_url: 'pregame',
+				title: 'Missing fields',
+				body: 'Fill in the missing data to continue',
+				kind: NotificationKind.WARN,
+				action_url: null,
+				action_text: 'join_game'
+			});
+		}
+
 		return isValid;
 	}
 
@@ -89,6 +100,15 @@
 		} else {
 			const error = await response.json();
 			console.log('error', error);
+			addNotification({
+				source_url: 'pregame',
+				title: 'Error generating bot name',
+				body: error,
+				kind: NotificationKind.ERROR,
+				action_url: url,
+				action_text: 'randomize_bot_name'
+			});
+
 		}
 	}
 
@@ -110,6 +130,14 @@
 		} else {
 			const error = await response.json();
 			console.log('error', error);
+			addNotification({
+				source_url: 'pregame',
+				title: 'Error generating aligner prompt',
+				body: error,
+				kind: NotificationKind.ERROR,
+				action_url: url,
+				action_text: 'randomize_aligner_prompt'
+			});
 		}
 	}
 
@@ -131,6 +159,14 @@
 		} else {
 			const error = await response.json();
 			console.log('error', error);
+			addNotification({
+				source_url: 'pregame',
+				title: 'Error generating bot prompt',
+				body: error,
+				kind: NotificationKind.ERROR,
+				action_url: url,
+				action_text: 'randomize_bot_prompt'
+			});
 		}
 	}
 
@@ -167,6 +203,14 @@
 			const error = await response.json();
 			joinError = error.message;
 			errorField = error.field;
+			addNotification({
+				source_url: 'pregame',
+				title: 'Error joining game',
+				body: error.message,
+				kind: NotificationKind.ERROR,
+				action_url: url,
+				action_text: 'join_game'
+			});
 		}
 	}
 </script>

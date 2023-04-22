@@ -39,12 +39,14 @@ export type Notification = {
 	title: string;
 	body: string;
 	kind: NotificationKind;
-	action_url?: string;
-	action_text?: string;
+	action_url?: string | null;
+	action_text?: string | null;
 	unix_time_sec: number;
   uuid: string;
 };
 export const notificationStore = persisted<Notification[]>('notifications', []);
+
+notificationStore.set([])
 
 const MAX_NOTIFICATION_HISTORY = 1000;
 
@@ -60,13 +62,5 @@ export const addNotification = (notification: Omit<Notification, 'uuid'|'unix_ti
 	});
 };
 
-addNotification({
-  source_url: '/game',
-  title: 'Welcome to the game!',
-  body: 'This is a test notification',
-  kind: NotificationKind.INFO,
-  action_url: '/startgame/123',
-  action_text: 'Go to game'
-});
 
 

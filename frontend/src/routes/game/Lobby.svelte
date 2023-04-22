@@ -1,5 +1,5 @@
 <script>
-	import { globalStore } from '$lib/store';
+	import { NotificationKind, addNotification, globalStore } from '$lib/store';
     import LoadingCommas from "./LoadingCommas.svelte";
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 
@@ -42,7 +42,16 @@
         }));
 		} else {
 			// Show an error message or handle the error accordingly
+			const data = await response.json();
 			console.error('Failed to start the game');
+			addNotification({
+				source_url: 'lobby',
+				title: 'Error starting game',
+				body: data,
+				kind: NotificationKind.ERROR,
+				action_url: url,
+				action_text: 'start_game'
+			});
 		}
 	}
 </script>
