@@ -1,5 +1,5 @@
 <script>
-	import { globalStore } from '$lib/store.js';
+	import { globalStore } from '$lib/store';
 	import { browser } from '$app/environment'; // Import browser from $app/env
 	import { page } from '$app/stores';
 	let gameLink;

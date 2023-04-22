@@ -1,5 +1,5 @@
 <script>
-	import { globalStore } from '$lib/store.js';
+	import { globalStore } from '$lib/store';
 	import chat from '$lib/chat';
 	import { onMount } from 'svelte';
 	import { writable } from 'svelte/store';

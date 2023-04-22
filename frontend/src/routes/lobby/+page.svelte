@@ -4,7 +4,7 @@
 	let bots;
 	let status;
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
-	import { globalStore } from '$lib/store.js';
+	import { globalStore } from '$lib/store';
 
     const game_id = $globalStore.game_id;
 	const creator_id = $globalStore.creator_id;

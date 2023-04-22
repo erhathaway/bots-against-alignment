@@ -1,5 +1,5 @@
 <script>
-	import { globalStore } from '$lib/store.js';
+	import { globalStore } from '$lib/store';
     import LoadingCommas from "./LoadingCommas.svelte";
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 

@@ -1,8 +1,11 @@
 <script>
 	import './styles.css';
+	import Notification from './Notification.svelte';
+
 </script>
 
 <div class="app">
+	<Notification />
 	<slot />
 </div>
 

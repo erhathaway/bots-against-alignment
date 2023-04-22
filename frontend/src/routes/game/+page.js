@@ -3,7 +3,7 @@ import { redirect } from '@sveltejs/kit';
 const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 
 import { page } from '$app/stores'
-import { globalStore } from '$lib/store.js';
+import { globalStore } from '$lib/store';
   
 
 export async function load({ params, fetch,  url}) {

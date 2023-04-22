@@ -1,5 +1,5 @@
 <!-- <script>
-	import { globalStore } from '$lib/store.js';
+	import { globalStore } from '$lib/store';
 
 	export let data;
 	import { page } from '$app/stores';
@@ -34,7 +34,7 @@
 </div> -->
 
 <script>
-	import { globalStore } from '$lib/store.js';
+	import { globalStore } from '$lib/store';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';

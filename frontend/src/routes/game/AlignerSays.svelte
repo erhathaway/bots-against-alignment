@@ -1,5 +1,5 @@
 <script>
-	import { globalStore } from '$lib/store.js';
+	import { globalStore } from '$lib/store';
 	import { onMount } from 'svelte';
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 
@@ -55,10 +55,18 @@
 			user_id
 		});
 
-		await fetch(`${BACKEND_API}/completeturn?${queryParams}`, {
+		const response = await fetch(`${BACKEND_API}/completeturn?${queryParams}`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
 		});
+
+		console.log('COMPLETED TURN', response)
+		
+
+		// await fetch(`${BACKEND_API}/completeturn?${queryParams}`, {
+		// 	method: 'POST',
+		// 	headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+		// });
 	}
 	
 </script>

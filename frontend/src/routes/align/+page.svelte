@@ -1,9 +1,9 @@
 <script>
 	import { onMount } from 'svelte';
-	import { globalStore } from '$lib/store.js';
+	import { globalStore } from '$lib/store';
 	import { goto } from '$app/navigation'; // Ensure you have this import
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
-	// import { globalStore } from '$lib/store.js';
+	// import { globalStore } from '$lib/store';
 
 	let alignment_prompt, turn_id;
 	let points = 0;
