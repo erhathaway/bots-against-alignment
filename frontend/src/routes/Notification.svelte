@@ -20,8 +20,11 @@
 			lastNotificationIndexSeen,
 			newlastNotificationIndexSeen
 		);
-		toasts = [...toasts, ..._toasts];
-		visibleToasts = [...visibleToasts, ..._toasts];
+		toasts = [...new Set([...toasts, ..._toasts])];
+		// toasts = [...toasts, ..._toasts];
+		// filter duplicates
+		// visibleToasts = [...visibleToasts, ..._toasts];
+		visibleToasts = [...new Set([...visibleToasts, ..._toasts])];
 		lastNotificationIndexSeen = newlastNotificationIndexSeen;
 	}
 

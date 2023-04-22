@@ -25,7 +25,7 @@ const defaultData = {
 	has_player_joined: false
 };
 
-export const globalStore = persisted('settings', writable<GlobalState>(defaultData));
+export const globalStore = persisted<GlobalState>('settings', defaultData);
 
 export enum NotificationKind {
 	INFO = 'INFO',
