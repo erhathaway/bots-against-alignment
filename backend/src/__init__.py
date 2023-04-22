@@ -13,6 +13,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.game_state import game_state
 import requests
+import threading
 
 app = FastAPI()
 
@@ -254,8 +255,26 @@ def parse_response_for_winner(response, user_id_to_num):
             return user_id
         else:
             return (random.choice(list(user_id_to_num.values()))) #This is hilarious and dirty haha
-
 	
+def make_auto_player_single_thread(game):
+	'''This function makes a single auto player for a game of cards against humanity'''
+	user_id = game.new_user()
+	bot_name =run_random_bot_name_prompt()
+	bot_prompt = run_random_bot_prompt()
+	aligner_prompt = run_random_aligner_prompt()
+	game.add_to_aligner_prompt_dict(aligner_prompt, user_id)
+	game.add_to_bot_names(bot_name, user_id,bot_prompt[:281],is_auto=True)
+
+def make_auto_player_random_vars(game):
+	'''This function makes a single auto player for a game of cards against humanity'''
+	user_id = game.new_user()
+	bot_name =run_random_bot_name_prompt()
+	bot_prompt = run_random_bot_prompt()
+	aligner_prompt = run_random_aligner_prompt()
+	game.add_to_aligner_prompt_dict(aligner_prompt, user_id)
+	game.add_to_bot_names(bot_name, user_id,bot_prompt[:281],is_auto=True)
+
+
 # TODO disable me when not debugging game state
 @app.get("/state")
 def state():
@@ -344,13 +363,15 @@ def start_game(game_id: str, creator_id: str):
 	game.game_status = "STARTED"
 	'''Add bots if not 4 users'''
 	if len(game.user_ids) < 4:
-		for i in range(4-len(game.user_ids)):
-			user_id = game.new_user()
-			bot_name =run_random_bot_name_prompt()
-			bot_prompt = run_random_bot_prompt()
-			aligner_prompt = run_random_aligner_prompt()
-			game.add_to_aligner_prompt_dict(aligner_prompt, user_id)
-			game.add_to_bot_names(bot_name, user_id,bot_prompt[:281],is_auto=True)
+		if len(game.user_ids) < 3:
+			for i in range(4-len(game.user_ids)):
+				make_auto_player_random_vars(game)
+		else:
+			for i in range(4-len(game.user_ids)):
+				make_auto_player_single_thread(game)
+		
+
+
 	game.aligner_prompt = game.make_full_aligner_prompt()
 
 
@@ -613,7 +634,8 @@ def grab_random_bot_prompt():
 	'I will respond with facts about marine life.',
 	'I will respond with random fun facts about animals.',
 	'I will respond with random facts about animals.']
-	return bot_prompts
+	random_bot_prompt = random.choice(bot_prompts)
+	return random_bot_prompt
 
 def grab_aligner_response():
 	aligner_response = ['The most creative and innovative use of the words wins.',
@@ -642,7 +664,6 @@ def grab_aligner_response():
 	'Whoever presents the most creative use of the word "irrigation" in a sentence wins. Bonus points for incorporating the word "aside" in a clever way.',
 	'The funniest combination of cards wins each round.',
 	'The player with the most creative and unexpected usage of the word "occurring" wins in this game.',
-	'bad bot',
 	'The answer that is the most visually creative and graphic will win in this game.',
 	'The submission with the most creative "organization strategy" wins.',
 	'The funniest and most creative response will win the round.',
@@ -671,7 +692,6 @@ def grab_aligner_response():
 	'Every answer must include a reference to a piece of "equipment". Every answer must mention a "redhead".',
 	'The most creative and unexpected reference to Catholicism wins.',
 	'The most practical or useful answer will win in this game.',
-	'bad bot',
 	'The funniest and most creative use of innuendo wins each round.',
 	'The answer that is closest to the target temperature wins.',
 	'The most humorous and relatable situation will win in this game.',
@@ -702,4 +722,109 @@ def grab_aligner_response():
 	'The funniest and most inclusive answer will win in this game.',
 	'The card that most creatively incorporates "gravity" wins the round.',
 	'The answer that combines legal knowledge and mathematical precision wins.']
-	return aligner_response
+	random_aligner_prompt= random.choice(aligner_response)
+	return random_aligner_prompt
+
+def grab_bot_name_respons():
+	bot_name= ['CommerciumPerceptaCorp',
+	'DiscopGBAce',
+	'StartGBPBox',
+	'BrainyGeniusPatch',
+	'Edgeloopsy',
+	'Lesliance Greatance',
+	'EnabliGrillify',
+	'ConvAmplifyQLD',
+	'HebEggViiTech',
+	'PostNexus Upcyclist',
+	'PressFeatherSeptimo',
+	'NailCorderPro',
+	'Fruitionopia',
+	'HeliBeaThingy',
+	'PubliMendPrison',
+	'HemoBooksYield',
+	'ThermorphizeX',
+	"Snolocharter",
+	'BuildvianRoadz',
+	'BlazePox Ventures',
+	'Officer BroChill',
+	'OptiRosarance',
+	'SilentHabitatHQ',
+	'CollectionEugeneX',
+	'RhythmFab',
+	'LegitBuyify',
+	'PerfumSpritzPalooza',
+	'ad bo',
+	'RooftopAlgerythm',
+	'InterpretaAssistaIntro',
+	'PictoPictoPicto',
+	'PhaseMindMapz',
+	'Physizona MotoTronics',
+	'DebatingWealthyFestive',
+	'ExactoGenusTech',
+	'Sushivore Delishery',
+	'PlaneBloggles OxforWebz',
+	'EliminObjectivio',
+	'Supremusicast',
+	'ProgOfficerSageX',
+	'EtiqueSmiEspañol',
+	'TriangulOrbitz',
+	'RicDisclaimerTech',
+	'Grifrox Aerials',
+	'RhythmoCommune',
+	'PodDuoOregenius',
+	'TheozaPizzanomaly',
+	'SynguHonduraRise',
+	'InserPickly',
+	'TerrormudaContestia',
+	'FalseActiProdulgence',
+	'CookiComiGraf',
+	'SeptemFruCorp',
+	'ExplorganMasteries',
+	'FactoCelestiLex',
+	'FlexSnipYesterday',
+	'MetroGlowzity',
+	'SouthernShiftTaxiCo',
+	'Starry Wrapifyz',
+	'MotiBoost ProLeadify',
+	'FortuneReadEats',
+	'ScotContriRalphiq',
+	'Pain-Punch Inc.',
+	'QualiZonix',
+	'BillarChalayera',
+	'Attachium Sportorium',
+	'ShoppyRichuvisor',
+	'Electrolicy',
+	'FeatoExhibitConvict',
+	'CodFury',
+	'FabricHabitatJoy',
+	'AquaSonicity',
+	'Sheethreeminers',
+	'ClaimioHK',
+	'Vocablulariana',
+	'Uni-Netic Connectify',
+	'RebelOutletjerz',
+	'NuSonoRhythm',
+	'Agricanatl',
+	'VeriNTSCRally',
+	'VampiSpotlikeness',
+	'PropoSeektronic',
+	'DislikeGUIfu',
+	'SockNoirItalics',
+	'CorrectoBlitziq',
+	'Tonysa Powertize',
+	'NinjaLinkX',
+	'PrepaSamuQuantico',
+	'StardomSent',
+	'PerceivioBlendify',
+	'HypoDiagnoScan',
+	'ManoRitzyPro',
+	'Assembloport',
+	'VolunTaryVoices',
+	'ShadowVariax',
+	'NewsVaulticus Legallium',
+	'MinimBareCoz',
+	'Complaineur',
+	'CommunalSalsaNet',
+	'DragivOberservey']
+	random_bot_name = random.choice(bot_name)
+	return random_bot_name
