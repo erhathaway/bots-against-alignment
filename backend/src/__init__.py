@@ -1,5 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass
+from operator import is_
 from fastapi import FastAPI, HTTPException
 import os
 from pathlib import Path
@@ -60,6 +61,7 @@ class Game:
 	prompts_remaining: int
 	turn_ended: bool
 	turn_started: bool
+	auto_players: int
 
 	
 	def __init__(self):
@@ -81,6 +83,7 @@ class Game:
 		self.prompts_remaining = 2
 		self.turn_started = False
 		self.turn_ended = False
+		self.auto_players = 0
 
 	def load_turn_prompts(self):
 		prompts = get_all_csv_data()
@@ -95,6 +98,8 @@ class Game:
 		self.user_aligner_prompts[user_id] = user_aligner_prompt
 	
 	def add_to_bot_names(self, bot_name: str, user_id: str,current_prompt:str,is_auto = False):
+		if is_auto:
+			self.auto_players +=1
 		self.user_bots[user_id] = {"name":bot_name, "score":"0","current_prompt":current_prompt,"prompts_remaining":self.prompts_remaining,"submitted_prompts":current_prompt,"turn_complete":False,"is_bot":is_auto}
 	
 	def bots_to_list(self):
