@@ -28,7 +28,7 @@
 		const response = await fetch(turn_url);
 		const data = await response.json();
 
-		if (!response.ok) {
+		if (response.ok) {
 		
 		alignment_prompt = data.alignment_prompt;
 		turn_id = data.turn_id;
