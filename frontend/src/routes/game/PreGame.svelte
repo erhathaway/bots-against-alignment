@@ -1,8 +1,9 @@
 <script>
 	import { NotificationKind, addNotification, globalStore } from '$lib/store';
 	import LoadingSpinner from './LoadingSpinner.svelte';
-
+	import LoadingBars  from './LoadingBars.svelte';
 	import { browser } from '$app/environment'; // Import browser from $app/env
+	import { onMount } from 'svelte';
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 
 	export let data;
@@ -34,6 +35,8 @@
 			errorMessages.botPrompt = '';
 		}
 	}
+
+
 
 	function validateInputs() {
 		let isValid = true;
@@ -255,6 +258,13 @@
 			joinGameLoading = false;
 		}
 	}
+
+
+	onMount(() => {
+		randomize_bot_name();
+		randomize_bot_prompt();
+		randomize_aligner_prompt();
+	})
 </script>
 
 <section id="bot-name">
@@ -283,9 +293,9 @@
 				aria-label="Bot Name"
 			/>
 		</div>
-		{#if errorMessages.botName}
+		<!-- {#if errorMessages.botName}
 			<p style="color:red">{errorMessages.botName}</p>
-		{/if}
+		{/if} -->
 	</div>
 </section>
 <section id="aligner">
@@ -311,9 +321,9 @@
 			</div>
 			<textarea id="aligner-input" bind:value={alignerPrompt} aria-label="Aligner Prompt" />
 		</div>
-		{#if errorMessages.alignerPrompt}
+		<!-- {#if errorMessages.alignerPrompt}
 			<p style="color:red">{errorMessages.alignerPrompt}</p>
-		{/if}
+		{/if} -->
 	</div>
 </section>
 <section>
@@ -340,17 +350,29 @@
 
 			<textarea id="bot-prompt-input" bind:value={botPrompt} aria-label="Bot Prompt" />
 		</div>
-		{#if errorMessages.botPrompt}
+		<!-- {#if errorMessages.botPrompt}
 			<p style="color:red">{errorMessages.botPrompt}</p>
-		{/if}
+		{/if} -->
 	</div>
 </section>
-<div id="button-container">
+<div id="button-container" class="join-game-button">
+	{#if joinGameLoading}
+		<LoadingBars />
+	{:else}
 	<button on:click={joinGame}>Join</button>
+	{/if}
 </div>
 
 <style>
+
 	#button-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.join-game-button {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
