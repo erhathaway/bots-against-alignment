@@ -57,8 +57,18 @@ export const addNotification = (notification: Omit<Notification, 'uuid'|'unix_ti
     if (_notifications.length >= MAX_NOTIFICATION_HISTORY) {
       _notifications = _notifications.slice(0, MAX_NOTIFICATION_HISTORY - 1);
     }
+		const body = notification.body;
+		if (typeof body === 'object') {
+			notification.body = JSON.stringify(body);
+		}
+		const newNotification = {
+			...notification,
+			uuid,
+			unix_time_sec
+		}
+		console.log('New Notification:', newNotification);
 
-		return [{...notification, uuid, unix_time_sec}, ..._notifications];
+		return [..._notifications, newNotification];
 	});
 };
 
