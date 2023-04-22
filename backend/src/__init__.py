@@ -206,6 +206,7 @@ def run_random_bot_name_prompt():
 	return response
 
 def run_random_aligner_prompt():
+	'''Generate a random prompt for the aligner from chatGPT'''
 	word_site = "https://www.mit.edu/~ecprice/wordlist.10000"
 	response = requests.get(word_site)
 	WORDS = response.content.splitlines()
@@ -222,7 +223,9 @@ def run_random_aligner_prompt():
 	return response
 
 def run_random_bot_prompt():
-
+	''' This function generates random prompts for Cards Against Humanity-style games using a specified set of rules.
+	 The bot creates responses based on a random word and a predetermined set of conditions.'''
+	
 	word_site = "https://www.mit.edu/~ecprice/wordlist.10000"
 	response = requests.get(word_site)
 	WORDS = response.content.splitlines()
@@ -243,6 +246,7 @@ def run_random_bot_prompt():
 
 
 def parse_response_for_winner(response, user_id_to_num):
+    '''Returns the user_id of the winner, or a random user_id if no winner is found'''
     for num, user_id in user_id_to_num.items():
         if str(num)+'.' in response:
             return user_id
@@ -329,7 +333,7 @@ def user_status(game_id:str, user_id:str):
 
 @app.post("/start")
 def start_game(game_id: str, creator_id: str):
-	"""Starts the game with the specified game ID"""
+	"""Starts the game with the specified game ID also adds bots if not 4 users"""
 	game = game_state.state.get(game_id)
 	if game is None:
 		raise HTTPException(status_code=404, detail="Game not found")
@@ -409,18 +413,21 @@ def turn_finale(game_id:str,turn_id:str):
 
 @app.get("/game_finale")
 def game_finale(game_id:str):
+	'''runs the finale of the game and returns the alignment responses'''
 	game = game_state.state.get(game_id)
 	alignment_responses = game.build_alignment_reponse()
 	return{"aligner_responses": alignment_responses ,"aligner_prompt":game.aligner_prompt}
 
 @app.get('/randomize_bot_name')
 def random_bot_name(game_id:str):
+	'''returns a random bot name based on chatGPT'''
 	game = game_state.state.get(game_id)
 	bot_name =run_random_bot_name_prompt()
 	return {"bot_name": bot_name, "game_id": game_id}
 
 @app.get('/randomize_aligner_prompt')
 def random_aligner_prompt(game_id:str):
+	'''returns a random aligner prompt based on chatGPT'''
 	game = game_state.state.get(game_id)
 	aligner_prompt = run_random_aligner_prompt()
 	return {"aligner_prompt": aligner_prompt, "game_id": game_id}
@@ -428,6 +435,7 @@ def random_aligner_prompt(game_id:str):
 
 @app.get('/randomize_bot_prompt')
 def random_bot_prompt(game_id:str):
+	'''returns a random bot prompt based on chatGPT'''
 	game = game_state.state.get(game_id)
 	bot_prompt = run_random_bot_prompt()
 	return {"bot_prompt": bot_prompt, "game_id": game_id}
