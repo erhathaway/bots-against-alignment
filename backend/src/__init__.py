@@ -589,7 +589,27 @@ def get_all_csv_data():
 		"If I could only bring one thing to a desert island, it would be ______.",
 		"What's the one thing that can always make you smile?",
 		"The next big technological innovation will be ______.",
-		"You won't believe this, but I just saw ______ at the grocery store."]
+		"You won't believe this, but I just saw ______ at the grocery store.",
+		"My secret to a balanced life is incorporating ______ into my daily routine.",
+		"The future of transportation is clearly _______.",
+		"At the farmer's market, I discovered the wonders of ________.",
+		"The latest self-help book everyone is raving about: 'The Power of ________.'",
+		"The next breakthrough in medical technology: ________.",
+		"The new hit reality show: 'America's Got ________.'",
+		"I can't believe I got the world record for ________!",
+		"The most unexpected combination at the ice cream parlor: ________ and ________.",
+		"My favorite way to unwind after a long day is ________.",
+		"In my alternate universe, the most popular sport is ________.",
+		"______ is the key ingredient to a successful party.",
+		"My most embarrassing moment involved ________.",
+		"When I close my eyes and think of paradise, I see ________.",
+		"The world would be a better place if we all embraced ________.",
+		"The most unconventional pizza topping: ________.",
+		"If I could have any superpower, it would be ________.",
+		"My favorite childhood toy was ________.",
+		"_______: the unsung hero of the kitchen.",
+		"The best thing about living in the future is ________.",
+		"It's always a good time for ________."]
 	return prompts
 
 def grab_random_bot_prompt():
