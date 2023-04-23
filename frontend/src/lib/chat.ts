@@ -33,7 +33,8 @@ class Chat {
             return
         }
         console.log('INIT GAME WATCHER', gameID)
-        this.gameWatcher = this.gun.get(gameID).on((data, key) => {
+        this.gameWatcher = 'SET'
+        this.gun.get(gameID).on((data, key) => {
             console.log('GUN MESSAGE', data, 'key', key);
             // if (key === this.lastMessage) {
             //     return;
