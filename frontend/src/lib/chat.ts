@@ -58,7 +58,7 @@ class Chat {
 
     }
 
-    joinGame(gameID: string, botName: string) {
+    joinGame(gameID: string | null, botName: string | null) {
         this.gameId = gameID;
         this.botName = botName;
         if (gameID == null) {

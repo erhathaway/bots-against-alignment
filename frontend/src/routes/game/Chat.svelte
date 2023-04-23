@@ -1,7 +1,7 @@
 <script>
 	import { globalStore } from '$lib/store';
 	import chat from '$lib/chat';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { writable } from 'svelte/store';
 	let _messages = [
 		// { isUser: true, name: 'User', icon: '/user-icon.png', text: 'Hello!' },
@@ -10,12 +10,14 @@
 	];
 	let messages = writable(_messages);
 	let inputText = '';
+	let messageContainer = null;
 
 	function sendMessage() {
 		if (inputText.trim() === '') return;
 		// messages.push({ isUser: true, name: 'User', icon: '/user-icon.png', text: inputText });
 		chat.sendMessage(inputText);
 		inputText = '';
+		// scrollToBottom();
 	}
 
 	function handleKeyPress(event) {
@@ -23,6 +25,18 @@
 			sendMessage();
 		}
 	}
+	async function scrollToBottom() {
+	// setTimeout(() => {
+		if (messageContainer) {
+			await tick();
+
+			messageContainer.scrollTop = messageContainer.scrollHeight;
+		}
+	// }, 100);
+	// if (messageContainer) {
+	// 	messageContainer.scrollTop = messageContainer.scrollHeight;
+	// }
+}
 
 	let lastBotName = '';
 	let hasJoinedChat = false;
@@ -80,6 +94,7 @@
 				// messages.push(newMessage);
 				// return messages;
 			});
+			scrollToBottom();
 			// messages = [...messages];
 			// console.log('MESSAGES: ', messages)
 		});
@@ -98,8 +113,8 @@
 </script>
 
 <div class="chat-window">
-	<div class="messages">
-		<div class="message-container padding" />
+	<div class="message-container" bind:this={messageContainer}>
+		<!-- <div class="padding" /> -->
 		{#each $messages as message (message)}
 			{#if message.isSystemMessage}
 				<div class="message system">
@@ -147,14 +162,19 @@
 		align-items: space-between;
 		justify-content: space-between;
 		flex-grow: 2;
+		overflow-y: hidden;
+		overflow-x: hidden;
 	}
 
 	.message-container {
 		flex: 2;
 		overflow-y: auto;
+		width: 100%;
+		/* background-color: blue; */
 		padding: 5px;
 		display: flex;
 		flex-direction: column;
+		/* height: 100%; */
 	}
 
 	.message {
@@ -187,6 +207,15 @@
 		justify-content: flex-end;
 	}
 
+	.other .message-text {
+		padding: 10px;
+		background-color: #eee;
+		border-radius: 5px;
+		font-size: 13px;
+		margin-right: 0.4rem;
+		margin-left: 0.4rem;
+	}
+
 	.other .message-part-top {
 		text-align: right;
 	}
@@ -202,9 +231,11 @@
 	.message-input {
 		flex: 1;
 		padding: 5px 10px;
+		margin-left: 1rem;
 		border: 1px solid #ccc;
 		border-radius: 5px;
 		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+		width: 100%;
 	}
 
 	.send-button {
@@ -246,19 +277,18 @@
 		align-items: center;
 	}
 
-
-
 	.system {
 		justify-content: center;
 		align-items: center;
 	}
-	
+
 	.system .message-text {
 		border-radius: 5px;
 		font-size: 13px;
 		margin-right: 0.4rem;
 		margin-left: 0.4rem;
-		padding: 0rem;
-		background-color: #fff6f6;
+		padding: 0.3rem;
+		background-color: #ecffe2;
+		color: rgb(98, 98, 98);
 	}
 </style>
