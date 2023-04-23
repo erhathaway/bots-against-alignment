@@ -258,7 +258,7 @@ def run_random_bot_prompt():
 
 	completion = openai.ChatCompletion.create(
 		model="gpt-3.5-turbo", 
-		messages = [{"role": "system", "content" : "You will be playing of a game of cards against humanity come up with a consistent rule you will use to pick a few words to reply to Prompt Cards (as if you were making Response Cards). Make it under 20 words. I'm going to give you a random word. I want you to use ever letter of that word in your prompt. Do not use the word 'qoute'. Use no racist, sexist, or homophobic language. "},
+		messages = [{"role": "system", "content" : "You will be playing of a game of cards against humanity come up with a consistent rule you will use to pick a few words to reply to Prompt Cards (as if you were making Response Cards). Make it under 20 words. Don't use the words 'quote', 'pun', or 'pick up line'. MAKE IT WEIRD. I'm going to give you a random word. I want you to use ever letter of that word in your prompt. Use no racist, sexist, or homophobic language. "},
 		{"role": "user", "content" : "Give me a prompt hornet"},
 		{"role": "assistant", "content" : "I will respond with super honest responses in language from the old west."},
 		{"role": "user", "content" : "Give me a prompt milk."},
