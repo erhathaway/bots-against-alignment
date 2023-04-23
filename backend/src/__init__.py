@@ -1,5 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass
+from operator import is_
 from fastapi import FastAPI, HTTPException
 import os
 from pathlib import Path
@@ -60,6 +61,7 @@ class Game:
 	prompts_remaining: int
 	turn_ended: bool
 	turn_started: bool
+	auto_players: int
 
 	
 	def __init__(self):
@@ -81,6 +83,7 @@ class Game:
 		self.prompts_remaining = 2
 		self.turn_started = False
 		self.turn_ended = False
+		self.auto_players = 0
 
 	def load_turn_prompts(self):
 		prompts = get_all_csv_data()
@@ -95,6 +98,8 @@ class Game:
 		self.user_aligner_prompts[user_id] = user_aligner_prompt
 	
 	def add_to_bot_names(self, bot_name: str, user_id: str,current_prompt:str,is_auto = False):
+		if is_auto:
+			self.auto_players +=1
 		self.user_bots[user_id] = {"name":bot_name, "score":"0","current_prompt":current_prompt,"prompts_remaining":self.prompts_remaining,"submitted_prompts":current_prompt,"turn_complete":False,"is_bot":is_auto}
 	
 	def bots_to_list(self):
@@ -274,6 +279,33 @@ def make_auto_player_random_vars(game):
 	game.add_to_aligner_prompt_dict(aligner_prompt, user_id)
 	game.add_to_bot_names(bot_name, user_id,bot_prompt[:281],is_auto=True)
 
+def make_bot_responses_single_thread(game):
+	'''This function makes a single auto player for a game of cards against humanity'''
+	for user_id in game.user_bots.keys():
+		if game.user_bots[user_id]['is_auto']:
+			game.user_bots[user_id]['turn_complete']=True
+			bot_response = run_chatGPT_call_suggestion(game.user_bots[user_id]["current_prompt"]["current_prompt"],game.turn_prompt)
+			game.turn_responses[user_id]= bot_response
+
+def make_bot_reponses_multi_thread(game):
+	threads = []
+	for user_id in game.user_bots.keys():
+		if game.user_bots[user_id]['is_auto']:
+			game.user_bots[user_id]['turn_complete'] = True
+
+			def threaded_run_chatGPT_call_suggestion(user_id):
+				bot_response = run_chatGPT_call_suggestion(game.user_bots[user_id]["current_prompt"], game.turn_prompt)
+				game.turn_responses[user_id] = bot_response
+
+			thread = threading.Thread(target=threaded_run_chatGPT_call_suggestion, args=(user_id,))
+			thread.start()
+			threads.append(thread)
+	# Wait for all threads to finish
+	for thread in threads:
+		thread.join()
+
+
+
 
 # TODO disable me when not debugging game state
 @app.get("/state")
@@ -383,7 +415,6 @@ def turn(game_id:str):
 		game.turn_prompt = random.choice(game.turn_prompts)
 		for user_id in game.user_bots.keys():
 			game.user_bots[user_id]['turn_complete']=False
-
 	return{ "alignment_prompt": game.turn_prompt, "turn_id":game.turn_id}
 
 @app.post("/completeturn")
@@ -393,11 +424,11 @@ def complete_turn(game_id:str,user_id:str):
 	game.user_bots[user_id]['turn_complete']=True
 	'''if creator_id is the same as user_id the complete all is_auto player turns'''
 	if game.creator_id == user_id:
-		for user_id in game.user_bots.keys():
-			if game.user_bots[user_id]['is_auto']:
-				game.user_bots[user_id]['turn_complete']=True
-				bot_response = run_chatGPT_call_suggestion(bot["current_prompt"],game.turn_prompt)
-				game.turn_responses[user_id]= bot_response
+		if game.auto_players>2:
+			make_bot_reponses_multi_thread(game)
+		else:
+			make_bot_reponses_single_thread(game)
+
 	return{"game_id":game_id,"user_id":user_id}
 
 @app.post("/alignment")
