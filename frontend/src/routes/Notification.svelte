@@ -15,7 +15,7 @@
 
 	$: {
 		const newlastNotificationIndexSeen = $notificationStore.length;
-		console.log('$notificationStore', $notificationStore);
+		// console.log('$notificationStore', $notificationStore);
 		const _toasts = $notificationStore.slice(
 			lastNotificationIndexSeen,
 			newlastNotificationIndexSeen
