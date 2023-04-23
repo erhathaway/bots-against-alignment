@@ -88,10 +88,12 @@ class Chat {
     
     sendMessage(message: string) {
         if (this.botName == null) {
-            throw new Error('botName is null');
+            return
+            // throw new Error('botName is null');
         }
         if (this.gameId == null) {
-            throw new Error('gameId is null');
+            return
+            // throw new Error('gameId is null');
         }
         console.log('setting message', message, this.botName, this.gameId, )
         this.gun.get(this.gameId).put({
