@@ -43,7 +43,7 @@ export async function load({ params, fetch,  url}) {
             globalStore.update((data) => {
                 const oldGameID = data.game_id;
                 if (oldGameID !== gameID) {
-                    return { ...data, game_id: gameID, creator_id: null, user_id: null };
+                    return { game_id: gameID };
                 } else {
                     return data;
                 }
