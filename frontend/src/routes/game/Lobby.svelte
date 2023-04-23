@@ -14,15 +14,15 @@
 
 	async function startGame() {
 		if ($globalStore.creator_id === null) {
-			console.error('Only the creator can start the game');
+			// console.error('Only the creator can start the game');
 			throw new Error('Only the creator can start the game');
 		}
 		if ($globalStore.is_game_started) {
-			console.error('Game already started');
+			// console.error('Game already started');
 			throw new Error('Game already started');
 		}
 		if ($globalStore.game_id === null) {
-			console.error('Game ID is null');
+			// console.error('Game ID is null');
 			throw new Error('Game ID is null');
 		}
 		const url = `${BACKEND_API}/start?game_id=${$globalStore.game_id}&creator_id=${$globalStore.creator_id}`;
@@ -43,7 +43,7 @@
 		} else {
 			// Show an error message or handle the error accordingly
 			const data = await response.json();
-			console.error('Failed to start the game');
+			// console.error('Failed to start the game');
 			addNotification({
 				source_url: 'lobby',
 				title: 'Error starting game',

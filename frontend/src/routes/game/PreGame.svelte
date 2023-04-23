@@ -95,7 +95,7 @@
 		randomizeBotNameLoading = true;
 		try {
 			const url = `${BACKEND_API}/randomize_bot_name?game_id=${data.gameID}`;
-			console.log('*** randomize bot name', url);
+			// console.log('*** randomize bot name', url);
 
 			const response = await fetch(url, {
 				method: 'GET',
@@ -110,7 +110,7 @@
 				botName = data.bot_name;
 			} else {
 				const error = await response.json();
-				console.log('error', error);
+				// console.log('error', error);
 				addNotification({
 					source_url: 'pregame',
 					title: 'Error generating bot name',
@@ -134,7 +134,7 @@
 		randomizeAlignerPromptLoading = true;
 		try {
 			const url = `${BACKEND_API}/randomize_aligner_prompt?game_id=${data.gameID}`;
-			console.log('*** randomize aligner prompt', url);
+			// console.log('*** randomize aligner prompt', url);
 
 			const response = await fetch(url, {
 				method: 'GET',
@@ -149,7 +149,7 @@
 				alignerPrompt = data.aligner_prompt;
 			} else {
 				const error = await response.json();
-				console.log('error', error);
+				// console.log('error', error);
 				addNotification({
 					source_url: 'pregame',
 					title: 'Error generating aligner prompt',
@@ -174,7 +174,7 @@
 		randomizeBotPromptLoading = true;
 		try {
 			const url = `${BACKEND_API}/randomize_bot_prompt?game_id=${data.gameID}`;
-			console.log('*** randomize bot prompt', url);
+			// console.log('*** randomize bot prompt', url);
 
 			const response = await fetch(url, {
 				method: 'GET',
@@ -189,7 +189,7 @@
 				botPrompt = data.bot_prompt;
 			} else {
 				const error = await response.json();
-				console.log('error', error);
+				// console.log('error', error);
 				addNotification({
 					source_url: 'pregame',
 					title: 'Error generating bot prompt',
@@ -217,7 +217,7 @@
 				return;
 			}
 			const url = `${BACKEND_API}/join_game?game_id=${data.gameID}&aligner_prompt=${alignerPrompt}&bot_name=${botName}&bot_prompt=${botPrompt}`;
-			console.log('*** join game', url);
+			// console.log('*** join game', url);
 
 			const response = await fetch(url, {
 				method: 'POST',
@@ -240,7 +240,7 @@
 						has_player_joined: true
 					};
 				});
-				console.log('has joined game');
+				// console.log('has joined game');
 			} else {
 				const error = await response.json();
 				joinError = error.message;

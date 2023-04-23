@@ -32,7 +32,7 @@
 		
 		alignment_prompt = data.alignment_prompt;
 		turn_id = data.turn_id;
-        console.log('TURN ID', turn_id)
+        // console.log('TURN ID', turn_id)
         globalStore.update((state) => ({
             ...state,
             last_turn_id: turn_id
@@ -96,7 +96,7 @@
 			headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
 		});
 
-		console.log('COMPLETED TURN', response)
+		// console.log('COMPLETED TURN', response)
 
 		if (response.ok) {
 			// globalStore.update((store) => ({
@@ -106,7 +106,7 @@
 		} else {
 			// Show an error message or handle the error accordingly
 			const data = await response.json();
-			console.error('Failed to start the game');
+			// console.error('Failed to start the game');
 			addNotification({
 				source_url: 'aligner says',
 				title: 'Error completing turn',

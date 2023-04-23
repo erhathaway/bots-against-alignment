@@ -4,7 +4,10 @@ import { writable } from 'svelte/store';
 
 class Chat {
     constructor() {
-        this.gun = GUN();
+        this.gun = GUN({
+            peers: ['https://bots-against-alignment.herokuapp.com/gun'],
+            localStorage: false,
+        });
         this.messages = [];
         this.gameId = null;
         this.botName = null;
@@ -15,6 +18,10 @@ class Chat {
     joinGame(gameID, botName) {
         this.gameId = gameID;
         this.botName = botName;
+        if (gameID == null) {
+            throw new Error('gameID is null');
+        }
+
         this.gun.get(gameID).on((data, key) => {
             console.log('GUN MESSAGE', data, 'key', key);
             // if (key === this.lastMessage) {
@@ -44,7 +51,7 @@ class Chat {
 
     
     sendMessage(message) {
-        // console.log('setting message', message, this.botName, this.gameId, )
+        console.log('setting message', message, this.botName, this.gameId, )
         this.gun.get(this.gameId).put({
             message,
             timestamp: Date.now(),
