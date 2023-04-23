@@ -3,7 +3,7 @@ import { redirect } from '@sveltejs/kit';
 const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 
 import { page } from '$app/stores'
-import { globalStore } from '$lib/store';
+import { addNotification, globalStore, NotificationKind } from '$lib/store';
   
 
 export async function load({ params, fetch,  url}) {
@@ -21,7 +21,8 @@ export async function load({ params, fetch,  url}) {
 
     if (gameID) {
         console.log('GAME ID FOUND', gameID)
-        const response = await fetch(`${BACKEND_API}/game/${gameID}`,
+        const url = `${BACKEND_API}/game/${gameID}`;
+        const response = await fetch(url,
             {
                 method: 'GET',
                 headers: {
@@ -32,14 +33,24 @@ export async function load({ params, fetch,  url}) {
         );
 
         console.log('GAME ID FOUND', response)
+        const _response = await response.json();
         if (!response.ok) {
-            
+            console.log('ERROR FINDING GAME ID', gameID)
             errorMessage = 'No game exists.';
+            addNotification({
+                source_url: '/game',
+                title: 'Error finding game',
+                body: _response,
+                kind: NotificationKind.ERROR,
+                action_url: '/game',
+                action_text: 'start_game'
+            });
             throw redirect(302, '/');
             
 
             // goto('/', { replaceState: true, state: { errorMessage } });
         } else {
+            console.log('Returning found game id', gameID)
             globalStore.update((data) => {
                 const oldGameID = data.game_id;
                 if (oldGameID !== gameID) {
@@ -52,7 +63,9 @@ export async function load({ params, fetch,  url}) {
     } else {
         console.log('NO GAME ID FOUND')
         // ignore cors
-        const response = await fetch(`${BACKEND_API}/game`, {
+        const url = `${BACKEND_API}/game`;
+
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -63,8 +76,9 @@ export async function load({ params, fetch,  url}) {
 
 
         console.log('NEW GAME IDs', response)
+        const _response = await response.json();
         if (response.ok) {
-            const { game_id: newGameID, creator_id } = await response.json();
+            const { game_id: newGameID, creator_id } = _response;
             gameID = newGameID;
             creatorID = creator_id;
             console.log('NEW GAME ID', newGameID, creator_id)
@@ -74,6 +88,14 @@ export async function load({ params, fetch,  url}) {
 
         } else {
             errorMessage = 'Failed to create a new game.';
+            addNotification({
+                source_url: '/game',
+                title: 'Error creating game',
+                body: _response,
+                kind: NotificationKind.ERROR,
+                action_url: '/game',
+                action_text: 'start_game'
+            });
         }
     }
 
@@ -84,3 +106,5 @@ export async function load({ params, fetch,  url}) {
         
     };
 }
+
+export const ssr = false;
