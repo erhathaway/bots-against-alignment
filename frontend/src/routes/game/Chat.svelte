@@ -26,26 +26,35 @@
 		}
 	}
 	async function scrollToBottom() {
-	// setTimeout(() => {
+		// setTimeout(() => {
 		if (messageContainer) {
 			await tick();
 
 			messageContainer.scrollTop = messageContainer.scrollHeight;
 		}
-	// }, 100);
-	// if (messageContainer) {
-	// 	messageContainer.scrollTop = messageContainer.scrollHeight;
-	// }
-}
+		// }, 100);
+		// if (messageContainer) {
+		// 	messageContainer.scrollTop = messageContainer.scrollHeight;
+		// }
+	}
 
 	let lastBotName = '';
+	let lastGameId = '';
 	let hasJoinedChat = false;
 	$: {
-		// console.log("Chat.svelte: ", $globalStore);
-		if ($globalStore.bot_name != null && $globalStore.bot_name !== lastBotName) {
+		console.log('CHAT MOUNTED');
+		const hasGameId = $globalStore.game_id != null;
+		const hasBotName = $globalStore.bot_name != null;
+		console.log('hasGameId', hasGameId, 'hasBotName', hasBotName);
+		if (
+			hasGameId &&
+			hasBotName &&
+			($globalStore.bot_name !== lastBotName || $globalStore.game_id !== lastGameId)
+		) {
+			console.log('JOINING CHAT');
 			lastBotName = $globalStore.bot_name;
-			// chat.leaveGame();
-			chat.joinGame($globalStore.game_id, $globalStore.bot_name);
+			lastGameId = $globalStore.game_id;
+			chat.joinGame(lastGameId, lastBotName);
 			hasJoinedChat = true;
 			// console.log('JOINED CHAT')
 		}
@@ -70,15 +79,13 @@
 	}
 
 	onMount(() => {
-		// chat.joinGame($globalStore.game_id, $globalStore.bot_name);
-		// chat.subscribe((lastMessage, messages) => {
-		//     console.log('New Message: ', lastMessage);
-		//     const isUser = lastMessage.userId === $globalStore.user_id;
-		//     messages.push({ isUser, name: lastMessage.botName, icon: '/john-icon.png', text: lastMessage.message });
-		// });
+		// leave any existing games
+		chat.leaveGame();
 
-		chat.subscribe((lastMessage, allMessages) => {
+		// subscribe to chat stream
+		chat.subscribe((lastMessage) => {
 			console.log('New Message: ', lastMessage);
+
 			const isUser = lastMessage.botName === $globalStore.bot_name;
 			const isSystemMessage = lastMessage.botName === null;
 			const newMessage = {
@@ -86,30 +93,26 @@
 				isSystemMessage,
 				name: lastMessage.botName,
 				icon: '../../static/noun-face-1751230.svg',
-				text: lastMessage.message
+				text: lastMessage.message,
+				isStatusMessage: lastMessage.isStatusMessage
 			};
-			// messages = [...messages];
+
 			messages.update((messages) => {
 				return [...messages, newMessage];
-				// messages.push(newMessage);
-				// return messages;
 			});
 			scrollToBottom();
-			// messages = [...messages];
-			// console.log('MESSAGES: ', messages)
 		});
 
+		// watch game
 		chat.watchGame($globalStore.game_id);
 
 		return () => {
 			chat.leaveGame();
+			hasJoinedChat = false;
+			lastBotName = '';
+			lastGameId = '';
 		};
 	});
-
-	// $: {
-	//     console.log("Chat.svelte: ", $globalStore);
-
-	// }
 </script>
 
 <div class="chat-window">
@@ -121,6 +124,18 @@
 					<div class="message-part-bottom">
 						<div class="message-text">{message.text}</div>
 					</div>
+				</div>
+			{:else if message.isStatusMessage}
+				<div class="message status">
+					<div class="message-status-contianer">
+
+						<!-- <div class="message-part"> -->
+							<div class="message-text name">{message.name}</div>
+							<!-- <div class="message-part-bottom"> -->
+								<!-- <div class="message-icon" style="background-color: {getNameColor(message.name)};" /> -->
+								<div class="message-text text">{message.text}</div>
+							</div>
+					<!-- </div> -->
 				</div>
 			{:else}
 				<div class="message {message.isUser ? 'user' : 'other'}">
@@ -289,6 +304,37 @@
 		margin-left: 0.4rem;
 		padding: 0.3rem;
 		background-color: #ecffe2;
+		color: rgb(98, 98, 98);
+	}
+
+	.status {
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.status .message-status-contianer {
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+		background-color: #e2f1ff;
+		border-radius: 5px;
+		padding: 0.3rem;
+	}
+
+	.status .name {
+		font-weight: bold;
+		font-size: 10px;
+		margin-right: 0.4rem;
+		margin-left: 0.4rem;
+	}
+
+	.status .message-text {
+		font-size: 13px;
+		margin-right: 0.4rem;
+		margin-left: 0.4rem;
 		color: rgb(98, 98, 98);
 	}
 </style>

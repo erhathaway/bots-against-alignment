@@ -11,6 +11,7 @@ type GlobalState = {
 	bot_name: string | null;
 	last_turn_id: number | null;
 	has_player_joined: boolean;
+	is_game_started: boolean;
 };
 
 const defaultData = {
@@ -22,7 +23,8 @@ const defaultData = {
 	aligner_prompt: null,
 	bot_name: null,
 	last_turn_id: null,
-	has_player_joined: false
+	has_player_joined: false,
+	is_game_started: false
 };
 
 export const globalStore = persisted<GlobalState>('settings', defaultData);

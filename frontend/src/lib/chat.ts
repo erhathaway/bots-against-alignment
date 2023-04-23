@@ -1,13 +1,22 @@
 import GUN, { type IGun, type IGunInstance } from 'gun';
 import { writable } from 'svelte/store';
 
+type Message = {
+	message: string;
+	timestamp: number;
+	botName: string;
+	isStatusMessage: boolean;
+}
+
+type Subscriber = (message: Message, messages: Message[]) => void;
+
 class Chat {
 	gun: IGunInstance;
-	messages: Array<any>;
+	messages: Array<Message>;
 	gameId: string | null;
 	botName: string | null;
-	subscribers: Array<any>;
-	lastMessage: Object | null;
+	subscribers: Array<Subscriber>;
+	lastMessage: Message | null;
 	gameWatcher: any;
 	retryInterval: NodeJS.Timer | null;
 
@@ -87,9 +96,9 @@ class Chat {
 			throw new Error('gameID is null');
 		}
 
-		if (this.gameWatcher != null) {
-			return;
-		}
+		// if (this.gameWatcher != null) {
+		// 	return;
+		// }
 		console.log('INIT GAME WATCHER', gameID);
 		this.gameWatcher = 'SET';
 		this.gun.get(gameID).on((data, key) => {
@@ -113,6 +122,8 @@ class Chat {
 	}
 
 	joinGame(gameID: string | null, botName: string | null) {
+		console.log('JOIN GAME', gameID, botName)
+		// this.leaveGame()
 		this.gameId = gameID;
 		this.botName = botName;
 		if (gameID == null) {
@@ -120,37 +131,54 @@ class Chat {
 		}
 
 		this.initGameWatcher(gameID);
-		this.sendMessage('joined the game');
+		this.sendStatusMessage('joined the game');
 	}
 
-	subscribe(callback: Function) {
+	subscribe(callback: Subscriber) {
 		this.subscribers.push(callback);
 		console.log('SUBSCRIBING', this.subscribers.length);
 	}
 
 	leaveGame() {
-		if (this.gameId == null) {
-			throw new Error('gameId is null');
-		}
-		this.sendMessage('left the game');
-		this.gun.get(this.gameId).off();
 		this.subscribers = [];
+		this.messages = [];
+		this.lastMessage = null;
+		if (this.gameId == null) {
+			return
+			// throw new Error('gameId is null');
+		}
+		// this.sendMessage('left the game');
+		this.sendStatusMessage('left the game');
+		this.gun.get(this.gameId).off();
+		this.gameId = null;
+		this.botName = null;
 	}
 
 	sendMessage(message: string) {
-		if (this.botName == null) {
+		if (this.botName == null || this.gameId == null) {
 			return;
-			// throw new Error('botName is null');
 		}
-		if (this.gameId == null) {
-			return;
-			// throw new Error('gameId is null');
-		}
+	
 		console.log('setting message', message, this.botName, this.gameId);
 		this.gun.get(this.gameId).put({
 			message,
 			timestamp: Date.now(),
-			botName: this.botName
+			botName: this.botName,
+			isStatusMessage: false
+		});
+	}
+
+	sendStatusMessage(message: string) {
+		if (this.botName == null || this.gameId == null) {
+			return;
+		}
+	
+		console.log('setting message', message, this.botName, this.gameId);
+		this.gun.get(this.gameId).put({
+			message,
+			timestamp: Date.now(),
+			botName: this.botName,
+			isStatusMessage: true
 		});
 	}
 
@@ -162,7 +190,8 @@ class Chat {
 		this.gun.get(this.gameId).put({
 			message,
 			timestamp: Date.now(),
-			botName: null
+			botName: null,
+			isStatusMessage: false
 		});
 	}
 }

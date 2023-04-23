@@ -20,7 +20,7 @@
 
 		isStartGamePending = true;
 		try {
-			if ($globalStore.creator_id === null) {
+			if ($globalStore.creator_id == null) {
 				// console.error('Only the creator can start the game');
 				throw new Error('Only the creator can start the game');
 			}
@@ -28,7 +28,7 @@
 				// console.error('Game already started');
 				throw new Error('Game already started');
 			}
-			if ($globalStore.game_id === null) {
+			if ($globalStore.game_id == null) {
 				// console.error('Game ID is null');
 				throw new Error('Game ID is null');
 			}
@@ -66,7 +66,7 @@
 </script>
 
 <div id="lobby">
-	{#if $globalStore.creator_id === null}
+	{#if $globalStore.creator_id == null}
 		<p class="non-creator">Waiting for creator to start game<LoadingCommas /></p>
 	{:else}
 		<p class="creator">Invite others to join</p>
