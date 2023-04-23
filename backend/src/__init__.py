@@ -12,11 +12,19 @@ import openai
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from src.game_state import game_state
 import requests
 import threading
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
 
 app = FastAPI()
+
+limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
+
 
 origins = ["*"]
 
@@ -27,7 +35,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+app.middleware("http")(limiter.middleware)
+app.add_exception_handler(HTTPException, _rate_limit_exceeded_handler)
 
 src_dir = Path(Path.cwd().anchor) / "backend" / "src"
 load_dotenv()  # take environment variables from .env.
@@ -40,7 +49,7 @@ class AlignerType(str, Enum):
 	LAST_WON_USER = "LAST_WON_USER"
 	BOT_WITH_HIDDEN_PROMPT = "BOT_WITH_HIDDEN_PROMPT"
 	BOT_WITH_USER_PROMPT = "BOT_WITH_USER_PROMPT"
-
+	
 class Game:
 	game_id: str
 	creator_id: str
@@ -354,6 +363,7 @@ def get_game(game_id):
 		return {"game_id": game.game_id}
 
 @app.post("/game")
+@limiter.limit("10/minute")  # Custom rate limit for this route (e.g., 10 requests per minute)
 def create_game():
 	"""Creates a new game and returns the creator ID and game ID"""
 	game = Game()
@@ -501,6 +511,7 @@ def game_finale(game_id:str):
 	return{"aligner_responses": alignment_responses ,"aligner_prompt":game.aligner_prompt}
 
 @app.get('/randomize_bot_name')
+@limiter.limit("10/minute")  # Custom rate limit for this route (e.g., 10 requests per minute)
 def random_bot_name(game_id:str):
 	'''returns a random bot name based on chatGPT'''
 	game = game_state.state.get(game_id)
@@ -508,6 +519,7 @@ def random_bot_name(game_id:str):
 	return {"bot_name": bot_name, "game_id": game_id}
 
 @app.get('/randomize_aligner_prompt')
+@limiter.limit("10/minute")  # Custom rate limit for this route (e.g., 10 requests per minute)
 def random_aligner_prompt(game_id:str):
 	'''returns a random aligner prompt based on chatGPT'''
 	game = game_state.state.get(game_id)
@@ -516,11 +528,22 @@ def random_aligner_prompt(game_id:str):
 	
 
 @app.get('/randomize_bot_prompt')
+@limiter.limit("10/minute")  # Custom rate limit for this route (e.g., 10 requests per minute)
 def random_bot_prompt(game_id:str):
 	'''returns a random bot prompt based on chatGPT'''
 	game = game_state.state.get(game_id)
 	bot_prompt = run_random_bot_prompt()
 	return {"bot_prompt": bot_prompt, "game_id": game_id}
+
+@app.exception_handler(RateLimitExceeded)
+async def custom_rate_limit_exceeded_handler(request, exc):
+    return JSONResponse(
+        status_code=429,  # Using the 429 status code directly
+        content={
+            "detail": "Too many requests",
+            "error_code": "RATE_LIMIT_EXCEEDED",
+        },
+    )
 
 
 def get_all_csv_data():
