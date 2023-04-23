@@ -29,27 +29,11 @@
 	$: {
 		// console.log("Chat.svelte: ", $globalStore);
 		if ($globalStore.bot_name != null && $globalStore.bot_name !== lastBotName) {
-			chat.leaveGame();
+			lastBotName = $globalStore.bot_name;
+			// chat.leaveGame();
 			chat.joinGame($globalStore.game_id, $globalStore.bot_name);
 			hasJoinedChat = true;
 			// console.log('JOINED CHAT')
-			chat.subscribe((lastMessage, allMessages) => {
-				// console.log('New Message: ', lastMessage);
-				const isUser = lastMessage.botName === $globalStore.bot_name;
-				const newMessage = {
-					isUser,
-					name: lastMessage.botName,
-					icon: '../../static/noun-face-1751230.svg',
-					text: lastMessage.message
-				};
-				// messages = [...messages];
-				messages.update((messages) => {
-					messages.push(newMessage);
-					return messages;
-				});
-				// messages = [...messages];
-				// console.log('MESSAGES: ', messages)
-			});
 		}
 	}
 
@@ -78,6 +62,30 @@
 		//     const isUser = lastMessage.userId === $globalStore.user_id;
 		//     messages.push({ isUser, name: lastMessage.botName, icon: '/john-icon.png', text: lastMessage.message });
 		// });
+
+		chat.subscribe((lastMessage, allMessages) => {
+			console.log('New Message: ', lastMessage);
+			const isUser = lastMessage.botName === $globalStore.bot_name;
+			const isSystemMessage = lastMessage.botName === null;
+			const newMessage = {
+				isUser,
+				isSystemMessage,
+				name: lastMessage.botName,
+				icon: '../../static/noun-face-1751230.svg',
+				text: lastMessage.message
+			};
+			// messages = [...messages];
+			messages.update((messages) => {
+				return [...messages, newMessage];
+				// messages.push(newMessage);
+				// return messages;
+			});
+			// messages = [...messages];
+			// console.log('MESSAGES: ', messages)
+		});
+
+		chat.watchGame($globalStore.game_id);
+
 		return () => {
 			chat.leaveGame();
 		};
@@ -91,15 +99,23 @@
 
 <div class="chat-window">
 	<div class="messages">
-		<div class="message padding" />
+		<div class="message-container padding" />
 		{#each $messages as message (message)}
-			<div class="message {message.isUser ? 'user' : 'other'}">
-				<div class="message-part-top">{message.name}</div>
-				<div class="message-part-bottom">
-					<div class="message-icon" style="background-color: {getNameColor(message.name)};" />
-					<div class="message-text">{message.text}</div>
+			{#if message.isSystemMessage}
+				<div class="message system">
+					<div class="message-part-bottom">
+						<div class="message-text">{message.text}</div>
+					</div>
 				</div>
-			</div>
+			{:else}
+				<div class="message {message.isUser ? 'user' : 'other'}">
+					<div class="message-part-top">{message.name}</div>
+					<div class="message-part-bottom">
+						<div class="message-icon" style="background-color: {getNameColor(message.name)};" />
+						<div class="message-text">{message.text}</div>
+					</div>
+				</div>
+			{/if}
 		{/each}
 	</div>
 	{#if hasJoinedChat}
@@ -133,7 +149,7 @@
 		flex-grow: 2;
 	}
 
-	.messages {
+	.message-container {
 		flex: 2;
 		overflow-y: auto;
 		padding: 5px;
@@ -146,7 +162,6 @@
 		margin-bottom: 1rem;
 		margin: 0.6rem;
 		flex-direction: column;
-
 	}
 
 	.message-icon {
@@ -155,7 +170,7 @@
 		border-radius: 50%;
 	}
 
-	.message-text {
+	.user .message-text {
 		padding: 10px;
 		background-color: #eee;
 		border-radius: 5px;
@@ -170,6 +185,13 @@
 
 	.other {
 		justify-content: flex-end;
+	}
+
+	.other .message-part-top {
+		text-align: right;
+	}
+	.other .message-part-bottom {
+		flex-direction: row-reverse;
 	}
 
 	.input-container {
@@ -224,7 +246,19 @@
 		align-items: center;
 	}
 
-	.message.padding {
-		height: 3rem;
+
+
+	.system {
+		justify-content: center;
+		align-items: center;
+	}
+	
+	.system .message-text {
+		border-radius: 5px;
+		font-size: 13px;
+		margin-right: 0.4rem;
+		margin-left: 0.4rem;
+		padding: 0rem;
+		background-color: #fff6f6;
 	}
 </style>
