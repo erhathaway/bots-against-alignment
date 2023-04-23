@@ -1,6 +1,7 @@
 <script>
 	import { NotificationKind, addNotification, globalStore } from '$lib/store';
 	import { onMount } from 'svelte';
+	import LoadingBars from './LoadingBars.svelte';
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 
 	// import { browser } from '$app/environment'; // Import browser from $app/env
@@ -83,7 +84,12 @@
 		}
 	});
 
+	let isCompleteTurnPending = false;
 	async function completeTurn() {
+		if (isCompleteTurnPending) return;
+
+		isCompleteTurnPending = true;
+		try {
 		const queryParams = new URLSearchParams({
 			game_id,
 			user_id
@@ -116,6 +122,10 @@
 				action_text: 'complete turn'
 			});
 		}
+	}
+	finally {
+		isCompleteTurnPending = false;
+	}
 		
 
 		// await fetch(`${BACKEND_API}/completeturn?${queryParams}`, {
@@ -151,7 +161,14 @@
 	</div>
 </section>
 <div id="button-container">
-	<button on:click={completeTurn}>Tell Bot To Respond To Aligner</button>
+	{#if isCompleteTurnPending}
+		<LoadingBars />
+	{:else}
+	<button on:click={completeTurn}>
+
+		Tell Bot To Respond To Aligner
+	</button>
+	{/if}
 </div>
 
 <!-- </section> -->
