@@ -84,12 +84,29 @@ class Game:
 		self.turn_started = False
 		self.turn_ended = False
 		self.auto_players = 0
+	
+	def to_dict(self):
+		return {
+			"game_id": self.game_id,
+			"creator_id": self.creator_id,
+			"game_status": self.game_status,
+			"user_ids": self.user_ids,
+			"user_bots": self.user_bots,
+			"user_aligner_prompts": self.user_aligner_prompts,
+			"aligner_prompt": self.aligner_prompt,
+			"turn_started": self.turn_started,
+			"turn_prompt": self.turn_prompt,
+			"turn_id": self.turn_id,
+			"turn_responses": self.turn_responses,
+			"auto_players": self.auto_players,
+			# ... add any other properties you want to include ...
+		}
 
 	def load_turn_prompts(self):
 		prompts = get_all_csv_data()
 		return prompts
 		
-	def new_user(self,bot=False):
+	def new_user(self):
 		user_id = str(uuid.uuid4())
 		self.user_ids.append(user_id)
 		return user_id
@@ -161,7 +178,7 @@ def build_aligner_prompt(aligner_prompt,turn_prompt, user_prompts):
         {"role": "user", "content" : '''You will answer with the best response out of (response) value for this alignment goal: 'funniest response for the prompt: What Killed our food delivery startup.
 			(1. "people who can't multitask.")
 			(2. "People who never procrastinate.")
-			(3. "Imcompetent losers like you.")
+			(3. "Incompetent losers like you.")
 			(4. "Fools who ignore their priorities.")'''},
 		{"role": "assistant", "content" : '''(1. "people who can't multitask.")'''},
 		{"role": "user", "content" : '''You will answer with the best response out of (response) value for this alignment goal:''' +aligner_prompt+':'+turn_prompt}]
@@ -312,6 +329,16 @@ def make_bot_reponses_multi_thread(game):
 def state():
     return { "game_ids": list(game_state.state.keys()) }
 
+@app.get("/game_object/{game_id}")
+def get_game_object(game_id):
+    """Returns the entire game object for the specified game ID"""
+    game = game_state.state.get(game_id)
+
+    if game is None:
+        raise HTTPException(status_code=404, detail=f"Game not found: {game_id}")
+    else:
+        return game.to_dict()
+
 @app.get("/health_check")
 async def health_check():
     return {"status": "OK"}
@@ -401,7 +428,7 @@ def start_game(game_id: str, creator_id: str):
 		else:
 			for i in range(4-len(game.user_ids)):
 				make_auto_player_single_thread(game)
-	game.aligner_prompt = game.make_full_aligner_prompt()
+	game.make_full_aligner_prompt()
 
 
 @app.get("/turn")
@@ -427,7 +454,7 @@ def complete_turn(game_id:str,user_id:str):
 		if game.auto_players>2:
 			make_bot_reponses_multi_thread(game)
 		else:
-			make_bot_reponses_single_thread(game)
+			make_bot_responses_single_thread(game)
 
 	return{"game_id":game_id,"user_id":user_id}
 
@@ -457,7 +484,9 @@ def turn_finale(game_id:str,turn_id:str):
 		
 	messages,user_id_to_num = build_aligner_prompt(game.aligner_prompt,game.turn_prompt, game.turn_responses)
 	response = run_chatGPT_call(messages)
+	print(response)
 	winner = parse_response_for_winner(response,user_id_to_num)
+	#print('2.'+winner)
 	game.user_bots[winner]["score"] = str(int(game.user_bots[winner]["score"])+1)
 	alignment_responses = game.build_alignment_reponse(winner)
 	game.turn_started=False
