@@ -2,6 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 
 	import { goto } from '$app/navigation';
+	import LoadingBars from './game/LoadingBars.svelte';
 
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 
@@ -44,7 +45,14 @@
 		}
 	}
 
+	let isJoinGamePending = false;
+
 	async function joinGame() {
+		if (isJoinGamePending) {
+			return;
+		}
+
+		isJoinGamePending = true;
 		try {
 			// const response = await fetch(`${BACKEND_API}/game/${gameId}`);
 			const response = await fetch(`${BACKEND_API}/game/${gameId}`, {
@@ -64,6 +72,8 @@
 		} catch (error) {
 			console.error('Error:', error);
 			showError = true;
+		} finally {
+			isJoinGamePending = false;
 		}
 	}
 
@@ -76,16 +86,24 @@
 	<div class="modal" on:click={(e) => e.stopPropagation()}>
 		<div class="join-game-container">
 			<p>Enter Game ID</p>
-			<input type="text" bind:value={rawGameId} placeholder="45210b0a-12cc-4be9-9bd3-69896b58dfad" />
+			<input
+				type="text"
+				bind:value={rawGameId}
+				placeholder="45210b0a-12cc-4be9-9bd3-69896b58dfad"
+			/>
 			<span class="subtext">This is a UUID that the game creator should share with you</span>
 
-			<button
-				role="button"
-				on:click={joinGame}
-				on:keydown={(e) => {
-					if (e.keyCode === 13) joinGame();
-				}}>Join Game</button
-			>
+			{#if isJoinGamePending}
+				<LoadingBars />
+			{:else}
+				<button
+					role="button"
+					on:click={joinGame}
+					on:keydown={(e) => {
+						if (e.keyCode === 13) joinGame();
+					}}>Join Game</button
+				>
+			{/if}
 		</div>
 		{#if showError}
 			<section>

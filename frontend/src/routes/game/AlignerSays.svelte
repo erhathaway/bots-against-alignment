@@ -1,6 +1,7 @@
 <script>
 	import { NotificationKind, addNotification, globalStore } from '$lib/store';
 	import { onMount } from 'svelte';
+	import LoadingBars from './LoadingBars.svelte';
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 
 	// import { browser } from '$app/environment'; // Import browser from $app/env
@@ -32,7 +33,7 @@
 		
 		alignment_prompt = data.alignment_prompt;
 		turn_id = data.turn_id;
-        console.log('TURN ID', turn_id)
+        // console.log('TURN ID', turn_id)
         globalStore.update((state) => ({
             ...state,
             last_turn_id: turn_id
@@ -83,7 +84,12 @@
 		}
 	});
 
+	let isCompleteTurnPending = false;
 	async function completeTurn() {
+		if (isCompleteTurnPending) return;
+
+		isCompleteTurnPending = true;
+		try {
 		const queryParams = new URLSearchParams({
 			game_id,
 			user_id
@@ -96,7 +102,7 @@
 			headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
 		});
 
-		console.log('COMPLETED TURN', response)
+		// console.log('COMPLETED TURN', response)
 
 		if (response.ok) {
 			// globalStore.update((store) => ({
@@ -106,7 +112,7 @@
 		} else {
 			// Show an error message or handle the error accordingly
 			const data = await response.json();
-			console.error('Failed to start the game');
+			// console.error('Failed to start the game');
 			addNotification({
 				source_url: 'aligner says',
 				title: 'Error completing turn',
@@ -116,6 +122,10 @@
 				action_text: 'complete turn'
 			});
 		}
+	}
+	finally {
+		isCompleteTurnPending = false;
+	}
 		
 
 		// await fetch(`${BACKEND_API}/completeturn?${queryParams}`, {
@@ -151,7 +161,14 @@
 	</div>
 </section>
 <div id="button-container">
-	<button on:click={completeTurn}>Tell Bot To Respond To Aligner</button>
+	{#if isCompleteTurnPending}
+		<LoadingBars />
+	{:else}
+	<button on:click={completeTurn}>
+
+		Tell Bot To Respond To Aligner
+	</button>
+	{/if}
 </div>
 
 <!-- </section> -->

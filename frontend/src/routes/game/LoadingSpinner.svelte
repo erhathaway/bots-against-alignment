@@ -1,26 +1,26 @@
-<div class="lds-ripple">
+<div class="lds-app">
 	<div />
 	<div />
 </div>
 
 <style>
-	.lds-ripple {
+	.lds-app {
 		display: inline-block;
 		position: relative;
 		width: 36px;
 		height: 36px;
 	}
-	.lds-ripple div {
+	.lds-app div {
 		position: absolute;
 		border: 4px solid rgb(0, 0, 0);
 		opacity: 1;
 		border-radius: 50%;
-		animation: lds-ripple 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+		animation: lds-app 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
 	}
-	.lds-ripple div:nth-child(2) {
+	.lds-app div:nth-child(2) {
 		animation-delay: -0.5s;
 	}
-	@keyframes lds-ripple {
+	@keyframes lds-app {
 		0% {
 			top: 18px;
 			left: 18px;

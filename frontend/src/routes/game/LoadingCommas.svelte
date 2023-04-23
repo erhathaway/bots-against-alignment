@@ -1,4 +1,3 @@
-<!-- WaveLoading.svelte -->
 <script>
     import { onMount } from "svelte";
   
