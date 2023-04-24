@@ -3,10 +3,8 @@
 	import { goto } from '$app/navigation';
 
 	let showModal = false;
-	let modalTitle = '';
 
-	function openModal(title: string) {
-		modalTitle = title;
+	function openModal() {
 		showModal = true;
 	}
 	function navigateToGame() {
@@ -15,14 +13,14 @@
 </script>
 
 <main>
-	<div class="left">
+	<div class="text-container">
 		<h1>Bots Against Alignment</h1>
 		<h2>A turn-based multiplayer game</h2>
 		<!-- <h2>Users compete to align their bot to the Aligner</h2> -->
 	</div>
 
 	<div class="buttons-container">
-		<button on:click={() => openModal('Join Game')}>Join Game</button>
+		<button on:click={openModal}>Join Game</button>
 		<button on:click={navigateToGame}>New Game</button>
 	</div>
 
@@ -41,7 +39,7 @@
 		height: 100vh;
 	}
 
-	.left {
+	.text-container {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -51,9 +49,7 @@
 	}
 	h1 {
 		font-size: 7rem;
-		/* margin-bottom: 1rem; */
 		color: rgb(0, 0, 0);
-		/* height: 100%; */
 		font-weight: bold;
 		letter-spacing: 15px;
 		color: rgb(123, 255, 0);
@@ -61,16 +57,12 @@
 		margin: 0;
 		font-family: 'Bebas Neue', cursive;
 		-webkit-text-stroke-width: 2px;
-  -webkit-text-stroke-color: rgba(0, 0, 0, 0.6);
+		-webkit-text-stroke-color: rgba(0, 0, 0, 0.6);
 	}
 
 	h2 {
-		/* margin-top: 3rem; */
 		font-size: 1.7rem;
-		/* max-width: 40rem; */
-		/* margin-bottom: 2rem; */
 		text-align: center;
-		/* padding: 0 6rem; */
 		font-weight: 100;
 		letter-spacing: 2px;
 		line-height: 2.3rem;
@@ -104,5 +96,52 @@
 		justify-content: center;
 		flex-direction: column;
 		height: 100%;
+	}
+
+	@media(max-width: 900px) {
+		h1 {
+			font-size: 5rem;
+			letter-spacing: 10px;
+		}
+
+		h2 {
+			font-size: 1.5rem;
+			line-height: 2rem;
+			margin: 1rem;
+		}
+
+		button {
+			width: 100%;
+			font-size: 50px;
+			margin: 5px;
+		}
+	}
+
+	@media (max-width: 600px) {
+		main {
+			display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		font: 1.5rem/1.5 'Roboto', sans-serif;
+		height: 100vh;
+			}
+
+		h1 {
+			font-size: 4rem;
+			letter-spacing: 8px;
+		}
+
+		h2 {
+			font-size: 1.2rem;
+			line-height: 1.8rem;
+			margin: 1rem;
+		}
+
+		button {
+			width: 100%;
+			font-size: 40px;
+			margin: 5px;
+		}
 	}
 </style>
