@@ -7,6 +7,13 @@
 	let showModal = false;
 	let modalTitle = '';
 
+	let errorMessage = '';
+
+	onMount(() => {
+		// Check for an error message in the page state
+		errorMessage = $page.state?.errorMessage || '';
+	});
+
 	function openModal(title) {
 		modalTitle = title;
 		showModal = true;
@@ -17,10 +24,18 @@
 </script>
 
 <main>
-	<div class="left">
-		<h1>Bots Against Alignment</h1>
-		<h2>A turn-based multiplayer game.<br /> Users compete to align their bot to the Aligner</h2>
-	</div>
+	<h1>Bots Against 
+		Alignment</h1>
+	<h2>
+		A turn-based multiplayer game. 
+		Users compete to align their bot to the Aligner
+	</h2>
+
+	{#if errorMessage}
+		<div class="error-message" role="alert">
+			{errorMessage}
+		</div>
+	{/if}
 
 	<div class="buttons-container">
 		<button on:click={() => openModal('Join Game')}>Join Game</button>
@@ -35,45 +50,26 @@
 <style>
 	main {
 		display: flex;
-		flex-direction: row;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
 		font: 1.5rem/1.5 'Roboto', sans-serif;
 		height: 100vh;
 	}
-
-	.left {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		font: 1.5rem/1.5 'Roboto', sans-serif;
-		/* height: 100vh; */
-	}
 	h1 {
-		font-size: 7rem;
+		font-size: 3rem;
 		margin-bottom: 1rem;
 		color: rgb(0, 0, 0);
-		height: 100%;
-		/* background-color: blue; */
-		
-		font-weight: bold;
-		letter-spacing: 7px;
-		color:rgb(123, 255, 0);
-		text-shadow: 4px 4px 5px rgba(0,0,0,0.2);
-		/* text-shadow: 0px 10px 15px 10px rgba(0, 0, 0, 0.1); */
-		}
+	}
 
 	h2 {
 		margin-top: 3rem;
-		font-size: 1.7rem;
+		font-size: 1.4rem;
 		max-width: 40rem;
 		margin-bottom: 2rem;
 		text-align: center;
 		padding: 0 6rem;
 		font-weight: 100;
-		letter-spacing: 2px;
-		line-height: 2.3rem;
 		color: #6c757d;
 	}
 
@@ -81,31 +77,32 @@
 		font-size: 1.5rem;
 		font-weight: bold;
 		padding: 0.75rem 1.5rem;
-		/* margin: 0.5rem 0.5rem; */
-		height: 100%;
+		margin: 0.5rem 0.5rem;
 		cursor: pointer;
 		border: 3px solid rgb(0, 0, 0);
 		background-color: rgb(0, 0, 0);
 		border-radius: 2rem;
 		color: white;
-		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.3);
-		width: calc(100%-20px);
-		font-size: 80px;
-		margin: 10px;
-	}
-	button:hover {
-		background-color: rgb(123, 255, 0);
-		color: rgb(0, 0, 0);
-	}
+		box-shadow: 0px 10px 15px -3px rgba(0,0,0,0.1);
+
+		}
+		button:hover {
+			background-color: rgb(123, 255, 0);
+			color: rgb(0, 0, 0);
+		}
 
 	.buttons-container {
 		display: flex;
 		justify-content: center;
 		flex-direction: column;
-		/* margin-top: 1rem; */
-		/* background-color: blue; */
-		height: 100%;
+		margin-top: 1rem;
 	}
 
-
+	.error-message {
+		background-color: #f8d7da;
+		border: 1px solid #f5c2c7;
+		color: #842029;
+		margin-top: 1rem;
+		padding: 1rem;
+	}
 </style>
