@@ -366,7 +366,7 @@ def get_game(game_id):
 
 @app.post("/game")
 @limiter.limit("10/minute")  # Custom rate limit for this route (e.g., 10 requests per minute)
-def create_game():
+def create_game(request: Request):
 	"""Creates a new game and returns the creator ID and game ID"""
 	game = Game()
 	#game_state.state[game.game_id] = game
@@ -529,7 +529,7 @@ def game_finale(game_id:str):
 
 @app.get('/randomize_bot_name')
 @limiter.limit("10/minute")  # Custom rate limit for this route (e.g., 10 requests per minute)
-def random_bot_name(game_id:str):
+def random_bot_name(request: Request, game_id:str):
 	'''returns a random bot name based on chatGPT'''
 	game = game_state.state.get(game_id)
 	bot_name =run_random_bot_name_prompt()
@@ -537,7 +537,7 @@ def random_bot_name(game_id:str):
 
 @app.get('/randomize_aligner_prompt')
 @limiter.limit("10/minute")  # Custom rate limit for this route (e.g., 10 requests per minute)
-def random_aligner_prompt(game_id:str):
+def random_aligner_prompt(request: Request, game_id:str):
 	'''returns a random aligner prompt based on chatGPT'''
 	game = game_state.state.get(game_id)
 	aligner_prompt = run_random_aligner_prompt()
@@ -546,7 +546,7 @@ def random_aligner_prompt(game_id:str):
 
 @app.get('/randomize_bot_prompt')
 @limiter.limit("10/minute")  # Custom rate limit for this route (e.g., 10 requests per minute)
-def random_bot_prompt(game_id:str):
+def random_bot_prompt(request: Request, game_id:str):
 	'''returns a random bot prompt based on chatGPT'''
 	game = game_state.state.get(game_id)
 	bot_prompt = run_random_bot_prompt()
