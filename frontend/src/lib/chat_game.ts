@@ -38,8 +38,8 @@ class ChatGame {
 		if (this.manager.gun == null) {
 			throw new Error('**gun is null');
 		}
-		this.manager.gun.get(this.gameId).on((data, key) => {
-			console.log('GUN MESSAGE', data, 'key', key);
+		this.manager.gun.get(this.gameId).on((data) => {
+			console.log('GUN MESSAGE', data);
             
             if (this.seenMessages.has(data.uuid)) {
                 return;
@@ -58,7 +58,7 @@ class ChatGame {
 			if (!this.gameWatcher) {
 				this.initGameWatcher();
 			}
-			this.sendAnonymousMessage('A new viewer joined');
+			this.sendSystemMessage('A new viewer joined', this.gameId);
 		};
 		this.manager.enqueue(_run);
 	}
@@ -71,14 +71,16 @@ class ChatGame {
 			}
 			console.log('>>>>>JOIN GAME', this.gameId, botName);
 			this.botName = botName;
-			this.sendStatusMessage('joined the game');
+			this.sendStatusMessage('joined the game', this.gameId, this.botName);
 		};
 		this.manager.enqueue(_run);
 	}
 
 	leaveGame() {
 		const _run = () => {
-			this.sendStatusMessage('left the game');
+            if (this.botName) {
+                this.sendStatusMessage('left the game', this.gameId, this.botName);
+            }
 			this.subscribers = [];
 			this.botName = null;
 
@@ -99,7 +101,8 @@ class ChatGame {
           
     }
 
-	sendMessage = (message: string) => {
+	sendMessage = (message: string, gameId: string, botName: string) => {
+        const uuid = this.createUUID();
 		const _run = () => {
 			if (this.botName === null) {
 				throw new Error('botName is null');
@@ -108,54 +111,76 @@ class ChatGame {
 				throw new Error('2gun is null');
 			}
 
-			console.log('sending message', message, this.botName, this.gameId);
-			this.manager.gun.get(this.gameId).put({
+			console.log('sending message', message, botName, gameId);
+			this.manager.gun.get(gameId).put({
 				message,
 				timestamp: Date.now(),
-				botName: this.botName,
+				botName: botName,
 				isStatusMessage: false,
-                uuid: this.createUUID()
+                isSystemMessage: false,
+                uuid
 			});
 		};
 		this.manager.enqueue(_run);
 	}
 
-	sendStatusMessage = (message: string) => {
+	sendStatusMessage = (message: string, gameId: string, botName: string) => {
+        const uuid = this.createUUID();
 		const _run = () => {
-			if (this.botName === null) {
+			if (botName === null) {
 				throw new Error('botName is null');
 			}
 
-			console.log('sending status message', message, this.botName, this.gameId);
-			this.manager.gun.get(this.gameId).put({
+			console.log('sending status message', message, botName, gameId);
+			this.manager.gun.get(gameId).put({
 				message,
 				timestamp: Date.now(),
-				botName: this.botName,
+				botName: botName,
 				isStatusMessage: true,
-                uuid: this.createUUID()
+                isSystemMessage: false,
+                uuid
 			});
 		};
 		this.manager.enqueue(_run);
 	}
 
-
-
-        
-
-	sendAnonymousMessage = (message: string) => {
+    sendSystemMessage = (message: string, gameId: string) => {
+        const uuid = this.createUUID();
 		const _run = () => {
-			console.log('sending anonymous message', message, this.gameId);
-			this.manager.gun.get(this.gameId).put({
+			// if (this.botName === null) {
+			// 	throw new Error('botName is null');
+			// }
+
+			console.log('sending system message', message);
+			this.manager.gun.get(gameId).put({
 				message,
 				timestamp: Date.now(),
 				botName: null,
 				isStatusMessage: false,
                 isSystemMessage: true,
-                uuid: this.createUUID()
+                uuid
 			});
 		};
 		this.manager.enqueue(_run);
 	}
+
+
+        
+
+	// sendAnonymousMessage = (message: string) => {
+	// 	const _run = () => {
+	// 		console.log('sending anonymous message', message, this.gameId);
+	// 		this.manager.gun.get(this.gameId).put({
+	// 			message,
+	// 			timestamp: Date.now(),
+	// 			botName: null,
+	// 			isStatusMessage: false,
+    //             isSystemMessage: false,
+    //             uuid
+	// 		});
+	// 	};
+	// 	this.manager.enqueue(_run);
+	// }
 
 	subscribe = (callback: Subscriber) => {
 		this.subscribers.push(callback);

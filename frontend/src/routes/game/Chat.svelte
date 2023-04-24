@@ -26,8 +26,17 @@
 		if (chat == null) {
 			throw new Error('Chat is null');
 		}
+
+		const gameId = $globalStore.game_id;
+		const botName = $globalStore.bot_name;
+		if (gameId == null) {
+			throw new Error('Game ID is null');
+		}
+		if (botName == null) {
+			throw new Error('Bot name is null');
+		}
 		// messages.push({ isUser: true, name: 'User', icon: '/user-icon.png', text: inputText });
-		chat.sendMessage(inputText);
+		chat.sendMessage(inputText, gameId, botName);
 		inputText = '';
 		// scrollToBottom();
 	}
