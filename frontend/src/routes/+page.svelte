@@ -1,25 +1,24 @@
-<script>
-	import { onMount } from 'svelte';
+<script lang="ts">
 	import JoinGameModal from './JoinGameModal.svelte';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores'; // Add this line
 
 	let showModal = false;
 	let modalTitle = '';
 
-	function openModal(title) {
+	function openModal(title: string) {
 		modalTitle = title;
 		showModal = true;
 	}
 	function navigateToGame() {
-		goto('/game'); // Add this line
+		goto('/game');
 	}
 </script>
 
 <main>
 	<div class="left">
 		<h1>Bots Against Alignment</h1>
-		<h2>A turn-based multiplayer game.<br /> Users compete to align their bot to the Aligner</h2>
+		<h2>A turn-based multiplayer game</h2>
+		<!-- <h2>Users compete to align their bot to the Aligner</h2> -->
 	</div>
 
 	<div class="buttons-container">
@@ -48,40 +47,42 @@
 		align-items: center;
 		justify-content: center;
 		font: 1.5rem/1.5 'Roboto', sans-serif;
-		/* height: 100vh; */
+		height: 100%;
 	}
 	h1 {
 		font-size: 7rem;
-		margin-bottom: 1rem;
+		/* margin-bottom: 1rem; */
 		color: rgb(0, 0, 0);
-		height: 100%;
-		/* background-color: blue; */
-		
+		/* height: 100%; */
 		font-weight: bold;
-		letter-spacing: 7px;
-		color:rgb(123, 255, 0);
-		text-shadow: 4px 4px 5px rgba(0,0,0,0.2);
-		/* text-shadow: 0px 10px 15px 10px rgba(0, 0, 0, 0.1); */
-		}
+		letter-spacing: 15px;
+		color: rgb(123, 255, 0);
+		text-shadow: 4px 4px 5px rgba(67, 164, 25, 0.3);
+		margin: 0;
+		font-family: 'Bebas Neue', cursive;
+		-webkit-text-stroke-width: 2px;
+  -webkit-text-stroke-color: rgba(0, 0, 0, 0.6);
+	}
 
 	h2 {
-		margin-top: 3rem;
+		/* margin-top: 3rem; */
 		font-size: 1.7rem;
-		max-width: 40rem;
-		margin-bottom: 2rem;
+		/* max-width: 40rem; */
+		/* margin-bottom: 2rem; */
 		text-align: center;
-		padding: 0 6rem;
+		/* padding: 0 6rem; */
 		font-weight: 100;
 		letter-spacing: 2px;
 		line-height: 2.3rem;
-		color: #6c757d;
+		color: #000000;
+		margin: 0;
+		margin: 2rem;
 	}
 
 	button {
 		font-size: 1.5rem;
 		font-weight: bold;
 		padding: 0.75rem 1.5rem;
-		/* margin: 0.5rem 0.5rem; */
 		height: 100%;
 		cursor: pointer;
 		border: 3px solid rgb(0, 0, 0);
@@ -102,10 +103,6 @@
 		display: flex;
 		justify-content: center;
 		flex-direction: column;
-		/* margin-top: 1rem; */
-		/* background-color: blue; */
 		height: 100%;
 	}
-
-
 </style>
