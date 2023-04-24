@@ -10,7 +10,7 @@ import random
 from dotenv import load_dotenv
 import openai
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from src.game_state import game_state
