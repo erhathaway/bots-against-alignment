@@ -35,7 +35,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.middleware("http")(limiter.middleware)
+
+app.state.limiter = limiter
 app.add_exception_handler(HTTPException, _rate_limit_exceeded_handler)
 
 src_dir = Path(Path.cwd().anchor) / "backend" / "src"
