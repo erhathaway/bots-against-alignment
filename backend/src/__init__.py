@@ -10,7 +10,7 @@ import random
 from dotenv import load_dotenv
 import openai
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from src.game_state import game_state
@@ -35,7 +35,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.middleware("http")(limiter.middleware)
+
+app.state.limiter = limiter
 app.add_exception_handler(HTTPException, _rate_limit_exceeded_handler)
 
 src_dir = Path(Path.cwd().anchor) / "backend" / "src"
@@ -71,7 +72,7 @@ class Game:
 	turn_ended: bool
 	turn_started: bool
 	auto_players: int
-
+	max_auto_players: int
 	
 	def __init__(self):
 		self.game_id = str(uuid.uuid4())
@@ -93,6 +94,7 @@ class Game:
 		self.turn_started = False
 		self.turn_ended = False
 		self.auto_players = 0
+		self.max_auto_players = 0
 	
 	def to_dict(self):
 		return {
@@ -126,7 +128,7 @@ class Game:
 	def add_to_bot_names(self, bot_name: str, user_id: str,current_prompt:str,is_auto = False):
 		if is_auto:
 			self.auto_players +=1
-		self.user_bots[user_id] = {"name":bot_name, "score":"0","current_prompt":current_prompt,"prompts_remaining":self.prompts_remaining,"submitted_prompts":current_prompt,"turn_complete":False,"is_bot":is_auto}
+		self.user_bots[user_id] = {"name":bot_name, "score":0,"current_prompt":current_prompt,"prompts_remaining":self.prompts_remaining,"submitted_prompts":current_prompt,"turn_complete":False,"is_bot":is_auto}
 	
 	def bots_to_list(self):
 		bots = []
@@ -152,7 +154,7 @@ class Game:
 			alignment_response['is_round_winner'] = False
 			if user_id == winner:
 				alignment_response["is_round_winner"] = True
-			if int(self.user_bots[user_id]["score"])>=10:
+			if self.user_bots[user_id]["score"]>=10:
 				alignment_response["is_global_winner"] = True
 			else:
 				alignment_response["is_global_winner"] = False
@@ -364,7 +366,7 @@ def get_game(game_id):
 
 @app.post("/game")
 @limiter.limit("10/minute")  # Custom rate limit for this route (e.g., 10 requests per minute)
-def create_game():
+def create_game(request: Request):
 	"""Creates a new game and returns the creator ID and game ID"""
 	game = Game()
 	#game_state.state[game.game_id] = game
@@ -420,6 +422,16 @@ def user_status(game_id:str, user_id:str):
 	submitted_prompts = user_bot["submitted_prompts"]
 	return{"points":points,"bot_prompts_remaining":prompts_remaining,"submitted_prompts":submitted_prompts}
 
+@app.post("/set_max_game_autobot_count")
+def set_max_game_autobot_count(game_id: str, creator_id: str, max_auto_players: int):
+	"""Sets the maximum number of auto players for the game with the specified game ID"""
+	game = game_state.state.get(game_id)
+	if game is None:
+		raise HTTPException(status_code=404, detail="Game not found")
+	if game.creator_id != creator_id:
+		raise HTTPException(status_code=403, detail="Forbidden")
+	game.max_auto_players = max_auto_players
+	return {"max_auto_players": max_auto_players}
 
 @app.post("/start")
 def start_game(game_id: str, creator_id: str):
@@ -432,11 +444,16 @@ def start_game(game_id: str, creator_id: str):
 	game.game_status = "STARTED"
 	'''Add bots if not 4 users'''
 	if len(game.user_ids) < 4:
-		if len(game.user_ids) < 3:
-			for i in range(4-len(game.user_ids)):
+		auto_players_to_add = min(game.max_auto_players,(4-len(game.user_ids)))
+		if game.auto_players >= game.max_auto_players:
+			pass
+		elif auto_players_to_add > 2:
+			for i in range(auto_players_to_add):
+				game.auto_players+=1
 				make_auto_player_random_vars(game)
 		else:
 			for i in range(4-len(game.user_ids)):
+				game.auto_players+=1
 				make_auto_player_single_thread(game)
 	game.make_full_aligner_prompt()
 
@@ -497,7 +514,7 @@ def turn_finale(game_id:str,turn_id:str):
 	print(response)
 	winner = parse_response_for_winner(response,user_id_to_num)
 	#print('2.'+winner)
-	game.user_bots[winner]["score"] = str(int(game.user_bots[winner]["score"])+1)
+	game.user_bots[winner]["score"] = game.user_bots[winner]["score"]+1
 	alignment_responses = game.build_alignment_reponse(winner)
 	game.turn_started=False
 	return {"alignment_responses": alignment_responses}
@@ -512,7 +529,7 @@ def game_finale(game_id:str):
 
 @app.get('/randomize_bot_name')
 @limiter.limit("10/minute")  # Custom rate limit for this route (e.g., 10 requests per minute)
-def random_bot_name(game_id:str):
+def random_bot_name(request: Request, game_id:str):
 	'''returns a random bot name based on chatGPT'''
 	game = game_state.state.get(game_id)
 	bot_name =run_random_bot_name_prompt()
@@ -520,7 +537,7 @@ def random_bot_name(game_id:str):
 
 @app.get('/randomize_aligner_prompt')
 @limiter.limit("10/minute")  # Custom rate limit for this route (e.g., 10 requests per minute)
-def random_aligner_prompt(game_id:str):
+def random_aligner_prompt(request: Request, game_id:str):
 	'''returns a random aligner prompt based on chatGPT'''
 	game = game_state.state.get(game_id)
 	aligner_prompt = run_random_aligner_prompt()
@@ -529,7 +546,7 @@ def random_aligner_prompt(game_id:str):
 
 @app.get('/randomize_bot_prompt')
 @limiter.limit("10/minute")  # Custom rate limit for this route (e.g., 10 requests per minute)
-def random_bot_prompt(game_id:str):
+def random_bot_prompt(request: Request, game_id:str):
 	'''returns a random bot prompt based on chatGPT'''
 	game = game_state.state.get(game_id)
 	bot_prompt = run_random_bot_prompt()
