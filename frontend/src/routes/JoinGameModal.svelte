@@ -178,7 +178,7 @@
 		padding: 0.75rem 1.5rem;
 		margin: 0.5rem 0.5rem;
 		cursor: pointer;
-		border: 1px solid rgb(0, 0, 0);
+		border: 3px solid rgb(0, 0, 0);
 		background-color: rgb(0, 0, 0);
 		border-radius: 2rem;
 		color: white;

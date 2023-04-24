@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { NotificationKind, addNotification, globalStore } from '$lib/store';
 	import { onMount } from 'svelte';
 	import LoadingBars from './LoadingBars.svelte';
@@ -9,39 +9,135 @@
 	// import { browser } from '$app/environment'; // Import browser from $app/env
 	// const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 
-	export let data;
-	let alignment_prompt, turn_id;
+	// export let data;
+	let alignment_request: string | null = null;
+	let turn_id: number | null = null;
 	let points = 0;
 	let prompts_remaining = 3;
 	let game_id = $globalStore.game_id;
 	let user_id = $globalStore.user_id;
-    let bot_name = $globalStore.bot_name;
+	let bot_name = $globalStore.bot_name;
 	let botsSubmitted = 0;
 	let totalBots = 0;
 
-	let botPrompt = '';
+	let botPrompt: string | null = null;
 
 	$: {
 		botPrompt = $globalStore.current_bot_prompt;
 	}
 
+	async function fetchTurnEndData() {
+		try {
+			const url = `${BACKEND_API}/turn_finale?game_id=${$globalStore.game_id}&turn_id=${$globalStore.last_turn_id}`;
+			console.log('TURN FINALE URL', url)
+			const response = await fetch(url);
+			const data = await response.json();
+			console.log('TURN FINALE DATA', data);
+			if (response.ok) {
+				// console.log('TURN FINALE DATA', data)
+				// alignmentResponses = data.alignment_responses;
+				botsSubmitted = data.bots_submitted;
+				totalBots = data.total_bots;
+			} else {
+				console.error('Failed to get turn finale');
+				// addNotification({
+				// 	source_url: 'aligner says',
+				// 	title: 'Error getting turn finale',
+				// 	body: data,
+				// 	kind: NotificationKind.ERROR,
+				// 	action_url: url,
+				// 	action_text: 'get turn finale'
+				// });
+			}
+			// alignmentResponses = data.alignment_responses;
+		} catch (error) {
+			console.error('Failed to fetch data:', error);
+		}
+	}
+
+	async function fetchGameStatus() {
+		const url = `${BACKEND_API}/game_status?game_id=${$globalStore.game_id}`;
+		const response = await fetch(url);
+		// const data = await response.json();
+		// const response = await fetch(`${BACKEND_API}/game_status?game_id=${game_id}`);
+		const data = await response.json();
+
+		console.log('GAME STATUS', data)
+		if (response.ok) {
+			let currentUserBot = null;
+			let allBotsTurnComplete = true;
+			let completedBots = 0;
+
+			if (data && data.bots) {
+				console.log('LOOKING AT BOTS');
+				for (const bot of data.bots) {
+					console.log('BOT', bot);
+					if (bot.turn_complete) {
+						completedBots++;
+					} else {
+						allBotsTurnComplete = false;
+					}
+					if (bot.name === bot_name) {
+						currentUserBot = bot;
+					}
+				}
+				botsSubmitted = completedBots;
+				totalBots = data.bots.length;
+				console.log(
+					'BOTS SUBMITTED',
+					botsSubmitted,
+					'TOTAL BOTS',
+					totalBots,
+					'CURRENT USER BOT',
+					currentUserBot,
+					'ALL BOTS TURN COMPLETE',
+					allBotsTurnComplete
+				);
+			}
+
+			if (currentUserBot && allBotsTurnComplete) {
+				// goto('/ranking');
+				console.log('-----------------------RANKING------------------------');
+			}
+		} else {
+			console.error('Failed to get game status');
+			addNotification({
+				source_url: 'aligner says',
+				title: 'Error getting game status',
+				body: data,
+				kind: NotificationKind.ERROR,
+				action_url: url,
+				action_text: 'get game status'
+			});
+		}
+	}
 
 	async function fetchData() {
+		fetchGameStatus();
+		fetchTurnEndData();
 		const turn_url = `${BACKEND_API}/turn?game_id=${game_id}&creator_id=${user_id}`;
 		const response = await fetch(turn_url);
 		const data = await response.json();
 
 		if (response.ok) {
-		
-		alignment_prompt = data.alignment_prompt;
-		turn_id = data.turn_id;
-        // console.log('TURN ID', turn_id)
-        globalStore.update((state) => ({
-            ...state,
-            last_turn_id: turn_id
-        }));
-		
-	
+			console.log('TURN DATA', data);
+			alignment_request = data.alignment_prompt;
+			turn_id = data.turn_id;
+			// console.log('TURN ID', turn_id)
+			if (turn_id && turn_id !== $globalStore.last_turn_id) {
+				globalStore.update((state) => ({
+					...state,
+					last_turn_id: turn_id
+				}));
+			}
+			if (alignment_request && alignment_request !== $globalStore.last_alignment_request) {
+				globalStore.update((state) => ({
+					...state,
+					last_alignment_request: alignment_request
+				}));
+				// const chat = chat_manager.findOrCreateChatGame($globalStore.game_id);
+				// chat.sendMessage(alignment_request, $globalStore.game_id, 'ALIGNER');
+			}
 		} else {
 			console.error('Failed to get turn');
 			addNotification({
@@ -55,13 +151,11 @@
 		}
 
 		const user_status_url = `${BACKEND_API}/user_status?game_id=${game_id}&user_id=${user_id}`;
-		const statusResponse = await fetch(
-			user_status_url
-		);
+		const statusResponse = await fetch(user_status_url);
 		const statusData = await statusResponse.json();
 
+		console.log('USER STATUS', statusData);
 		if (statusResponse.ok) {
-
 			points = statusData.points;
 			prompts_remaining = statusData.bot_prompts_remaining;
 		} else {
@@ -75,7 +169,6 @@
 				action_text: 'get user status'
 			});
 		}
-
 	}
 
 	onMount(async () => {
@@ -83,7 +176,7 @@
 		const fdId = setInterval(fetchData, 3000);
 		return () => {
 			clearInterval(fdId);
-		}
+		};
 	});
 
 	let isCompleteTurnPending = false;
@@ -92,52 +185,50 @@
 
 		isCompleteTurnPending = true;
 		try {
-		const queryParams = new URLSearchParams({
-			game_id,
-			user_id
-		});
-
-		const url = `${BACKEND_API}/completeturn?${queryParams}`;
-
-		const response = await fetch(url, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-		});
-
-		// console.log('COMPLETED TURN', response)
-
-		if (response.ok) {
-			// globalStore.update((store) => ({
-			// 	...store,
-			// 	is_game_started: true
-			// }));
-		} else {
-			// Show an error message or handle the error accordingly
-			const data = await response.json();
-			// console.error('Failed to start the game');
-			addNotification({
-				source_url: 'aligner says',
-				title: 'Error completing turn',
-				body: data,
-				kind: NotificationKind.ERROR,
-				action_url: url,
-				action_text: 'complete turn'
+			const queryParams = new URLSearchParams({
+				game_id: $globalStore.game_id,
+				user_id: $globalStore.user_id
 			});
-			// const chat = chat_manager.findOrCreateChatGame(game_id);
-			// chat.sendSystemMessage()
+
+			const url = `${BACKEND_API}/completeturn?${queryParams}`;
+
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+			});
+
+			// console.log('COMPLETED TURN', response)
+
+			if (response.ok) {
+				console.log('Turn completed successfully');
+				// globalStore.update((store) => ({
+				// 	...store,
+				// 	is_game_started: true
+				// }));
+				const chat = chat_manager.findOrCreateChatGame($globalStore.game_id);
+				chat.sendStatusMessage('Submitted response', $globalStore.game_id, $globalStore.bot_name);
+			} else {
+				// Show an error message or handle the error accordingly
+				const data = await response.json();
+				// console.error('Failed to start the game');
+				addNotification({
+					source_url: 'aligner says',
+					title: 'Error completing turn',
+					body: data,
+					kind: NotificationKind.ERROR,
+					action_url: url,
+					action_text: 'complete turn'
+				});
+			}
+		} finally {
+			isCompleteTurnPending = false;
 		}
-	}
-	finally {
-		isCompleteTurnPending = false;
-	}
-		
 
 		// await fetch(`${BACKEND_API}/completeturn?${queryParams}`, {
 		// 	method: 'POST',
 		// 	headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
 		// });
 	}
-	
 </script>
 
 <!-- <section id="left"> -->
@@ -149,7 +240,7 @@
 		</div>
 		<div class="config-bottom">
 			<p>
-				{alignment_prompt}
+				{$globalStore.last_alignment_request}
 			</p>
 		</div>
 	</div>
@@ -168,10 +259,7 @@
 	{#if isCompleteTurnPending}
 		<LoadingBars />
 	{:else}
-	<button on:click={completeTurn}>
-
-		Tell Bot To Respond To Aligner
-	</button>
+		<button on:click={completeTurn}> Tell Bot To Respond To Aligner </button>
 	{/if}
 </div>
 
@@ -201,7 +289,6 @@
 		/* width: 100%; */
 		flex-grow: 2;
 	}
-
 
 	button {
 		font-size: 1.5rem;

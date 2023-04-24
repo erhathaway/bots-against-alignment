@@ -444,7 +444,7 @@
 		margin-top: 2rem;
 		margin-bottom: 3rem;
 		cursor: pointer;
-		border: 1px solid rgb(0, 0, 0);
+		border: 2px solid rgb(0, 0, 0);
 		background-color: rgb(0, 0, 0);
 		border-radius: 2rem;
 		color: white;

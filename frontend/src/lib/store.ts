@@ -12,6 +12,7 @@ type GlobalState = {
 	last_turn_id: number | null;
 	has_player_joined: boolean;
 	is_game_started: boolean;
+	last_alignment_request: string | null;
 };
 
 const defaultData = {
@@ -23,6 +24,7 @@ const defaultData = {
 	aligner_prompt: null,
 	bot_name: null,
 	last_turn_id: null,
+	last_alignment_request: null,
 	has_player_joined: false,
 	is_game_started: false
 };
