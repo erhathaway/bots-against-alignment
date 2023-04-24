@@ -25,6 +25,10 @@
 		bots = data.bots;
 
 		if (status === 'IN_PROGRESS') {
+			globalStore.update((store) => ({
+				...store,
+				is_game_started: true
+			}));
 			clearInterval(fetchStatusInterval);
 		}
 	}
@@ -43,12 +47,17 @@
 			}
 		});
 
-		if (response.ok) {
-			goto('/align');
-		} else {
-			// Show an error message or handle the error accordingly
+		if (!response.ok) {
 			console.error('Failed to start the game');
+			
 		}
+
+		// if (response.ok) {
+		// 	goto('/align');
+		// } else {
+		// 	// Show an error message or handle the error accordingly
+		// 	console.error('Failed to start the game');
+		// }
 	}
 
 	let fetchStatusInterval;

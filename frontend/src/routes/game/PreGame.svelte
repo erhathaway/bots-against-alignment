@@ -237,7 +237,7 @@
 						aligner_prompt: alignerPrompt,
 						bot_name: botName,
 						user_id: data.user_id,
-						has_player_joined: true
+						has_player_joined: true,
 					};
 				});
 				// console.log('has joined game');

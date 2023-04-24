@@ -1,8 +1,12 @@
-<script>
+<script lang="ts">
 	import { NotificationKind, addNotification, globalStore } from '$lib/store';
+	import { onMount } from 'svelte';
 	import LoadingBars from './LoadingBars.svelte';
 	import LoadingCommas from './LoadingCommas.svelte';
+	import chat_manager from '$lib/chat_manager';
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
+
+	let fetchStatusInterval: NodeJS.Timer | null = null;
 
 	// const startGame = () => {
 	// 	globalStore.update((store) => ({
@@ -11,6 +15,40 @@
 
 	//     }));
 	// };
+	async function fetchStatus() {
+		const url = `${BACKEND_API}/game_status?game_id=${$globalStore.game_id}`;
+
+		const response = await fetch(url, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				'Access-Control-Allow-Origin': '*'
+			}
+		});
+		const data = await response.json();
+		if (response.ok) {
+			const status = data.status;
+			console.log('GAME STATUS -------->', status, $globalStore);
+			// bots = data.bots;
+
+			if (status === 'STARTED' || status === 'ENDED' || status === 'WAITING_ON_ALIGNMENT_RATING') {
+				globalStore.update((store) => ({
+					...store,
+					is_game_started: true
+				}));
+				fetchStatusInterval && clearInterval(fetchStatusInterval);
+			}
+		} else {
+			addNotification({
+				source_url: 'lobby',
+				title: 'Error fetching game status',
+				body: data,
+				kind: NotificationKind.ERROR,
+				action_url: url,
+				action_text: 'fetch_status'
+			});
+		}
+	}
 
 	let isStartGamePending = false;
 	async function startGame() {
@@ -42,6 +80,8 @@
 			});
 
 			if (response.ok) {
+				const chat = chat_manager.findOrCreateChatGame($globalStore.game_id);
+				chat.sendSystemMessage('Game started', $globalStore.game_id);
 				globalStore.update((store) => ({
 					...store,
 					is_game_started: true
@@ -63,6 +103,14 @@
 			isStartGamePending = false;
 		}
 	}
+
+	onMount(() => {
+		fetchStatus();
+		fetchStatusInterval = setInterval(fetchStatus, 3000);
+		return () => {
+			fetchStatusInterval && clearInterval(fetchStatusInterval);
+		};
+	});
 </script>
 
 <div id="lobby">
@@ -74,7 +122,7 @@
 		{#if isStartGamePending}
 			<LoadingBars />
 		{:else}
-		<button on:click={startGame} disabled={$globalStore.is_game_started}> Start Game </button>
+			<button on:click={startGame} disabled={$globalStore.is_game_started}> Start Game </button>
 		{/if}
 	{/if}
 </div>

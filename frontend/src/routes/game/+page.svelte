@@ -1,38 +1,3 @@
-<!-- <script>
-	import { globalStore } from '$lib/store';
-
-	export let data;
-	import { page } from '$app/stores';
-	import { goto } from '$app/navigation'; // Ensure you have this import
-	import { browser } from '$app/environment'; // Import browser from $app/env
-	import Chat from './Chat.svelte';
-	import PreGame from './PreGame.svelte';
-	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
-
-	if (browser) {
-		$page.url.searchParams.set('game_id', $globalStore.game_id);
-
-		goto(`?${$page.url.searchParams.toString()}`, { replaceState: true });
-	}
-</script>
-
-<div id="screen" role="region" aria-label="Game">
-	<section id="left">
-		<div id="first">
-			<PreGame />
-		</div>
-		<div id="second">
-			<PreGame />
-		</div>
-		<div id="third">
-			<PreGame />
-		</div>
-	</section>
-	<section id="right">
-		<Chat />
-	</section>
-</div> -->
-
 <script>
 	import { globalStore } from '$lib/store';
 	import { page } from '$app/stores';
@@ -41,7 +6,7 @@
 	import Chat from './Chat.svelte';
 	import PreGame1 from './PreGame.svelte';
 	import Lobby from './Lobby.svelte';
-	import PreGame3 from './AlignerSays.svelte';
+	import AlignerSays from './AlignerSays.svelte';
 	import { fly } from 'svelte/transition'; // New import
 
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
@@ -115,7 +80,7 @@
 		{/if}
 		{#if currentPreGame === 3}
 			<div in:fly={customFly('in')} out:fly={customFly('out')}>
-				<PreGame3 {data} />
+				<AlignerSays {data} />
 			</div>
 		{/if}
 	</section>

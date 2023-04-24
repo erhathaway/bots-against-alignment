@@ -2,6 +2,8 @@
 	import { NotificationKind, addNotification, globalStore } from '$lib/store';
 	import { onMount } from 'svelte';
 	import LoadingBars from './LoadingBars.svelte';
+	import chat from '$lib/chat';
+	import chat_manager from '$lib/chat_manager';
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 
 	// import { browser } from '$app/environment'; // Import browser from $app/env
@@ -121,6 +123,8 @@
 				action_url: url,
 				action_text: 'complete turn'
 			});
+			// const chat = chat_manager.findOrCreateChatGame(game_id);
+			// chat.sendSystemMessage()
 		}
 	}
 	finally {
