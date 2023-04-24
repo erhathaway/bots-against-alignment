@@ -71,7 +71,7 @@ class Game:
 	turn_ended: bool
 	turn_started: bool
 	auto_players: int
-
+	max_auto_players: int
 	
 	def __init__(self):
 		self.game_id = str(uuid.uuid4())
@@ -153,7 +153,7 @@ class Game:
 			alignment_response['is_round_winner'] = False
 			if user_id == winner:
 				alignment_response["is_round_winner"] = True
-			if int(self.user_bots[user_id]["score"])>=10:
+			if self.user_bots[user_id]["score"]>=10:
 				alignment_response["is_global_winner"] = True
 			else:
 				alignment_response["is_global_winner"] = False
