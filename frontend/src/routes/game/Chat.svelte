@@ -1,26 +1,38 @@
-<script>
+<script lang="ts">
 	import { globalStore } from '$lib/store';
-	import chat from '$lib/chat';
+	// import chat from '$lib/chat';
 	import { onMount, tick } from 'svelte';
 	import { writable } from 'svelte/store';
-	let _messages = [
-		// { isUser: true, name: 'User', icon: '/user-icon.png', text: 'Hello!' },
-		// { isUser: false, name: 'John Doe', icon: '/john-icon.png', text: 'Hi there!' }
-		// Add more messages as needed
-	];
-	let messages = writable(_messages);
+	import chat_manager from '$lib/chat_manager';
+	import type ChatGame from '$lib/chat_game';
+	import type { Message } from '$lib/chat_types';
+	// let _messages = [
+	// 	// { isUser: true, name: 'User', icon: '/user-icon.png', text: 'Hello!' },
+	// 	// { isUser: false, name: 'John Doe', icon: '/john-icon.png', text: 'Hi there!' }
+	// 	// Add more messages as needed
+	// ];
+
+	let chat: ChatGame | null = null;
+	let messages = writable<Message[]>([]);
+	let seenMessages = new Set<string>();
 	let inputText = '';
-	let messageContainer = null;
+	let messageContainer: HTMLElement | null = null;
+	let joinedChatGameId: string | null = null;
+	let watchingChatGameId: string | null = null;
+	let subscribedChatGameId: string | null = null;
 
 	function sendMessage() {
 		if (inputText.trim() === '') return;
+		if (chat == null) {
+			throw new Error('Chat is null');
+		}
 		// messages.push({ isUser: true, name: 'User', icon: '/user-icon.png', text: inputText });
 		chat.sendMessage(inputText);
 		inputText = '';
 		// scrollToBottom();
 	}
 
-	function handleKeyPress(event) {
+	function handleKeyPress(event: KeyboardEvent) {
 		if (event.key === 'Enter') {
 			sendMessage();
 		}
@@ -38,29 +50,23 @@
 		// }
 	}
 
-	let lastBotName = '';
-	let lastGameId = '';
-	let hasJoinedChat = false;
+
 	$: {
-		console.log('CHAT MOUNTED');
-		const hasGameId = $globalStore.game_id != null;
-		const hasBotName = $globalStore.bot_name != null;
-		console.log('hasGameId', hasGameId, 'hasBotName', hasBotName);
-		if (
-			hasGameId &&
-			hasBotName &&
-			($globalStore.bot_name !== lastBotName || $globalStore.game_id !== lastGameId)
-		) {
-			console.log('JOINING CHAT');
-			lastBotName = $globalStore.bot_name;
-			lastGameId = $globalStore.game_id;
-			chat.joinGame(lastGameId, lastBotName);
-			hasJoinedChat = true;
-			// console.log('JOINED CHAT')
+		const game_id = $globalStore.game_id;
+		const bot_name = $globalStore.bot_name;
+
+		const hasJoinedChat = joinedChatGameId === game_id;
+		const hasWatchedChat = watchingChatGameId === game_id;
+		const hasSubscribedChat = subscribedChatGameId === game_id;
+
+		if (hasJoinedChat && hasWatchedChat && hasSubscribedChat) {
+			'false';
+		} else {
+			initChat();
 		}
 	}
 
-	function stringToColor(str) {
+	function stringToColor(str: string) {
 		let hash = 0;
 		for (let i = 0; i < str.length; i++) {
 			hash = str.charCodeAt(i) + ((hash << 5) - hash);
@@ -73,44 +79,65 @@
 		return '#' + '00000'.substring(0, 6 - c.length) + c;
 	}
 
-	function getNameColor(name) {
+	function getNameColor(name: string) {
 		const hash = stringToColor(name);
 		return intToRGB(hash);
 	}
 
-	onMount(() => {
-		// leave any existing games
-		chat.leaveGame();
+	const initChat = () => {
+		const gameId = $globalStore.game_id;
+		const botName = $globalStore.bot_name;
+		if (gameId) {
+			console.log('Init Chat')
+			chat = chat_manager.findOrCreateChatGame(gameId);
+			subscribeToChat();
 
-		// subscribe to chat stream
-		chat.subscribe((lastMessage) => {
-			console.log('New Message: ', lastMessage);
-
-			const isUser = lastMessage.botName === $globalStore.bot_name;
-			const isSystemMessage = lastMessage.botName === null;
-			const newMessage = {
-				isUser,
-				isSystemMessage,
-				name: lastMessage.botName,
-				icon: '../../static/noun-face-1751230.svg',
-				text: lastMessage.message,
-				isStatusMessage: lastMessage.isStatusMessage
-			};
-
-			messages.update((messages) => {
-				return [...messages, newMessage];
+			if (botName ) {
+				if (joinedChatGameId !== gameId) {
+					console.log('Joining Chat')
+					chat.joinGame(botName);
+					joinedChatGameId = gameId;
+				}
+			} else {
+				if (watchingChatGameId !== gameId) {
+					console.log('Watching Chat')
+					chat.watchGame();
+					watchingChatGameId = gameId;
+				}
+			}
+		}
+	};
+	
+	const subscribeToChat = () => {
+		if (!chat) {
+			throw new Error('Chat not initialized. Cant subscribe to chat.');
+		}
+		if (subscribedChatGameId === chat.gameId) {
+			return;
+		}
+		console.log('Subscribing to Chat')
+		chat.subscribe((newMessage) => {
+			console.log('New Message: ', newMessage);
+			if (seenMessages.has(newMessage.uuid)) {
+				return;
+			}
+			messages.update((existingMessages) => {
+				return [...existingMessages, newMessage];
 			});
+			console.log('Seen Messages: ', $messages)
+			seenMessages.add(newMessage.uuid);
 			scrollToBottom();
 		});
+		subscribedChatGameId = chat.gameId;
+	};
 
-		// watch game
-		chat.watchGame($globalStore.game_id);
+	onMount(() => {
+		initChat();
 
 		return () => {
-			chat.leaveGame();
-			hasJoinedChat = false;
-			lastBotName = '';
-			lastGameId = '';
+			if (chat) {
+				chat.leaveGame();
+			}
 		};
 	});
 </script>
@@ -118,37 +145,36 @@
 <div class="chat-window">
 	<div class="message-container" bind:this={messageContainer}>
 		<!-- <div class="padding" /> -->
-		{#each $messages as message (message)}
+		{#each $messages as message, i (i)}
 			{#if message.isSystemMessage}
 				<div class="message system">
 					<div class="message-part-bottom">
-						<div class="message-text">{message.text}</div>
+						<div class="message-text">{message.message}</div>
 					</div>
 				</div>
 			{:else if message.isStatusMessage}
 				<div class="message status">
 					<div class="message-status-contianer">
-
 						<!-- <div class="message-part"> -->
-							<div class="message-text name">{message.name}</div>
-							<!-- <div class="message-part-bottom"> -->
-								<!-- <div class="message-icon" style="background-color: {getNameColor(message.name)};" /> -->
-								<div class="message-text text">{message.text}</div>
-							</div>
+						<div class="message-text name">{message.botName}</div>
+						<!-- <div class="message-part-bottom"> -->
+						<!-- <div class="message-icon" style="background-color: {getNameColor(message.name)};" /> -->
+						<div class="message-text text">{message.message}</div>
+					</div>
 					<!-- </div> -->
 				</div>
 			{:else}
 				<div class="message {message.isUser ? 'user' : 'other'}">
-					<div class="message-part-top">{message.name}</div>
+					<div class="message-part-top">{message.botName}</div>
 					<div class="message-part-bottom">
-						<div class="message-icon" style="background-color: {getNameColor(message.name)};" />
-						<div class="message-text">{message.text}</div>
+						<div class="message-icon" style="background-color: {getNameColor(message.botName)};" />
+						<div class="message-text">{message.message}</div>
 					</div>
 				</div>
 			{/if}
 		{/each}
 	</div>
-	{#if hasJoinedChat}
+	{#if joinedChatGameId && joinedChatGameId === $globalStore.game_id}
 		<div class="input-container">
 			<input
 				class="message-input"

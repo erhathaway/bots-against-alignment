@@ -40,7 +40,7 @@
 	import { browser } from '$app/environment';
 	import Chat from './Chat.svelte';
 	import PreGame1 from './PreGame.svelte';
-	import PreGame2 from './Lobby.svelte';
+	import Lobby from './Lobby.svelte';
 	import PreGame3 from './AlignerSays.svelte';
 	import { fly } from 'svelte/transition'; // New import
 
@@ -110,7 +110,7 @@
 		{/if}
 		{#if currentPreGame === 2}
 			<div in:fly={customFly('in')} out:fly={customFly('out')}>
-				<PreGame2 {data} />
+				<Lobby />
 			</div>
 		{/if}
 		{#if currentPreGame === 3}
