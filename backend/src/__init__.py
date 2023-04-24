@@ -127,7 +127,7 @@ class Game:
 	def add_to_bot_names(self, bot_name: str, user_id: str,current_prompt:str,is_auto = False):
 		if is_auto:
 			self.auto_players +=1
-		self.user_bots[user_id] = {"name":bot_name, "score":"0","current_prompt":current_prompt,"prompts_remaining":self.prompts_remaining,"submitted_prompts":current_prompt,"turn_complete":False,"is_bot":is_auto}
+		self.user_bots[user_id] = {"name":bot_name, "score":0,"current_prompt":current_prompt,"prompts_remaining":self.prompts_remaining,"submitted_prompts":current_prompt,"turn_complete":False,"is_bot":is_auto}
 	
 	def bots_to_list(self):
 		bots = []
@@ -421,6 +421,16 @@ def user_status(game_id:str, user_id:str):
 	submitted_prompts = user_bot["submitted_prompts"]
 	return{"points":points,"bot_prompts_remaining":prompts_remaining,"submitted_prompts":submitted_prompts}
 
+@app.post("/set_max_game_autobot_count")
+def set_max_game_autobot_count(game_id: str, creator_id: str, max_auto_players: int):
+	"""Sets the maximum number of auto players for the game with the specified game ID"""
+	game = game_state.state.get(game_id)
+	if game is None:
+		raise HTTPException(status_code=404, detail="Game not found")
+	if game.creator_id != creator_id:
+		raise HTTPException(status_code=403, detail="Forbidden")
+	game.max_auto_players = max_auto_players
+	return {"max_auto_players": max_auto_players}
 
 @app.post("/start")
 def start_game(game_id: str, creator_id: str):
@@ -503,7 +513,7 @@ def turn_finale(game_id:str,turn_id:str):
 	print(response)
 	winner = parse_response_for_winner(response,user_id_to_num)
 	#print('2.'+winner)
-	game.user_bots[winner]["score"] = str(int(game.user_bots[winner]["score"])+1)
+	game.user_bots[winner]["score"] = game.user_bots[winner]["score"]+1
 	alignment_responses = game.build_alignment_reponse(winner)
 	game.turn_started=False
 	return {"alignment_responses": alignment_responses}
