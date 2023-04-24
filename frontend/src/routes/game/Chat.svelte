@@ -126,15 +126,16 @@
 		}
 		console.log('Subscribing to Chat')
 		chat.subscribe((newMessage) => {
-			console.log('New Message: ', newMessage);
-			if (seenMessages.has(newMessage.uuid)) {
+			const _newMessage = {...newMessage, isUser: newMessage.botName === $globalStore.bot_name}
+			console.log('New Message: ', _newMessage);
+			if (seenMessages.has(_newMessage.uuid)) {
 				return;
 			}
 			messages.update((existingMessages) => {
-				return [...existingMessages, newMessage];
+				return [...existingMessages, _newMessage];
 			});
 			console.log('Seen Messages: ', $messages)
-			seenMessages.add(newMessage.uuid);
+			seenMessages.add(_newMessage.uuid);
 			scrollToBottom();
 		});
 		subscribedChatGameId = chat.gameId;

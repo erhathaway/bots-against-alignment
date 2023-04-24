@@ -4,7 +4,7 @@ export type Message = {
 	botName: string;
 	isStatusMessage: boolean;
     isSystemMessage: boolean;
-    isUser: boolean;
+    isSelf: boolean;
     uuid: string;
 };
 

@@ -39,16 +39,17 @@ class ChatGame {
 			throw new Error('**gun is null');
 		}
 		this.manager.gun.get(this.gameId).on((data) => {
-			console.log('GUN MESSAGE', data);
+            const newMessage = {...data};
+			console.log('GUN MESSAGE', newMessage, 'subscriber count', this.subscribers.length, 'existing messages', this.messages);
             
-            if (this.seenMessages.has(data.uuid)) {
+            if (this.seenMessages.has(newMessage.uuid)) {
                 return;
             }
-			this.lastMessageKey = data.uuid;
-			this.messages.push(data);
+			this.lastMessageKey = newMessage.uuid;
+			this.messages.push({...newMessage});
 
-			this.subscribers.forEach((callback) => callback(data, this.messages));
-            this.seenMessages.add(data.uuid);
+			this.subscribers.forEach((callback) => callback(newMessage, this.messages));
+            this.seenMessages.add(newMessage.uuid);
 		});
 		// }, 5000);
 	}
