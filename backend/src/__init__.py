@@ -93,6 +93,7 @@ class Game:
 		self.turn_started = False
 		self.turn_ended = False
 		self.auto_players = 0
+		self.max_auto_players = 0
 	
 	def to_dict(self):
 		return {
@@ -432,11 +433,16 @@ def start_game(game_id: str, creator_id: str):
 	game.game_status = "STARTED"
 	'''Add bots if not 4 users'''
 	if len(game.user_ids) < 4:
-		if len(game.user_ids) < 3:
-			for i in range(4-len(game.user_ids)):
+		auto_players_to_add = min(game.max_auto_players,(4-len(game.user_ids)))
+		if game.auto_players >= game.max_auto_players:
+			pass
+		elif auto_players_to_add > 2:
+			for i in range(auto_players_to_add):
+				game.auto_players+=1
 				make_auto_player_random_vars(game)
 		else:
 			for i in range(4-len(game.user_ids)):
+				game.auto_players+=1
 				make_auto_player_single_thread(game)
 	game.make_full_aligner_prompt()
 
