@@ -25,7 +25,30 @@
 		delay: direction === 'in' ? 300 : 0,
 		duration: 300,
 		easing: (t) => --t * t * t + 1,
-		y: direction === 'in' ? -100 : 100
+		y: direction === 'in' ? 200 : -200
+	});
+
+	const screenTransition = (direction) => ({
+		delay: direction === 'in' ? 300 : 0,
+		duration: 300,
+		easing: (t) => --t * t * t + 1,
+		x: direction === 'in' ? 200 : 0,
+		y: direction === 'in' ? 0 : 500
+	});
+
+	const leftTransition = (direction) => ({
+		delay: direction === 'in' ? 300 : 0,
+		duration: 300,
+		easing: (t) => --t * t * t + 1,
+		x: direction === 'in' ? 200 : 0,
+		y: direction === 'in' ? 0 : 500
+	});
+
+	const chatTransition = (direction) => ({
+		// delay: direction === 'in' ? 300 : 0,
+		// duration: 300,
+		easing: (t) => --t * t * t + 1,
+		// x: direction === 'in' ? -200 : 200
 	});
 
 	// const rotateMe = () => {
@@ -66,8 +89,8 @@
 	}
 </script>
 
-<div id="screen" role="region" aria-label="Game">
-	<section id="left">
+<div id="screen" role="region" aria-label="Game"  in:fly={screenTransition('in')} >
+	<section id="left" out:fly={leftTransition('out')}>
 		{#if currentPreGame === 1}
 			<div in:fly={customFly('in')} out:fly={customFly('out')}>
 				<PreGame1 {data} />
@@ -84,7 +107,7 @@
 			</div>
 		{/if}
 	</section>
-	<section id="right">
+	<section id="right"  out:fly={chatTransition('out')} >
 		<Chat />
 	</section>
 	<!-- <button on:click={rotateMe}>Change PreGame</button> -->
