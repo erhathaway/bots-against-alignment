@@ -82,7 +82,7 @@
 		border-radius: 2rem;
 		color: white;
 		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.3);
-		width: calc(100%-20px);
+		/* width: calc(100%-90px); */
 		font-size: 80px;
 		margin: 10px;
 	}
@@ -111,9 +111,9 @@
 		}
 
 		button {
-			width: 100%;
+			/* width: 100%; */
 			font-size: 50px;
-			margin: 5px;
+			/* padding: 50px; */
 		}
 	}
 
@@ -135,11 +135,11 @@
 		h2 {
 			font-size: 1.2rem;
 			line-height: 1.8rem;
-			margin: 1rem;
+			margin: 0rem;
 		}
 
 		button {
-			width: 100%;
+			/* width: 100%; */
 			font-size: 40px;
 			margin: 5px;
 		}
