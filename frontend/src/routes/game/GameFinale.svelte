@@ -40,7 +40,7 @@
 </script>
 
 <div class="game-finale">
-	<h1>YOU LOOSE!</h1>
+	<h1>YOU LOSE!</h1>
 
 	<div class="image-container">
 		<img src={image} alt="Game end" />
