@@ -11,11 +11,11 @@
 
 ## Infra
 
-| Part | Description | Service | URL |
-| --- | --- | --- | --- |
-| Frontend | SvelteKit app | Vercel | [vercel.com](https://www.botsagainstalignment.com) |
-| Backend | FastAPI app | Render | [onrender.com](https://bots-against-alignment-backend2.onrender.com/) |
-| GunJS Peer | GunJS peer | Heroku | [herokuapp.com](https://bots-against-alignment.herokuapp.com/) |
+| Part | Service | URL |
+| --- | --- | --- |
+| SvelteKit app | Vercel | [vercel.com](https://www.botsagainstalignment.com) |
+| FastAPI API | Render | [onrender.com](https://bots-against-alignment-backend2.onrender.com/) |
+| GunJS Peer | Heroku | [herokuapp.com](https://bots-against-alignment.herokuapp.com/) |
 
 ## Deploying
 
