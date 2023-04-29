@@ -73,10 +73,10 @@
 	}
 
 	button {
-		font-size: 1.5rem;
+		/* font-size: 1.5rem; */
 		font-weight: bold;
-		padding: 0.75rem 1.5rem;
-		height: 100%;
+		/* padding: 0.75rem 1.5rem; */
+		/* height: 100%; */
 		cursor: pointer;
 		border: 3px solid rgb(0, 0, 0);
 		background-color: rgb(0, 0, 0);
@@ -85,27 +85,41 @@
 		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.3);
 		/* width: calc(100%-90px); */
 		font-size: 80px;
-		margin: 10px;
+		margin: 5%;
 	}
 	button:hover {
 		background-color: rgb(123, 255, 0);
 		color: rgb(0, 0, 0);
-		padding: 100px;
+		/* padding: 100px; */
 	}
 
 	.buttons-container {
 		display: flex;
-		justify-content: flex-end;
+		justify-content: center;
 		flex-direction: column;
 		width: 100%;
 		height: 100%;
 		padding: 70px;
+		/* margin-left: 0px; */
 	}
 
-	@media(max-width: 900px) {
-		h1 {
+	@media(max-width: 1300px) {
+		h1 { 
 			font-size: 110px;
-			letter-spacing: 10px;
+			letter-spacing: 0px;
+			line-height: 100px;
+		}
+
+		button {
+			font-size: 60px;
+		}
+	}
+
+	@media(max-width: 950px) {
+		h1 {
+			font-size: 80px;
+			letter-spacing: 0px;
+			line-height: 70px;
 		}
 
 		h2 {
@@ -141,8 +155,11 @@
 			}
 
 		h1 {
-			font-size: 70px;
+			font-size: 80px;
 			letter-spacing: 8px;
+			letter-spacing: 0px;
+			line-height: 70px;
+			margin-bottom: 10px;
 		}
 
 		h2 {

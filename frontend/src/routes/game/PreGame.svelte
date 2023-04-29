@@ -288,7 +288,7 @@
 			<input
 				id="bot-name-input"
 				type="text"
-				maxlength="50"
+				maxlength="30"
 				bind:value={botName}
 				aria-label="Bot Name"
 			/>
@@ -415,16 +415,16 @@
 		color: gray;
 	}
 	.config-right {
-		width: 50%;
-		height: 100%;
+		/* width: 50%; */
+		/* height: 100%; */
 		display: flex;
 		align-items: center;
-		margin-right: 1rem;
+		/* margin-right: 1rem; */
 	}
 
 	.config-right textarea,
 	input {
-		height: 2rem;
+		/* height: 2rem; */
 		font-size: 1.4rem;
 		padding: 0.7rem;
 		border: 0px;
@@ -453,6 +453,7 @@
 	button:hover {
 		background-color: rgb(123, 255, 0);
 		color: rgb(0, 0, 0);
+		outline: 1px solid black;
 	}
 
 	.input-wrapper {
@@ -460,8 +461,8 @@
 		display: flex;
 		flex-direction: row;
 		align-items: flex-start;
-		background-color: blue;
-		width: 100%;
+		/* background-color: blue;
+		width: 100%; */
 		/* height: 100%; */
 	}
 
