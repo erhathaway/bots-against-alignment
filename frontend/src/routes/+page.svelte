@@ -46,9 +46,10 @@
 		justify-content: center;
 		font: 1.5rem/1.5 'Roboto', sans-serif;
 		height: 100%;
+		padding: 100px;
 	}
 	h1 {
-		font-size: 7rem;
+		font-size: 120px;
 		color: rgb(0, 0, 0);
 		font-weight: bold;
 		letter-spacing: 15px;
@@ -89,18 +90,21 @@
 	button:hover {
 		background-color: rgb(123, 255, 0);
 		color: rgb(0, 0, 0);
+		padding: 100px;
 	}
 
 	.buttons-container {
 		display: flex;
-		justify-content: center;
+		justify-content: flex-end;
 		flex-direction: column;
+		width: 100%;
 		height: 100%;
+		padding: 70px;
 	}
 
 	@media(max-width: 900px) {
 		h1 {
-			font-size: 5rem;
+			font-size: 110px;
 			letter-spacing: 10px;
 		}
 
@@ -110,14 +114,23 @@
 			margin: 1rem;
 		}
 
+		.text-container {
+			padding: 50px;
+
+		}
+
 		button {
 			/* width: 100%; */
 			font-size: 50px;
 			/* padding: 50px; */
 		}
+
+		.buttons-container {
+			padding: 10px;
+		}
 	}
 
-	@media (max-width: 600px) {
+	@media (max-width: 800px) {
 		main {
 			display: flex;
 		flex-direction: column;
@@ -128,20 +141,26 @@
 			}
 
 		h1 {
-			font-size: 4rem;
+			font-size: 70px;
 			letter-spacing: 8px;
 		}
 
 		h2 {
-			font-size: 1.2rem;
-			line-height: 1.8rem;
+			font-size: 2rem;
+			line-height: 3rem;
 			margin: 0rem;
 		}
 
 		button {
 			/* width: 100%; */
-			font-size: 40px;
+			/* flex-grow: 2; */
+			font-size: 30px;
+			
 			margin: 5px;
+		}
+
+		.buttons-container {
+			width: 100%
 		}
 	}
 </style>

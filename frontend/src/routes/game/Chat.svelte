@@ -1,16 +1,10 @@
 <script lang="ts">
 	import { globalStore } from '$lib/store';
-	// import chat from '$lib/chat';
 	import { onMount, tick } from 'svelte';
 	import { writable } from 'svelte/store';
 	import chat_manager from '$lib/chat_manager';
 	import type ChatGame from '$lib/chat_game';
 	import type { Message } from '$lib/chat_types';
-	// let _messages = [
-	// 	// { isUser: true, name: 'User', icon: '/user-icon.png', text: 'Hello!' },
-	// 	// { isUser: false, name: 'John Doe', icon: '/john-icon.png', text: 'Hi there!' }
-	// 	// Add more messages as needed
-	// ];
 
 	let chat: ChatGame | null = null;
 	let messages = writable<Message[]>([]);
@@ -35,10 +29,8 @@
 		if (botName == null) {
 			throw new Error('Bot name is null');
 		}
-		// messages.push({ isUser: true, name: 'User', icon: '/user-icon.png', text: inputText });
 		chat.sendMessage(inputText, gameId, botName);
 		inputText = '';
-		// scrollToBottom();
 	}
 
 	function handleKeyPress(event: KeyboardEvent) {
@@ -47,18 +39,12 @@
 		}
 	}
 	async function scrollToBottom() {
-		// setTimeout(() => {
 		if (messageContainer) {
 			await tick();
 
 			messageContainer.scrollTop = messageContainer.scrollHeight;
 		}
-		// }, 100);
-		// if (messageContainer) {
-		// 	messageContainer.scrollTop = messageContainer.scrollHeight;
-		// }
 	}
-
 
 	$: {
 		const game_id = $globalStore.game_id;
@@ -69,7 +55,7 @@
 		const hasSubscribedChat = subscribedChatGameId === game_id;
 
 		if (hasJoinedChat && hasWatchedChat && hasSubscribedChat) {
-			'false';
+			('false');
 		} else {
 			initChat();
 		}
@@ -97,26 +83,26 @@
 		const gameId = $globalStore.game_id;
 		const botName = $globalStore.bot_name;
 		if (gameId) {
-			console.log('Init Chat')
+			console.log('Init Chat');
 			chat = chat_manager.findOrCreateChatGame(gameId);
 			subscribeToChat();
 
-			if (botName ) {
+			if (botName) {
 				if (joinedChatGameId !== gameId) {
-					console.log('Joining Chat')
+					console.log('Joining Chat');
 					chat.joinGame(botName);
 					joinedChatGameId = gameId;
 				}
 			} else {
 				if (watchingChatGameId !== gameId) {
-					console.log('Watching Chat')
+					console.log('Watching Chat');
 					chat.watchGame();
 					watchingChatGameId = gameId;
 				}
 			}
 		}
 	};
-	
+
 	const subscribeToChat = () => {
 		if (!chat) {
 			throw new Error('Chat not initialized. Cant subscribe to chat.');
@@ -124,9 +110,9 @@
 		if (subscribedChatGameId === chat.gameId) {
 			return;
 		}
-		console.log('Subscribing to Chat')
+		console.log('Subscribing to Chat');
 		chat.subscribe((newMessage) => {
-			const _newMessage = {...newMessage, isUser: newMessage.botName === $globalStore.bot_name}
+			const _newMessage = { ...newMessage, isUser: newMessage.botName === $globalStore.bot_name };
 			console.log('New Message: ', _newMessage);
 			if (seenMessages.has(_newMessage.uuid)) {
 				return;
@@ -134,7 +120,7 @@
 			messages.update((existingMessages) => {
 				return [...existingMessages, _newMessage];
 			});
-			console.log('Seen Messages: ', $messages)
+			console.log('Seen Messages: ', $messages);
 			seenMessages.add(_newMessage.uuid);
 			scrollToBottom();
 		});
@@ -154,7 +140,6 @@
 
 <div class="chat-window">
 	<div class="message-container" bind:this={messageContainer}>
-		<!-- <div class="padding" /> -->
 		{#each $messages as message, i (i)}
 			{#if message.isSystemMessage}
 				<div class="message system">
@@ -165,13 +150,9 @@
 			{:else if message.isStatusMessage}
 				<div class="message status">
 					<div class="message-status-contianer">
-						<!-- <div class="message-part"> -->
 						<div class="message-text name">{message.botName}</div>
-						<!-- <div class="message-part-bottom"> -->
-						<!-- <div class="message-icon" style="background-color: {getNameColor(message.name)};" /> -->
 						<div class="message-text text">{message.message}</div>
 					</div>
-					<!-- </div> -->
 				</div>
 			{:else}
 				<div class="message {message.isUser ? 'user' : 'other'}">
