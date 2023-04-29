@@ -96,7 +96,11 @@
 			}
 
 			if (currentUserBot && allBotsTurnComplete) {
-				// goto('/ranking');
+				// goto('/turn finale');
+				globalStore.update((_s) => ({
+					..._s,
+					have_all_users_submitted : true
+				}))
 				console.log('-----------------------RANKING------------------------');
 			}
 		} else {

@@ -5,6 +5,7 @@
     let commas = ["", "", "", "", "", "", ""];
     let state = "appear";
     let step = 0;
+    export let speed = 450;
   
     onMount(() => {
       const animateWave = () => {
@@ -23,7 +24,7 @@
         }
       };
   
-      animationInterval = setInterval(animateWave, 450);
+      animationInterval = setInterval(animateWave, speed);
   
       return () => clearInterval(animationInterval);
     });
@@ -55,4 +56,8 @@
     {#each commas as comma, index (index)}
       <span class="comma {comma ? 'comma-visible' : ''}">{comma}</span>
     {/each}
+    {#if commas[0] !== "."}
+      <span class="comma comma-visible">‎ </span>
+    {/if }
+    
   </div>

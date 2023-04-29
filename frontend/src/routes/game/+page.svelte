@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { globalStore } from '$lib/store';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
@@ -7,6 +7,8 @@
 	import PreGame1 from './PreGame.svelte';
 	import Lobby from './Lobby.svelte';
 	import AlignerSays from './AlignerSays.svelte';
+	import TurnFinale from './TurnFinale.svelte';
+	import GameFinale from './GameFinale.svelte';
 	import { fly } from 'svelte/transition'; // New import
 
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
@@ -19,16 +21,24 @@
 	// 	is_config_open: false
 	// };
 
-	let currentPreGame = 1;
+	// type RouterState = "PreGame" | "Lobby" | "AlignerSays" | "TurnFinale" | "GameFinale"
+	enum RouterState {
+		PreGame,
+		Lobby,
+		AlignerSays,
+		TurnFinale,
+		GameFinale
+	}
+	let routerState: RouterState = RouterState.PreGame;
 
-	const customFly = (direction) => ({
+	const customFly = (direction: 'in' | 'out') => ({
 		delay: direction === 'in' ? 300 : 0,
 		duration: 300,
 		easing: (t) => --t * t * t + 1,
 		y: direction === 'in' ? 200 : -200
 	});
 
-	const screenTransition = (direction) => ({
+	const screenTransition = (direction: 'in' | 'out') => ({
 		delay: direction === 'in' ? 300 : 0,
 		duration: 300,
 		easing: (t) => --t * t * t + 1,
@@ -36,7 +46,7 @@
 		y: direction === 'in' ? 0 : 500
 	});
 
-	const leftTransition = (direction) => ({
+	const leftTransition = (direction: 'in' | 'out') => ({
 		delay: direction === 'in' ? 300 : 0,
 		duration: 300,
 		easing: (t) => --t * t * t + 1,
@@ -44,70 +54,94 @@
 		y: direction === 'in' ? 0 : 500
 	});
 
-	const chatTransition = (direction) => ({
+	const chatTransition = (direction: 'in' | 'out') => ({
 		// delay: direction === 'in' ? 300 : 0,
 		// duration: 300,
-		easing: (t) => --t * t * t + 1,
+		easing: (t) => --t * t * t + 1
 		// x: direction === 'in' ? -200 : 200
 	});
 
 	// const rotateMe = () => {
 	// 	const { has_joined_game, is_game_started, is_config_open } = state;
 	// 	if (has_joined_game && !is_game_started) {
-	// 		currentPreGame = 2;
+	// 		routerState = 2;
 	// 		state.is_game_started = true;
 	// 	} else if (has_joined_game && is_game_started) {
 	// 		if (is_config_open) {
-	// 			currentPreGame = 1;
+	// 			routerState = 1;
 	// 		} else {
-	// 			currentPreGame = 3;
+	// 			routerState = 3;
 	// 		}
 	// 		state.is_config_open = !is_config_open;
 	// 	}
 	// };
 
 	$: {
-		const { has_player_joined, is_game_started, is_config_open } = $globalStore;
+		const {
+			has_player_joined,
+			is_game_started,
+			is_config_open,
+			have_all_users_submitted,
+			is_game_over
+		} = $globalStore;
 		if (!has_player_joined) {
-			currentPreGame = 1;
+			routerState = RouterState.PreGame;
 		} else if (has_player_joined && !is_game_started) {
-			currentPreGame = 2;
+			routerState = RouterState.Lobby;
 			// state.is_game_started = true;
 		} else if (has_player_joined && is_game_started) {
 			if (is_config_open) {
-				currentPreGame = 1;
+				routerState = RouterState.PreGame;
+			} else if (have_all_users_submitted) {
+				routerState = RouterState.TurnFinale;
+			} else if (is_game_over) {
+				routerState = RouterState.GameFinale;
 			} else {
-				currentPreGame = 3;
+				routerState = RouterState.AlignerSays;
 			}
 		}
 	}
 
 	if (browser) {
-		$page.url.searchParams.set('game_id', $globalStore.game_id);
+		const game_id = $globalStore.game_id;
+		if (!game_id) {
+			throw new Error('Game ID not found');
+		}
+		$page.url.searchParams.set('game_id', game_id);
 
 		goto(`?${$page.url.searchParams.toString()}`, { replaceState: true });
 	}
 </script>
 
-<div id="screen" role="region" aria-label="Game"  in:fly={screenTransition('in')} >
+<div id="screen" role="region" aria-label="Game" in:fly={screenTransition('in')}>
 	<section id="left" out:fly={leftTransition('out')}>
-		{#if currentPreGame === 1}
+		{#if routerState === RouterState.PreGame}
 			<div in:fly={customFly('in')} out:fly={customFly('out')}>
 				<PreGame1 {data} />
 			</div>
 		{/if}
-		{#if currentPreGame === 2}
+		{#if routerState === RouterState.Lobby}
 			<div in:fly={customFly('in')} out:fly={customFly('out')}>
 				<Lobby />
 			</div>
 		{/if}
-		{#if currentPreGame === 3}
+		{#if routerState === RouterState.AlignerSays}
 			<div in:fly={customFly('in')} out:fly={customFly('out')}>
-				<AlignerSays {data} />
+				<AlignerSays />
+			</div>
+		{/if}
+		{#if routerState === RouterState.TurnFinale}
+			<div in:fly={customFly('in')} out:fly={customFly('out')}>
+				<TurnFinale />
+			</div>
+		{/if}
+		{#if routerState === RouterState.GameFinale}
+			<div in:fly={customFly('in')} out:fly={customFly('out')}>
+				<GameFinale />
 			</div>
 		{/if}
 	</section>
-	<section id="right"  out:fly={chatTransition('out')} >
+	<section id="right" out:fly={chatTransition('out')}>
 		<Chat />
 	</section>
 	<!-- <button on:click={rotateMe}>Change PreGame</button> -->

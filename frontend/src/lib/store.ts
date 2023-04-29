@@ -13,6 +13,8 @@ type GlobalState = {
 	has_player_joined: boolean;
 	is_game_started: boolean;
 	last_alignment_request: string | null;
+	have_all_users_submitted: boolean;
+	is_game_over: boolean;
 };
 
 const defaultData = {
@@ -26,7 +28,9 @@ const defaultData = {
 	last_turn_id: null,
 	last_alignment_request: null,
 	has_player_joined: false,
-	is_game_started: false
+	is_game_started: false,
+	have_all_users_submitted: false,
+	is_game_over: false
 };
 
 export const globalStore = persisted<GlobalState>('settings', defaultData);
