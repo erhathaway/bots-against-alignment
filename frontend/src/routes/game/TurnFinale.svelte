@@ -5,7 +5,7 @@
 	import chat_manager from '$lib/chat_manager';
 	import { NotificationKind, addNotification, globalStore } from '$lib/store';
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
-    import robot_head from '$lib/images/robot_head.png';
+    import robot_comedy from '$lib/images/robot_comedy.png';
 	import LoadingCommas from './LoadingCommas.svelte';
 
 	let isForceNextTurnPending = false;
@@ -61,8 +61,8 @@
 
 <div id="container">
     <div class="padding" />
-    <h2>Aligner Says</h2>
-    <img alt="a robots head talking" src={robot_head} />
+    <!-- <h2>Aligner Says</h2> -->
+    <img alt="a robots head talking" src={robot_comedy} />
 
     <LoadingCommas speed={300}/>
     <div class="padding" />
@@ -92,14 +92,14 @@
         /* padding-top: 10rem; */
     }
     .padding {
-        height: 5rem;
+        height: 0rem;
     }
     img {
-        height: 10rem;
-        width: 10rem;
-        border: 1px solid rgb(255, 255, 255);
+        height: 30rem;
+        width: 30rem;
+        border: 3px solid rgb(255, 255, 255);
         box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.4);
-        border-radius: 0.3rem;
+        border-radius: 0.7rem;
         /* margin-bottom: 10rem; */
 
     }
