@@ -92,10 +92,10 @@
 		} else if (has_player_joined && is_game_started) {
 			if (is_config_open) {
 				routerState = RouterState.PreGame;
-			} else if (have_all_users_submitted) {
-				routerState = RouterState.TurnFinale;
 			} else if (is_game_over) {
 				routerState = RouterState.GameFinale;
+			} else if (have_all_users_submitted) {
+				routerState = RouterState.TurnFinale;
 			} else {
 				routerState = RouterState.AlignerSays;
 			}

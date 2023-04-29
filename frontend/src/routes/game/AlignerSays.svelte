@@ -40,14 +40,14 @@
 				totalBots = data.total_bots;
 			} else {
 				console.error('Failed to get turn finale');
-				// addNotification({
-				// 	source_url: 'aligner says',
-				// 	title: 'Error getting turn finale',
-				// 	body: data,
-				// 	kind: NotificationKind.ERROR,
-				// 	action_url: url,
-				// 	action_text: 'get turn finale'
-				// });
+				addNotification({
+					source_url: 'aligner says',
+					title: 'Error getting turn finale',
+					body: data,
+					kind: NotificationKind.ERROR,
+					action_url: url,
+					action_text: 'get turn finale'
+				});
 			}
 			// alignmentResponses = data.alignment_responses;
 		} catch (error) {
@@ -93,16 +93,18 @@
 					'ALL BOTS TURN COMPLETE',
 					allBotsTurnComplete
 				);
+
+				
+				if (currentUserBot && allBotsTurnComplete && totalBots > 0) {
+					// goto('/turn finale');
+					globalStore.update((_s) => ({
+						..._s,
+						have_all_users_submitted : true
+					}))
+					console.log('-----------------------RANKING------------------------');
+				}
 			}
 
-			if (currentUserBot && allBotsTurnComplete) {
-				// goto('/turn finale');
-				globalStore.update((_s) => ({
-					..._s,
-					have_all_users_submitted : true
-				}))
-				console.log('-----------------------RANKING------------------------');
-			}
 		} else {
 			console.error('Failed to get game status');
 			addNotification({

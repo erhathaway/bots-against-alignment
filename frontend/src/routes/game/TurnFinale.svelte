@@ -17,7 +17,8 @@
 		try {
             globalStore.update((_s) => ({
                 ..._s,
-                have_all_users_submitted : false
+                have_all_users_submitted : false,
+                is_game_over: true
             }));
 			// Call the API to get turn finale results
 			// const response = await fetch(`${BACKEND_API}/turn_finale?game_id=${$globalStore.game_id}&turn_id=${$globalStore.last_turn_id}`);
