@@ -6,7 +6,7 @@
 	import { NotificationKind, addNotification, globalStore } from '$lib/store';
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
     import robot_comedy from '$lib/images/robot_comedy.png';
-	import LoadingCommas from './LoadingCommas.svelte';
+	import LoadingAudioWave from './LoadingAudioWave.svelte';
 
 	let isForceNextTurnPending = false;
 
@@ -64,7 +64,7 @@
     <!-- <h2>Aligner Says</h2> -->
     <img alt="a robots head talking" src={robot_comedy} />
 
-    <LoadingCommas speed={300}/>
+    <LoadingAudioWave />
     <div class="padding" />
     <button on:click={forceNextTurn}>
         {#if isForceNextTurnPending}
