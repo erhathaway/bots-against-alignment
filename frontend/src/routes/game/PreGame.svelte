@@ -216,7 +216,13 @@
 			if (!validateInputs()) {
 				return;
 			}
-			const url = `${BACKEND_API}/join_game?game_id=${data.gameID}&aligner_prompt=${alignerPrompt}&bot_name=${botName}&bot_prompt=${botPrompt}`;
+
+
+			let url = `${BACKEND_API}/join_game?game_id=${data.gameID}&aligner_prompt=${alignerPrompt}&bot_name=${botName}&bot_prompt=${botPrompt}`;
+			
+			if ($globalStore.creator_id) {
+				url += `&creator_id=${$globalStore.creator_id}`;
+			}
 			// console.log('*** join game', url);
 
 			const response = await fetch(url, {
