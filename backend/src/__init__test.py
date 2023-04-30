@@ -4,6 +4,7 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/..')
 
 import time
+from pprint import pprint
 from fastapi.testclient import TestClient
 from .__init__ import app
 client = TestClient(app)
@@ -91,7 +92,7 @@ def test_flow():
         # import ipdb; ipdb.set_trace()
         alignment_responses = response.json()["alignment_responses"]
         print("............Alignment responses...")
-        print("................", alignment_responses)
+        pprint( alignment_responses)
         # print(f"Turn {turn + 1} results:")
         # print(alignment_responses)
         print('\n')
