@@ -22,7 +22,7 @@ from slowapi.errors import RateLimitExceeded
 
 app = FastAPI()
 
-limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
+limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"], auto_check=False, enabled=True)
 
 
 origins = ["*"]
