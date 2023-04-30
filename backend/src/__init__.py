@@ -73,6 +73,7 @@ class Game:
 	turn_started: bool
 	auto_players: int
 	max_auto_players: int
+	user_id_of_creator: str
 	
 	def __init__(self):
 		self.game_id = str(uuid.uuid4())
@@ -95,6 +96,7 @@ class Game:
 		self.turn_ended = False
 		self.auto_players = 0
 		self.max_auto_players = 0
+		self.user_id_of_creator = ''
 	
 	def to_dict(self):
 		return {
@@ -179,7 +181,7 @@ def build_player_prompt(bot_prompt, turn_prompt, extra_context):
     return messages
 
 
-def build_aligner_prompt(aligner_prompt,turn_prompt, user_prompts):
+def build_aligner_prompt(aligner_prompt: str | None, turn_prompt: str | None, user_prompts):
 	if aligner_prompt is None:
 		aligner_prompt =''
 	if turn_prompt is None:
@@ -199,7 +201,7 @@ def build_aligner_prompt(aligner_prompt,turn_prompt, user_prompts):
 		user_id_to_num[unn] = user_id
 	return messages,user_id_to_num
 
-def run_chatGPT_call(messages):
+def run_chatGPT_call(messages: list[dict[str, str]]):
     completion = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=messages,
@@ -310,15 +312,15 @@ def make_auto_player_random_vars(game):
 def make_bot_responses_single_thread(game):
 	'''This function makes a single auto player for a game of cards against humanity'''
 	for user_id in game.user_bots.keys():
-		if game.user_bots[user_id]['is_auto']:
+		if game.user_bots[user_id].get('is_auto', True): # TODO check if this is kosher
 			game.user_bots[user_id]['turn_complete']=True
-			bot_response = run_chatGPT_call_suggestion(game.user_bots[user_id]["current_prompt"]["current_prompt"],game.turn_prompt)
+			bot_response = run_chatGPT_call_suggestion(game.user_bots[user_id]["current_prompt"],game.turn_prompt)
 			game.turn_responses[user_id]= bot_response
 
 def make_bot_reponses_multi_thread(game):
 	threads = []
 	for user_id in game.user_bots.keys():
-		if game.user_bots[user_id]['is_auto']:
+		if game.user_bots[user_id].get('is_auto', True): # TODO check if this is kosher
 			game.user_bots[user_id]['turn_complete'] = True
 
 			def threaded_run_chatGPT_call_suggestion(user_id):
@@ -386,12 +388,14 @@ def config_game(game_id: str, creator_id: str, aligner: AlignerType, points: int
 	return {"game_id": game_id, "aligner": aligner, "points": points}
 
 @app.post("/join_game")
-def join_game(game_id: str, aligner_prompt: str, bot_prompt: str,bot_name:str):
+def join_game(game_id: str, aligner_prompt: str, bot_prompt: str,bot_name:str, creator_id: str | None = None):
 	"""Joins the game with the specified game ID and returns the user ID"""
 	game = game_state.state.get(game_id)
 	if game is None:
 		raise HTTPException(status_code=404, detail="Game not found")
 	user_id = game.new_user()
+	if creator_id is not None and creator_id == game.creator_id:
+		game.user_id_of_creator = user_id
 	game.add_to_aligner_prompt_dict(aligner_prompt, user_id)
 	game.add_to_bot_names(bot_name, user_id,bot_prompt[:281])
 	return {"user_id": user_id}
@@ -477,7 +481,7 @@ def complete_turn(game_id:str,user_id:str):
 	game = game_state.state.get(game_id)
 	game.user_bots[user_id]['turn_complete']=True
 	'''if creator_id is the same as user_id the complete all is_auto player turns'''
-	if game.creator_id == user_id:
+	if game.user_id_of_creator == user_id:
 		if game.auto_players>2:
 			make_bot_reponses_multi_thread(game)
 		else:
@@ -502,6 +506,7 @@ def take_suggestion_and_generate_answer(game_id:str,suggestion:str,turn_id:str,u
 		
 @app.get("/turn_finale")
 def turn_finale(game_id:str,turn_id:str):
+
 	'''runs the finale of the turn and returns the alignment responses'''
 	game = game_state.state.get(game_id)
 	'''return error if not all players are complete'''
@@ -509,10 +514,10 @@ def turn_finale(game_id:str,turn_id:str):
 		if game.user_bots[user_id]['turn_complete']==False:
 			raise HTTPException(status_code=404, detail="Not all players have completed their turn")
 		
-	messages,user_id_to_num = build_aligner_prompt(game.aligner_prompt,game.turn_prompt, game.turn_responses)
+	messages, user_id_to_num = build_aligner_prompt(game.aligner_prompt,game.turn_prompt, game.turn_responses)
 	response = run_chatGPT_call(messages)
 	print(response)
-	winner = parse_response_for_winner(response,user_id_to_num)
+	winner = parse_response_for_winner(response, user_id_to_num)
 	#print('2.'+winner)
 	game.user_bots[winner]["score"] = game.user_bots[winner]["score"]+1
 	alignment_responses = game.build_alignment_reponse(winner)
@@ -532,6 +537,7 @@ def game_finale(game_id:str):
 def random_bot_name(request: Request, game_id:str):
 	'''returns a random bot name based on chatGPT'''
 	game = game_state.state.get(game_id)
+	assert game, HTTPException(status_code=404, detail="Game not found")
 	bot_name =run_random_bot_name_prompt()
 	return {"bot_name": bot_name, "game_id": game_id}
 
@@ -540,6 +546,7 @@ def random_bot_name(request: Request, game_id:str):
 def random_aligner_prompt(request: Request, game_id:str):
 	'''returns a random aligner prompt based on chatGPT'''
 	game = game_state.state.get(game_id)
+	assert game, HTTPException(status_code=404, detail="Game not found")
 	aligner_prompt = run_random_aligner_prompt()
 	return {"aligner_prompt": aligner_prompt, "game_id": game_id}
 	
@@ -549,6 +556,7 @@ def random_aligner_prompt(request: Request, game_id:str):
 def random_bot_prompt(request: Request, game_id:str):
 	'''returns a random bot prompt based on chatGPT'''
 	game = game_state.state.get(game_id)
+	assert game, HTTPException(status_code=404, detail="Game not found")
 	bot_prompt = run_random_bot_prompt()
 	return {"bot_prompt": bot_prompt, "game_id": game_id}
 

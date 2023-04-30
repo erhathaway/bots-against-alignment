@@ -34,12 +34,13 @@ def test_main():
 
 
     # Configure the game
-    aligner = "GPT-4"
+    aligner = "BOT_WITH_HIDDEN_PROMPT"
     points = 10
-    response = requests.post(f"{BASE_URL}/config", json={"game_id": game_id, "creator_id": creator_id, "aligner": aligner, "points": points})
+    response = requests.post(f"{BASE_URL}/config", params={"game_id": game_id, "creator_id": creator_id, "aligner": aligner, "points": points})
     assert response.status_code == 200, response.text
     print("\nConfiguring game...")
     # Add auto players
+    user_ids = []
     for player_number in range(4):
         print('....Initiating auto player # ', player_number)
 
@@ -62,7 +63,12 @@ def test_main():
         print('..............', bot_prompt)
 
         print("........Joining game...")
-        response = requests.post(f"{BASE_URL}/join_game", json={"game_id": game_id, "aligner_prompt": aligner_prompt, "bot_prompt": bot_prompt, "bot_name": bot_name})
+        user_creator_id = creator_id if player_number == 1 else None
+        print('User creator id: ', user_creator_id)
+        response = requests.post(f"{BASE_URL}/join_game", params={"game_id": game_id, "aligner_prompt": aligner_prompt, "bot_prompt": bot_prompt, "bot_name": bot_name, "creator_id": user_creator_id})
+        user_id = response.json()["user_id"]
+        user_ids.append(user_id)
+        print('..............', response)
         assert response.status_code == 200, response.text
     
     print("\nStarting game...")
@@ -80,10 +86,10 @@ def test_main():
         print(response)
         turn_id = response.json()["turn_id"]
 
-        for user_id in range(4):
+        for user_id in user_ids:
             print(f"........User {user_id}...")
             print("............Submitting prompt...")
-            response = requests.post(f"{BASE_URL}/completeturn", json={"game_id": game_id, "user_id": str(user_id)})
+            response = requests.post(f"{BASE_URL}/completeturn", params={"game_id": game_id, "user_id": str(user_id)})
             assert response.status_code == 200, response.text
             time.sleep(1)  # Wait for bots to generate responses
 
