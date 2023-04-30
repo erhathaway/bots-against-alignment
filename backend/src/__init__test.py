@@ -101,8 +101,8 @@ def test_flow():
     # End the game
     response = client.get(f"{BASE_URL}/game_finale", params={"game_id": game_id})
     assert response.status_code == 200, response.text
-    print(response)
-    
+    pprint(response.json())
+            
     aligner_responses = response.json()["aligner_responses"]
     aligner_prompt = response.json()["aligner_prompt"]
 
