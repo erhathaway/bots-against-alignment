@@ -213,6 +213,8 @@ def run_chatGPT_call(messages: list[dict[str, str]]):
         messages=messages,
     )
     response = completion['choices'][0]['message']['content']
+    finish_reason = completion['choices'][0]['finish_reason']
+    assert finish_reason == "length", finish_reason
     return response
 
 
@@ -229,6 +231,8 @@ def run_chatGPT_call_suggestion(bot_prompt, turn_prompt):
                   {"role": "user", "content": bot_prompt + ' ' + turn_prompt}]
     )
     response = completion['choices'][0]['message']['content']
+    finish_reason = completion['choices'][0]['finish_reason']
+    assert finish_reason == "length", finish_reason
     if 'sorry' in response:
         response = 'bad bot'
     return response
@@ -249,6 +253,8 @@ def run_random_bot_name_prompt():
                   {"role": "user", "content": "You three words are:" + bot_name}]
     )
     response = completion['choices'][0]['message']['content'][1:-1]
+    finish_reason = completion['choices'][0]['finish_reason']
+    assert finish_reason == "length", finish_reason
     return response
 
 
@@ -269,6 +275,8 @@ def run_random_aligner_prompt():
                   {"role": "user", "content": "You words are"+bot_name}]
     )
     response = completion['choices'][0]['message']['content']
+    finish_reason = completion['choices'][0]['finish_reason']
+    assert finish_reason == "length", finish_reason
     return response
 
 
@@ -293,6 +301,8 @@ def run_random_bot_prompt():
                   {"role": "user", "content": "Give me a prompt "+bot_name}]
     )
     response = completion['choices'][0]['message']['content']
+    finish_reason = completion['choices'][0]['finish_reason']
+    assert finish_reason == "length", finish_reason
     return response
 
 
