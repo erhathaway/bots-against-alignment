@@ -33,7 +33,7 @@ app.add_middleware(
 )
 
 app.state.limiter = limiter
-app.add_exception_handler(HTTPException, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 src_dir = Path(Path.cwd().anchor) / "backend" / "src"
 load_dotenv()  # take environment variables from .env.
@@ -442,7 +442,7 @@ def take_suggestion_and_generate_answer(game_id: str, suggestion: str, turn_id: 
 
 
 @app.get("/turn_finale")
-def turn_finale(game_id: str):
+def turn_finale(request: Request, game_id: str):
     '''runs the finale of the turn and returns the alignment responses'''
     game = game_state.state.get(game_id)
     if game is None:
@@ -467,7 +467,7 @@ def turn_finale(game_id: str):
 
 
 @app.get("/game_finale")
-def game_finale(game_id: str):
+def game_finale(request: Request, game_id: str):
     '''runs the finale of the game and returns the alignment responses'''
     game = game_state.state.get(game_id)
     if game is None:
@@ -510,7 +510,7 @@ def random_bot_prompt(request: Request, game_id: str):
 
 
 @app.exception_handler(RateLimitExceeded)
-async def custom_rate_limit_exceeded_handler(request, exc):
+async def custom_rate_limit_exceeded_handler(request: Request, exc):
     return JSONResponse(
         status_code=429,  # Using the 429 status code directly
         content={
