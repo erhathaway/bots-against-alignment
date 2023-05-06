@@ -11,17 +11,8 @@
 	import GameFinale from './GameFinale.svelte';
 	import { fly } from 'svelte/transition'; // New import
 
-	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
-
 	export let data;
 
-	// let state = {
-	// 	has_joined_game: false,
-	// 	is_game_started: false,
-	// 	is_config_open: false
-	// };
-
-	// type RouterState = "PreGame" | "Lobby" | "AlignerSays" | "TurnFinale" | "GameFinale"
 	enum RouterState {
 		PreGame,
 		Lobby,
@@ -55,26 +46,8 @@
 	});
 
 	const chatTransition = (direction: 'in' | 'out') => ({
-		// delay: direction === 'in' ? 300 : 0,
-		// duration: 300,
 		easing: (t) => --t * t * t + 1
-		// x: direction === 'in' ? -200 : 200
 	});
-
-	// const rotateMe = () => {
-	// 	const { has_joined_game, is_game_started, is_config_open } = state;
-	// 	if (has_joined_game && !is_game_started) {
-	// 		routerState = 2;
-	// 		state.is_game_started = true;
-	// 	} else if (has_joined_game && is_game_started) {
-	// 		if (is_config_open) {
-	// 			routerState = 1;
-	// 		} else {
-	// 			routerState = 3;
-	// 		}
-	// 		state.is_config_open = !is_config_open;
-	// 	}
-	// };
 
 	$: {
 		const {
@@ -88,7 +61,6 @@
 			routerState = RouterState.PreGame;
 		} else if (has_player_joined && !is_game_started) {
 			routerState = RouterState.Lobby;
-			// state.is_game_started = true;
 		} else if (has_player_joined && is_game_started) {
 			if (is_config_open) {
 				routerState = RouterState.PreGame;
@@ -144,8 +116,6 @@
 	<section id="right" out:fly={chatTransition('out')}>
 		<Chat />
 	</section>
-	<!-- <button on:click={rotateMe}>Change PreGame</button> -->
-	<!-- Bind the new function -->
 </div>
 
 <style>

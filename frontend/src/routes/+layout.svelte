@@ -1,27 +1,23 @@
-<!-- __layout.svelte -->
 
-<!-- 1. Using a `load` function, pass the current URL to the layout component as a prop -->
-<script context="module">
+<script context="module" lang="ts">
 	/** @type {import('@sveltejs/kit').Load} */
-	// export const load = async ({ url }) => ({ props: { url } });
-	export const load = async ({ url }) => ({
+	export const load = async ({ url }: { url: URL}) => ({
     props: {
       url: url.href
     }
   });
 </script>
 
-<script>
+<script lang="ts">
 	import './styles.css';
 	import Notification from './Notification.svelte';
 	import { dev } from '$app/environment';
 	import { inject } from '@vercel/analytics';
 	import PageTransition from '$lib/PageTransition.svelte';
-	export let url;
+	export let url: string;
 
 	inject({ mode: dev ? 'development' : 'production' });
 
-	console.log('URL', url);
 </script>
 
 <div class="app">

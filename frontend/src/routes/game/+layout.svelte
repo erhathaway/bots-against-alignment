@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import GameLink from './GameLink.svelte';
 	import { goto } from '$app/navigation';
 </script>
@@ -40,14 +40,12 @@
 
 	#header {
 		position: fixed;
-		/* width: 100vw; */
 		background: none;
 		display: flex;
 		flex-direction: row;
 		justify-content: center;
 		align-items: center;
 		padding: 0.5rem;
-		/* background-color: #f5f5f5; */
 	}
 
 	#home {
@@ -61,8 +59,6 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		/* padding-left: 1rem; */
-		/* padding-right: 1rem; */
 		cursor: pointer;
 		background-color: black;
 		border-radius: 5rem;

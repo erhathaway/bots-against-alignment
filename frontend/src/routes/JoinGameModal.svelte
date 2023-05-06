@@ -54,7 +54,6 @@
 
 		isJoinGamePending = true;
 		try {
-			// const response = await fetch(`${BACKEND_API}/game/${gameId}`);
 			const response = await fetch(`${BACKEND_API}/game/${gameId}`, {
 				method: 'GET',
 				headers: {
@@ -120,7 +119,6 @@
 		left: 0;
 		width: 100%;
 		height: 100%;
-		/* background-color: rgba(0, 0, 0, 0.5); */
 		background-color: rgb(0 255 51);
 
 		display: flex;
@@ -129,8 +127,6 @@
 	}
 
 	.modal {
-		/* background-color: white; */
-		/* padding: 2rem; */
 		border-radius: 8px;
 		max-width: 500px;
 	}
@@ -160,7 +156,6 @@
 		margin-bottom: 1rem;
 		width: 100%;
 		max-width: 20rem;
-		/* border: 1px solid rgb(0, 0, 0); */
 		outline: 2px solid rgb(0, 0, 0);
 		border: 1px solid black;
 		border-radius: 0.5rem;
@@ -190,14 +185,12 @@
 		color: rgb(0, 0, 0);
 	}
 	.error {
-		/* color: red; */
 		color: rgb(123, 255, 0);
 	}
 
 	section {
 		margin-top: 1rem;
 		height: 3rem;
-		/* width: 100%; */
 		background-color: black;
 		padding: 2rem;
 		border-bottom-left-radius: 8px;

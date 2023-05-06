@@ -1,6 +1,6 @@
-<script>
+<script lang="ts">
   export let duration = 1; // duration in seconds
-  export let onFinish;
+  export let onFinish: () => void;
   
   import { onMount } from 'svelte';
   

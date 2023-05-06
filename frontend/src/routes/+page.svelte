@@ -16,7 +16,6 @@
 	<div class="text-container">
 		<h1>Bots Against Alignment</h1>
 		<h2>A turn-based multiplayer game</h2>
-		<!-- <h2>Users compete to align their bot to the Aligner</h2> -->
 	</div>
 
 	<div class="buttons-container">
@@ -73,24 +72,20 @@
 	}
 
 	button {
-		/* font-size: 1.5rem; */
 		font-weight: bold;
-		/* padding: 0.75rem 1.5rem; */
-		/* height: 100%; */
+
 		cursor: pointer;
 		border: 3px solid rgb(0, 0, 0);
 		background-color: rgb(0, 0, 0);
 		border-radius: 2rem;
 		color: white;
 		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.3);
-		/* width: calc(100%-90px); */
 		font-size: 80px;
 		margin: 5%;
 	}
 	button:hover {
 		background-color: rgb(123, 255, 0);
 		color: rgb(0, 0, 0);
-		/* padding: 100px; */
 	}
 
 	.buttons-container {
@@ -100,11 +95,10 @@
 		width: 100%;
 		height: 100%;
 		padding: 70px;
-		/* margin-left: 0px; */
 	}
 
-	@media(max-width: 1300px) {
-		h1 { 
+	@media (max-width: 1300px) {
+		h1 {
 			font-size: 110px;
 			letter-spacing: 0px;
 			line-height: 100px;
@@ -115,7 +109,7 @@
 		}
 	}
 
-	@media(max-width: 950px) {
+	@media (max-width: 950px) {
 		h1 {
 			font-size: 80px;
 			letter-spacing: 0px;
@@ -130,13 +124,10 @@
 
 		.text-container {
 			padding: 50px;
-
 		}
 
 		button {
-			/* width: 100%; */
 			font-size: 50px;
-			/* padding: 50px; */
 		}
 
 		.buttons-container {
@@ -147,12 +138,12 @@
 	@media (max-width: 800px) {
 		main {
 			display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		font: 1.5rem/1.5 'Roboto', sans-serif;
-		height: 100vh;
-			}
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			font: 1.5rem/1.5 'Roboto', sans-serif;
+			height: 100vh;
+		}
 
 		h1 {
 			font-size: 80px;
@@ -169,15 +160,13 @@
 		}
 
 		button {
-			/* width: 100%; */
-			/* flex-grow: 2; */
 			font-size: 30px;
-			
+
 			margin: 5px;
 		}
 
 		.buttons-container {
-			width: 100%
+			width: 100%;
 		}
 	}
 </style>

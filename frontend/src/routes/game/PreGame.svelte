@@ -1,7 +1,7 @@
-<script>
+<script lang="ts">
 	import { NotificationKind, addNotification, globalStore } from '$lib/store';
 	import LoadingSpinner from './LoadingSpinner.svelte';
-	import LoadingBars  from './LoadingBars.svelte';
+	import LoadingBars from './LoadingBars.svelte';
 	import { browser } from '$app/environment'; // Import browser from $app/env
 	import { onMount } from 'svelte';
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
@@ -35,8 +35,6 @@
 			errorMessages.botPrompt = '';
 		}
 	}
-
-
 
 	function validateInputs() {
 		let isValid = true;
@@ -95,7 +93,6 @@
 		randomizeBotNameLoading = true;
 		try {
 			const url = `${BACKEND_API}/randomize_bot_name?game_id=${data.gameID}`;
-			// console.log('*** randomize bot name', url);
 
 			const response = await fetch(url, {
 				method: 'GET',
@@ -110,7 +107,6 @@
 				botName = data.bot_name;
 			} else {
 				const error = await response.json();
-				// console.log('error', error);
 				addNotification({
 					source_url: 'pregame',
 					title: 'Error generating bot name',
@@ -134,7 +130,6 @@
 		randomizeAlignerPromptLoading = true;
 		try {
 			const url = `${BACKEND_API}/randomize_aligner_prompt?game_id=${data.gameID}`;
-			// console.log('*** randomize aligner prompt', url);
 
 			const response = await fetch(url, {
 				method: 'GET',
@@ -149,7 +144,6 @@
 				alignerPrompt = data.aligner_prompt;
 			} else {
 				const error = await response.json();
-				// console.log('error', error);
 				addNotification({
 					source_url: 'pregame',
 					title: 'Error generating aligner prompt',
@@ -174,7 +168,6 @@
 		randomizeBotPromptLoading = true;
 		try {
 			const url = `${BACKEND_API}/randomize_bot_prompt?game_id=${data.gameID}`;
-			// console.log('*** randomize bot prompt', url);
 
 			const response = await fetch(url, {
 				method: 'GET',
@@ -189,7 +182,6 @@
 				botPrompt = data.bot_prompt;
 			} else {
 				const error = await response.json();
-				// console.log('error', error);
 				addNotification({
 					source_url: 'pregame',
 					title: 'Error generating bot prompt',
@@ -217,13 +209,11 @@
 				return;
 			}
 
-
 			let url = `${BACKEND_API}/join_game?game_id=${data.gameID}&aligner_prompt=${alignerPrompt}&bot_name=${botName}&bot_prompt=${botPrompt}`;
-			
+
 			if ($globalStore.creator_id) {
 				url += `&creator_id=${$globalStore.creator_id}`;
 			}
-			// console.log('*** join game', url);
 
 			const response = await fetch(url, {
 				method: 'POST',
@@ -243,10 +233,9 @@
 						aligner_prompt: alignerPrompt,
 						bot_name: botName,
 						user_id: data.user_id,
-						has_player_joined: true,
+						has_player_joined: true
 					};
 				});
-				// console.log('has joined game');
 			} else {
 				const error = await response.json();
 				joinError = error.message;
@@ -265,12 +254,11 @@
 		}
 	}
 
-
 	onMount(() => {
 		randomize_bot_name();
 		randomize_bot_prompt();
 		randomize_aligner_prompt();
-	})
+	});
 </script>
 
 <section id="bot-name">
@@ -283,12 +271,11 @@
 				{#if randomizeBotNameLoading}
 					<LoadingSpinner />
 				{:else}
-					
-				<svg viewBox="0 0 640 512" xmlns="http://www.w3.org/2000/svg"
-					><path
-						d="M447.1 224c0-12.56-4.781-25.13-14.35-34.76l-174.9-174.9C249.1 4.786 236.5 0 223.1 0C211.4 0 198.9 4.786 189.2 14.35L14.35 189.2C4.783 198.9-.0011 211.4-.0011 223.1c0 12.56 4.785 25.17 14.35 34.8l174.9 174.9c9.625 9.562 22.19 14.35 34.75 14.35s25.13-4.783 34.75-14.35l174.9-174.9C443.2 249.1 447.1 236.6 447.1 224zM96 248c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1S120 210.8 120 224S109.3 248 96 248zM224 376c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S237.3 376 224 376zM224 248c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1S248 210.8 248 224S237.3 248 224 248zM224 120c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S237.3 120 224 120zM352 248c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S365.3 248 352 248zM591.1 192l-118.7 0c4.418 10.27 6.604 21.25 6.604 32.23c0 20.7-7.865 41.38-23.63 57.14l-136.2 136.2v46.37C320 490.5 341.5 512 368 512h223.1c26.5 0 47.1-21.5 47.1-47.1V240C639.1 213.5 618.5 192 591.1 192zM479.1 376c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S493.2 376 479.1 376z"
-					/></svg
-				>
+					<svg viewBox="0 0 640 512" xmlns="http://www.w3.org/2000/svg"
+						><path
+							d="M447.1 224c0-12.56-4.781-25.13-14.35-34.76l-174.9-174.9C249.1 4.786 236.5 0 223.1 0C211.4 0 198.9 4.786 189.2 14.35L14.35 189.2C4.783 198.9-.0011 211.4-.0011 223.1c0 12.56 4.785 25.17 14.35 34.8l174.9 174.9c9.625 9.562 22.19 14.35 34.75 14.35s25.13-4.783 34.75-14.35l174.9-174.9C443.2 249.1 447.1 236.6 447.1 224zM96 248c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1S120 210.8 120 224S109.3 248 96 248zM224 376c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S237.3 376 224 376zM224 248c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1S248 210.8 248 224S237.3 248 224 248zM224 120c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S237.3 120 224 120zM352 248c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S365.3 248 352 248zM591.1 192l-118.7 0c4.418 10.27 6.604 21.25 6.604 32.23c0 20.7-7.865 41.38-23.63 57.14l-136.2 136.2v46.37C320 490.5 341.5 512 368 512h223.1c26.5 0 47.1-21.5 47.1-47.1V240C639.1 213.5 618.5 192 591.1 192zM479.1 376c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S493.2 376 479.1 376z"
+						/></svg
+					>
 				{/if}
 			</div>
 			<input
@@ -299,9 +286,6 @@
 				aria-label="Bot Name"
 			/>
 		</div>
-		<!-- {#if errorMessages.botName}
-			<p style="color:red">{errorMessages.botName}</p>
-		{/if} -->
 	</div>
 </section>
 <section id="aligner">
@@ -318,18 +302,15 @@
 				{#if randomizeAlignerPromptLoading}
 					<LoadingSpinner />
 				{:else}
-				<svg viewBox="0 0 640 512" xmlns="http://www.w3.org/2000/svg"
-					><path
-						d="M447.1 224c0-12.56-4.781-25.13-14.35-34.76l-174.9-174.9C249.1 4.786 236.5 0 223.1 0C211.4 0 198.9 4.786 189.2 14.35L14.35 189.2C4.783 198.9-.0011 211.4-.0011 223.1c0 12.56 4.785 25.17 14.35 34.8l174.9 174.9c9.625 9.562 22.19 14.35 34.75 14.35s25.13-4.783 34.75-14.35l174.9-174.9C443.2 249.1 447.1 236.6 447.1 224zM96 248c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1S120 210.8 120 224S109.3 248 96 248zM224 376c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S237.3 376 224 376zM224 248c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1S248 210.8 248 224S237.3 248 224 248zM224 120c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S237.3 120 224 120zM352 248c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S365.3 248 352 248zM591.1 192l-118.7 0c4.418 10.27 6.604 21.25 6.604 32.23c0 20.7-7.865 41.38-23.63 57.14l-136.2 136.2v46.37C320 490.5 341.5 512 368 512h223.1c26.5 0 47.1-21.5 47.1-47.1V240C639.1 213.5 618.5 192 591.1 192zM479.1 376c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S493.2 376 479.1 376z"
-					/></svg
-				>
+					<svg viewBox="0 0 640 512" xmlns="http://www.w3.org/2000/svg"
+						><path
+							d="M447.1 224c0-12.56-4.781-25.13-14.35-34.76l-174.9-174.9C249.1 4.786 236.5 0 223.1 0C211.4 0 198.9 4.786 189.2 14.35L14.35 189.2C4.783 198.9-.0011 211.4-.0011 223.1c0 12.56 4.785 25.17 14.35 34.8l174.9 174.9c9.625 9.562 22.19 14.35 34.75 14.35s25.13-4.783 34.75-14.35l174.9-174.9C443.2 249.1 447.1 236.6 447.1 224zM96 248c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1S120 210.8 120 224S109.3 248 96 248zM224 376c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S237.3 376 224 376zM224 248c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1S248 210.8 248 224S237.3 248 224 248zM224 120c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S237.3 120 224 120zM352 248c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S365.3 248 352 248zM591.1 192l-118.7 0c4.418 10.27 6.604 21.25 6.604 32.23c0 20.7-7.865 41.38-23.63 57.14l-136.2 136.2v46.37C320 490.5 341.5 512 368 512h223.1c26.5 0 47.1-21.5 47.1-47.1V240C639.1 213.5 618.5 192 591.1 192zM479.1 376c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S493.2 376 479.1 376z"
+						/></svg
+					>
 				{/if}
 			</div>
 			<textarea id="aligner-input" bind:value={alignerPrompt} aria-label="Aligner Prompt" />
 		</div>
-		<!-- {#if errorMessages.alignerPrompt}
-			<p style="color:red">{errorMessages.alignerPrompt}</p>
-		{/if} -->
 	</div>
 </section>
 <section>
@@ -346,31 +327,27 @@
 				{#if randomizeBotPromptLoading}
 					<LoadingSpinner />
 				{:else}
-				<svg viewBox="0 0 640 512" xmlns="http://www.w3.org/2000/svg"
-					><path
-						d="M447.1 224c0-12.56-4.781-25.13-14.35-34.76l-174.9-174.9C249.1 4.786 236.5 0 223.1 0C211.4 0 198.9 4.786 189.2 14.35L14.35 189.2C4.783 198.9-.0011 211.4-.0011 223.1c0 12.56 4.785 25.17 14.35 34.8l174.9 174.9c9.625 9.562 22.19 14.35 34.75 14.35s25.13-4.783 34.75-14.35l174.9-174.9C443.2 249.1 447.1 236.6 447.1 224zM96 248c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1S120 210.8 120 224S109.3 248 96 248zM224 376c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S237.3 376 224 376zM224 248c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1S248 210.8 248 224S237.3 248 224 248zM224 120c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S237.3 120 224 120zM352 248c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S365.3 248 352 248zM591.1 192l-118.7 0c4.418 10.27 6.604 21.25 6.604 32.23c0 20.7-7.865 41.38-23.63 57.14l-136.2 136.2v46.37C320 490.5 341.5 512 368 512h223.1c26.5 0 47.1-21.5 47.1-47.1V240C639.1 213.5 618.5 192 591.1 192zM479.1 376c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S493.2 376 479.1 376z"
-					/></svg
-				>
+					<svg viewBox="0 0 640 512" xmlns="http://www.w3.org/2000/svg"
+						><path
+							d="M447.1 224c0-12.56-4.781-25.13-14.35-34.76l-174.9-174.9C249.1 4.786 236.5 0 223.1 0C211.4 0 198.9 4.786 189.2 14.35L14.35 189.2C4.783 198.9-.0011 211.4-.0011 223.1c0 12.56 4.785 25.17 14.35 34.8l174.9 174.9c9.625 9.562 22.19 14.35 34.75 14.35s25.13-4.783 34.75-14.35l174.9-174.9C443.2 249.1 447.1 236.6 447.1 224zM96 248c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1S120 210.8 120 224S109.3 248 96 248zM224 376c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S237.3 376 224 376zM224 248c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1S248 210.8 248 224S237.3 248 224 248zM224 120c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S237.3 120 224 120zM352 248c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S365.3 248 352 248zM591.1 192l-118.7 0c4.418 10.27 6.604 21.25 6.604 32.23c0 20.7-7.865 41.38-23.63 57.14l-136.2 136.2v46.37C320 490.5 341.5 512 368 512h223.1c26.5 0 47.1-21.5 47.1-47.1V240C639.1 213.5 618.5 192 591.1 192zM479.1 376c-13.25 0-23.1-10.75-23.1-23.1s10.75-23.1 23.1-23.1s23.1 10.75 23.1 23.1S493.2 376 479.1 376z"
+						/></svg
+					>
 				{/if}
 			</div>
 
 			<textarea id="bot-prompt-input" bind:value={botPrompt} aria-label="Bot Prompt" />
 		</div>
-		<!-- {#if errorMessages.botPrompt}
-			<p style="color:red">{errorMessages.botPrompt}</p>
-		{/if} -->
 	</div>
 </section>
 <div id="button-container" class="join-game-button">
 	{#if joinGameLoading}
 		<LoadingBars />
 	{:else}
-	<button on:click={joinGame}>Join</button>
+		<button on:click={joinGame}>Join</button>
 	{/if}
 </div>
 
 <style>
-
 	#button-container {
 		display: flex;
 		flex-direction: column;
@@ -421,16 +398,12 @@
 		color: gray;
 	}
 	.config-right {
-		/* width: 50%; */
-		/* height: 100%; */
 		display: flex;
 		align-items: center;
-		/* margin-right: 1rem; */
 	}
 
 	.config-right textarea,
 	input {
-		/* height: 2rem; */
 		font-size: 1.4rem;
 		padding: 0.7rem;
 		border: 0px;
@@ -467,22 +440,17 @@
 		display: flex;
 		flex-direction: row;
 		align-items: flex-start;
-		/* background-color: blue;
-		width: 100%; */
-		/* height: 100%; */
 	}
 
 	.input-wrapper .embeded-button {
 		position: absolute;
 		right: 0;
 		margin: 0.6rem;
-		/* top: -1.4rem; */
-		/* margin-top: 3rem; */
+
 		height: 2rem;
 		width: 2rem;
 		border-radius: 0.5rem;
 		border: 0px;
-		/* background-color: rgb(0, 0, 0); */
 		color: white;
 		font-size: 1.5rem;
 		font-weight: bold;

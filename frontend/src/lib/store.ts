@@ -1,4 +1,3 @@
-import { get, writable } from 'svelte/store';
 import { persisted } from 'svelte-local-storage-store';
 
 type GlobalState = {
@@ -74,7 +73,6 @@ export const addNotification = (notification: Omit<Notification, 'uuid'|'unix_ti
 			uuid,
 			unix_time_sec
 		}
-		console.log('New Notification:', newNotification);
 
 		return [..._notifications, newNotification];
 	});

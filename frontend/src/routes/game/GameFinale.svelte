@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
-	// import { navigate } from "svelte-routing";
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
-	import { globalStore } from '$lib/store';
 
 	import { goto } from '$app/navigation';
 	import image from '$lib/images/3d-success.gif';
@@ -26,7 +24,6 @@
 	}
 
 	function playAgain() {
-		//   globalStore.set({});
 		goto('/game');
 	}
 
@@ -44,7 +41,6 @@
 
 	<div class="image-container">
 		<img src={image} alt="Game end" />
-		<!-- <div class="image-text">{imageText}</div> -->
 	</div>
 	<div class="button-container">
 		<button on:click={playAgain}>Play Again</button>
@@ -54,13 +50,12 @@
 
 <style>
 	.game-finale {
-		/* position: relative; */
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		overflow-y: hidden;
 		width: 100%;
-        height: 100%;
+		height: 100%;
 	}
 	h1 {
 		position: absolute;
@@ -69,12 +64,10 @@
 	}
 
 	.button-container {
-		/* position: absolute; */
 		bottom: 0;
 		display: flex;
 		justify-content: space-between;
 		width: 100%;
-		/* margin-top: 20px; */
 		box-shadow: 0px -5px 10px -3px rgba(0, 0, 0, 0.2);
 	}
 	button {
@@ -85,9 +78,6 @@
 		border: 1px solid black;
 		background-color: black;
 		color: white;
-		/* color: white;
-      border-radius: 5px;
-      box-shadow: 0px 5px 10px -3px rgba(0, 0, 0, 0.2); */
 	}
 	button:hover {
 		background-color: white;

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { notificationStore } from '$lib/store';
 	import type { Notification } from '$lib/store';
-	import { onMount } from 'svelte';
 	import { slide } from 'svelte/transition';
 	import BarAnimator from './BarAnimator.svelte';
 
@@ -9,30 +8,20 @@
 	let visibleToasts: Notification[] = [];
 	let lastNotificationIndexSeen = 0;
 
-	// onMount(() => {
-	// 	visibleToasts = [...toasts].slice(-3, toasts.length);
-	// });
-
 	$: {
 		const newlastNotificationIndexSeen = $notificationStore.length;
-		// console.log('$notificationStore', $notificationStore);
 		const _toasts = $notificationStore.slice(
 			lastNotificationIndexSeen,
 			newlastNotificationIndexSeen
 		);
 		toasts = [...new Set([...toasts, ..._toasts])];
-		// toasts = [...toasts, ..._toasts];
-		// filter duplicates
-		// visibleToasts = [...visibleToasts, ..._toasts];
+
 		visibleToasts = [...new Set([...visibleToasts, ..._toasts])];
 		lastNotificationIndexSeen = newlastNotificationIndexSeen;
 	}
 
 	const closeToast = (toast: Notification) => {
-		console.log('closeToast - start', toast, visibleToasts.length);
-
 		visibleToasts = visibleToasts.filter((t) => t.uuid !== toast.uuid);
-		console.log('closeToast - done', visibleToasts.length);
 	};
 
 	function onTransitionEnd(event, toast: Notification) {
@@ -40,7 +29,6 @@
 			closeToast(toast);
 		}
 	}
-
 </script>
 
 <div class="toast-container">
@@ -48,10 +36,9 @@
 		<div
 			class="toast"
 			style="opacity: 1"
-            transition:slide|local
+			transition:slide|local
 			on:transitionend={(event) => onTransitionEnd(event, toast)}
 		>
-			<!-- <div> -->
 			<div class="top">
 				<h1>{toast.title}</h1>
 
@@ -62,7 +49,7 @@
 
 				<span class="close-button" on:click={() => closeToast(toast)}>X</span>
 			</div>
-            <BarAnimator duration={5} onFinish={() => closeToast(toast)} />
+			<BarAnimator duration={5} onFinish={() => closeToast(toast)} />
 		</div>
 	{/each}
 </div>
@@ -118,8 +105,7 @@
 		align-items: center;
 		opacity: 1;
 		transition: opacity 0.5s ease;
-        box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
-
+		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
 	}
 
 	.close-button {
@@ -127,6 +113,4 @@
 		font-weight: bold;
 		margin: 1rem;
 	}
-
-
 </style>

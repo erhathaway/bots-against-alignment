@@ -8,13 +8,6 @@
 
 	let fetchStatusInterval: NodeJS.Timer | null = null;
 
-	// const startGame = () => {
-	// 	globalStore.update((store) => ({
-	//         ...store,
-	//         is_game_started: true
-
-	//     }));
-	// };
 	async function fetchStatus() {
 		const url = `${BACKEND_API}/game_status?game_id=${$globalStore.game_id}`;
 
@@ -28,8 +21,6 @@
 		const data = await response.json();
 		if (response.ok) {
 			const status = data.status;
-			console.log('GAME STATUS -------->', status, $globalStore);
-			// bots = data.bots;
 
 			if (status === 'STARTED' || status === 'ENDED' || status === 'WAITING_ON_ALIGNMENT_RATING') {
 				globalStore.update((store) => ({
@@ -59,15 +50,12 @@
 		isStartGamePending = true;
 		try {
 			if ($globalStore.creator_id == null) {
-				// console.error('Only the creator can start the game');
 				throw new Error('Only the creator can start the game');
 			}
 			if ($globalStore.is_game_started) {
-				// console.error('Game already started');
 				throw new Error('Game already started');
 			}
 			if ($globalStore.game_id == null) {
-				// console.error('Game ID is null');
 				throw new Error('Game ID is null');
 			}
 			const url = `${BACKEND_API}/start?game_id=${$globalStore.game_id}&creator_id=${$globalStore.creator_id}`;
@@ -89,7 +77,6 @@
 			} else {
 				// Show an error message or handle the error accordingly
 				const data = await response.json();
-				// console.error('Failed to start the game');
 				addNotification({
 					source_url: 'lobby',
 					title: 'Error starting game',

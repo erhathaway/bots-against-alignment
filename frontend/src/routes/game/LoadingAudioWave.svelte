@@ -18,7 +18,6 @@
 		width: 100%;
 		margin-top: 3rem;
 		margin-right: 3rem;
-		/* height: 6rem; */
 	}
 	#preloader_1 {
 		position: absolute;

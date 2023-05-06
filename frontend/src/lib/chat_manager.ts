@@ -1,5 +1,4 @@
-// import type { IGunInstance } from 'gun';
-import GUN, { type IGun, type IGunInstance } from 'gun';
+import GUN, { type IGunInstance } from 'gun';
 
 import ChatGame from './chat_game';
 
@@ -11,29 +10,27 @@ class ChatManager {
 
 	constructor() {
 		this.retryInterval = null;
-        this.gun = null;
+		this.gun = null;
 		this.initGun();
 		this.gameChats = new Map();
 		this.sideEffectQueue = [];
-        this.runSideEffects();
+		this.runSideEffects();
 	}
 
 	initGun() {
 		const tryConnect = () => {
 			try {
-                console.log('TRYING TO CONNECT TO GUN')
 				this.gun = GUN({
 					peers: ['https://bots-against-alignment.herokuapp.com/gun'],
 					localStorage: false
 				});
-                console.log('GUN INITIALIZED', this.gun)
 
 				this.gun.on('out', { get: { '#': { '*': '' } } }); // Requesting root graph data
 
 				// Listen to 'in' event to check for successful connection
 				this.gun.on('in', (msg) => {
 					if (
-                        this.gun && 
+						this.gun &&
 						msg &&
 						this.gun.back('opt.peers')['https://bots-against-alignment.herokuapp.com/gun']
 					) {
@@ -42,8 +39,6 @@ class ChatManager {
 							this.retryInterval = null;
 						}
 					} else {
-						console.log('WebSocket connection failed');
-
 						if (!this.retryInterval) {
 							this.retryInterval = setInterval(() => {
 								console.log('Retrying WebSocket connection...');
@@ -63,9 +58,8 @@ class ChatManager {
 
 	runSideEffects = () => {
 		setInterval(() => {
-            if (this.gun) {
-                while (this.sideEffectQueue.length > 0) {
-                    console.log('RUNNING SIDE EFFECTS')
+			if (this.gun) {
+				while (this.sideEffectQueue.length > 0) {
 					const fn = this.sideEffectQueue.shift();
 					if (fn) {
 						fn();
@@ -73,11 +67,11 @@ class ChatManager {
 				}
 			}
 		}, 1000);
-	}
+	};
 
 	enqueue = (fn: () => void): void => {
 		this.sideEffectQueue.push(fn);
-	}
+	};
 
 	findOrCreateChatGame(gameId: string): ChatGame {
 		if (this.gameChats.has(gameId)) {
@@ -88,13 +82,6 @@ class ChatManager {
 		this.gameChats.set(gameId, chatGame);
 		return chatGame;
 	}
-
-	// getChatGame(gameId: string): ChatGame | null {
-	//   if (this.gameChats.has(gameId)) {
-	//     return this.gameChats.get(gameId) as ChatGame;
-	//   }
-	//   return null;
-	// }
 
 	deleteChatGame(gameId: string): void {
 		if (this.gameChats.has(gameId)) {

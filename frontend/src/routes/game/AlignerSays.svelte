@@ -2,14 +2,9 @@
 	import { NotificationKind, addNotification, globalStore } from '$lib/store';
 	import { onMount } from 'svelte';
 	import LoadingBars from './LoadingBars.svelte';
-	import chat from '$lib/chat';
 	import chat_manager from '$lib/chat_manager';
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 
-	// import { browser } from '$app/environment'; // Import browser from $app/env
-	// const BACKEND_API = import.meta.env.VITE_BACKEND_API;
-
-	// export let data;
 	let alignment_request: string | null = null;
 	let turn_id: number | null = null;
 	let points = 0;
@@ -28,18 +23,16 @@
 
 	async function fetchTurnEndData() {
 		try {
-			const url = `${BACKEND_API}/turn_finale?game_id=${$globalStore.game_id}&turn_id=${$globalStore.last_turn_id}`;
-			console.log('TURN FINALE URL', url)
+			const url = `${BACKEND_API}/turn_finale?game_id=${$globalStore.game_id}`;
+
 			const response = await fetch(url);
 			const data = await response.json();
-			console.log('TURN FINALE DATA', data);
 			if (response.ok) {
-				// console.log('TURN FINALE DATA', data)
-				// alignmentResponses = data.alignment_responses;
 				botsSubmitted = data.bots_submitted;
 				totalBots = data.total_bots;
+			} else if (response.status === 404) {
+				console.log('No turn finale yet');
 			} else {
-				console.error('Failed to get turn finale');
 				addNotification({
 					source_url: 'aligner says',
 					title: 'Error getting turn finale',
@@ -49,7 +42,6 @@
 					action_text: 'get turn finale'
 				});
 			}
-			// alignmentResponses = data.alignment_responses;
 		} catch (error) {
 			console.error('Failed to fetch data:', error);
 		}
@@ -58,20 +50,15 @@
 	async function fetchGameStatus() {
 		const url = `${BACKEND_API}/game_status?game_id=${$globalStore.game_id}`;
 		const response = await fetch(url);
-		// const data = await response.json();
-		// const response = await fetch(`${BACKEND_API}/game_status?game_id=${game_id}`);
 		const data = await response.json();
 
-		console.log('GAME STATUS', data)
 		if (response.ok) {
 			let currentUserBot = null;
 			let allBotsTurnComplete = true;
 			let completedBots = 0;
 
 			if (data && data.bots) {
-				console.log('LOOKING AT BOTS');
 				for (const bot of data.bots) {
-					console.log('BOT', bot);
 					if (bot.turn_complete) {
 						completedBots++;
 					} else {
@@ -83,30 +70,15 @@
 				}
 				botsSubmitted = completedBots;
 				totalBots = data.bots.length;
-				console.log(
-					'BOTS SUBMITTED',
-					botsSubmitted,
-					'TOTAL BOTS',
-					totalBots,
-					'CURRENT USER BOT',
-					currentUserBot,
-					'ALL BOTS TURN COMPLETE',
-					allBotsTurnComplete
-				);
 
-				
 				if (currentUserBot && allBotsTurnComplete && totalBots > 0) {
-					// goto('/turn finale');
 					globalStore.update((_s) => ({
 						..._s,
-						have_all_users_submitted : true
-					}))
-					console.log('-----------------------RANKING------------------------');
+						have_all_users_submitted: true
+					}));
 				}
 			}
-
 		} else {
-			console.error('Failed to get game status');
 			addNotification({
 				source_url: 'aligner says',
 				title: 'Error getting game status',
@@ -126,10 +98,8 @@
 		const data = await response.json();
 
 		if (response.ok) {
-			console.log('TURN DATA', data);
 			alignment_request = data.alignment_prompt;
 			turn_id = data.turn_id;
-			// console.log('TURN ID', turn_id)
 			if (turn_id && turn_id !== $globalStore.last_turn_id) {
 				globalStore.update((state) => ({
 					...state,
@@ -141,11 +111,8 @@
 					...state,
 					last_alignment_request: alignment_request
 				}));
-				// const chat = chat_manager.findOrCreateChatGame($globalStore.game_id);
-				// chat.sendMessage(alignment_request, $globalStore.game_id, 'ALIGNER');
 			}
 		} else {
-			console.error('Failed to get turn');
 			addNotification({
 				source_url: 'aligner says',
 				title: 'Error getting turn',
@@ -160,12 +127,10 @@
 		const statusResponse = await fetch(user_status_url);
 		const statusData = await statusResponse.json();
 
-		console.log('USER STATUS', statusData);
 		if (statusResponse.ok) {
 			points = statusData.points;
 			prompts_remaining = statusData.bot_prompts_remaining;
 		} else {
-			console.error('Failed to get user status');
 			addNotification({
 				source_url: 'aligner says',
 				title: 'Error getting user status',
@@ -203,20 +168,11 @@
 				headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
 			});
 
-			// console.log('COMPLETED TURN', response)
-
 			if (response.ok) {
-				console.log('Turn completed successfully');
-				// globalStore.update((store) => ({
-				// 	...store,
-				// 	is_game_started: true
-				// }));
 				const chat = chat_manager.findOrCreateChatGame($globalStore.game_id);
 				chat.sendStatusMessage('Submitted response', $globalStore.game_id, $globalStore.bot_name);
 			} else {
-				// Show an error message or handle the error accordingly
 				const data = await response.json();
-				// console.error('Failed to start the game');
 				addNotification({
 					source_url: 'aligner says',
 					title: 'Error completing turn',
@@ -229,15 +185,8 @@
 		} finally {
 			isCompleteTurnPending = false;
 		}
-
-		// await fetch(`${BACKEND_API}/completeturn?${queryParams}`, {
-		// 	method: 'POST',
-		// 	headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-		// });
 	}
 </script>
-
-<!-- <section id="left"> -->
 
 <section id="aligner">
 	<div id="aligner-card" class="card">
@@ -269,8 +218,6 @@
 	{/if}
 </div>
 
-<!-- </section> -->
-
 <style>
 	#button-container {
 		display: flex;
@@ -292,7 +239,6 @@
 		flex-direction: row;
 		align-items: center;
 		margin-top: 1rem;
-		/* width: 100%; */
 		flex-grow: 2;
 	}
 
@@ -317,10 +263,7 @@
 
 	#aligner {
 		margin-top: 0;
-		/* margin: 3rem; */
-		/* padding: 2rem; */
-		/* width: 100%; */
-		/* background-color: blue; */
+
 		display: flex;
 		flex-direction: row;
 		justify-content: center;
@@ -338,10 +281,7 @@
 	#bot {
 		padding-top: 2rem;
 		margin-top: 0;
-		/* margin: 3rem; */
-		/* padding: 2rem; */
-		/* width: 100%; */
-		/* background-color: blue; */
+
 		display: flex;
 		flex-direction: row;
 		justify-content: center;
@@ -380,10 +320,7 @@
 		margin-top: 1rem;
 		border-radius: 1rem;
 		padding: 1rem;
-		/* display: flex; */
-		/* flex-direction: column; */
-		/* justify-content: space-between; */
-		/* align-items: center; */
+
 		width: 100%;
 	}
 

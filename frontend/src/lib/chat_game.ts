@@ -24,7 +24,6 @@ class ChatGame {
 		this.lastMessageKey = null;
 		this.gameWatcher = null;
 		this.manager.enqueue(this.initGameWatcher);
-		// this.initGameWatcher();
 	}
 
 	initGameWatcher = () => {
@@ -32,15 +31,12 @@ class ChatGame {
 			throw new Error('gameID is null');
 		}
 
-		console.log('INIT GAME WATCHER', this.gameId);
 		this.gameWatcher = 'SET';
-		// setTimeout(() => {
 		if (this.manager.gun == null) {
 			throw new Error('**gun is null');
 		}
 		this.manager.gun.get(this.gameId).on((data) => {
             const newMessage = {...data};
-			console.log('GUN MESSAGE', newMessage, 'subscriber count', this.subscribers.length, 'existing messages', this.messages);
             
             if (this.seenMessages.has(newMessage.uuid)) {
                 return;
@@ -51,7 +47,6 @@ class ChatGame {
 			this.subscribers.forEach((callback) => callback(newMessage, this.messages));
             this.seenMessages.add(newMessage.uuid);
 		});
-		// }, 5000);
 	}
 
 	watchGame = () => {
@@ -65,12 +60,10 @@ class ChatGame {
 	}
 
 	joinGame = (botName: string) => {
-        console.log('>>>>JOIN GAME', this.gameId, botName)
 		const _run = () => {
 			if (!this.gameWatcher) {
 				this.initGameWatcher();
 			}
-			console.log('>>>>>JOIN GAME', this.gameId, botName);
 			this.botName = botName;
 			this.sendStatusMessage('joined the game', this.gameId, this.botName);
 		};
@@ -112,7 +105,6 @@ class ChatGame {
 				throw new Error('2gun is null');
 			}
 
-			console.log('sending message', message, botName, gameId);
 			this.manager.gun.get(gameId).put({
 				message,
 				timestamp: Date.now(),
@@ -132,7 +124,6 @@ class ChatGame {
 				throw new Error('botName is null');
 			}
 
-			console.log('sending status message', message, botName, gameId);
 			this.manager.gun.get(gameId).put({
 				message,
 				timestamp: Date.now(),
@@ -148,11 +139,8 @@ class ChatGame {
     sendSystemMessage = (message: string, gameId: string) => {
         const uuid = this.createUUID();
 		const _run = () => {
-			// if (this.botName === null) {
-			// 	throw new Error('botName is null');
-			// }
+		
 
-			console.log('sending system message', message);
 			this.manager.gun.get(gameId).put({
 				message,
 				timestamp: Date.now(),
@@ -166,26 +154,10 @@ class ChatGame {
 	}
 
 
-        
-
-	// sendAnonymousMessage = (message: string) => {
-	// 	const _run = () => {
-	// 		console.log('sending anonymous message', message, this.gameId);
-	// 		this.manager.gun.get(this.gameId).put({
-	// 			message,
-	// 			timestamp: Date.now(),
-	// 			botName: null,
-	// 			isStatusMessage: false,
-    //             isSystemMessage: false,
-    //             uuid
-	// 		});
-	// 	};
-	// 	this.manager.enqueue(_run);
-	// }
+    
 
 	subscribe = (callback: Subscriber) => {
 		this.subscribers.push(callback);
-		console.log('SUBSCRIBING', this.subscribers.length);
 	}
 }
 
