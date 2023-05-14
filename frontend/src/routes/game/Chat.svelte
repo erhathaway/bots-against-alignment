@@ -267,7 +267,7 @@
 	}
 
 	.send-button {
-		border-radius: 5px; */
+		border-radius: 5px;
 		font-size: 1.5rem;
 		font-weight: bold;
 		padding: 0.75rem 1.5rem;
