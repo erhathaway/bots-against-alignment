@@ -454,6 +454,25 @@ def turn_finale(request: Request, game_id: str):
             raise HTTPException(
                 status_code=404, detail="Not all players have completed their turn")
 
+    return Response(status_code=200)
+
+@app.post("/process/turn")
+def process_turn(game_id: str, user_id: str, turn_id: str):
+    """Processes the turn and returns the alignment responses"""
+    game = game_state.state.get(game_id)
+    if game is None:
+        raise HTTPException(status_code=404, detail="Game not found")
+    if game.user_id_of_creator != user_id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    if game.turn_id != turn_id:
+        raise HTTPException(status_code=404, detail="Turn not found")
+    
+    '''return error if not all players are complete'''
+    for user_id in game.user_bots.keys():
+        if game.user_bots[user_id]['turn_complete'] == False:
+            raise HTTPException(
+                status_code=404, detail="Not all players have completed their turn")
+
     messages, user_id_to_num = build_aligner_prompt(
         game.aligner_prompt, game.turn_prompt, game.turn_responses)
     response = run_chatGPT_call(messages)
