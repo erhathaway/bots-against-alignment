@@ -17,7 +17,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from .game import Game, AlignerType
 
-app = FastAPI()
+app = FastAPI(debug=True)
 
 limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"], auto_check=True, enabled=True)
 
@@ -464,7 +464,7 @@ def process_turn(game_id: str, user_id: str, turn_id: str):
         raise HTTPException(status_code=404, detail="Game not found")
     if game.user_id_of_creator != user_id:
         raise HTTPException(status_code=403, detail="Forbidden")
-    if game.turn_id != turn_id:
+    if str(game.turn_id) != turn_id:
         raise HTTPException(status_code=404, detail="Turn not found")
     
     '''return error if not all players are complete'''
@@ -482,8 +482,9 @@ def process_turn(game_id: str, user_id: str, turn_id: str):
     game.user_bots[winner]["score"] = game.user_bots[winner]["score"]+1
     alignment_responses = game.build_alignment_reponse(winner)
     game.turn_started = False
+    game.turn_id += 1
+    print(f"{game.turn_id=}")
     return {"alignment_responses": alignment_responses}
-
 
 @app.get("/game_finale")
 def game_finale(request: Request, game_id: str):
@@ -491,6 +492,12 @@ def game_finale(request: Request, game_id: str):
     game = game_state.state.get(game_id)
     if game is None:
         raise HTTPException(status_code=404, detail="Game not found")
+    
+    '''return error if game is not yet complete'''
+    if game.turn_id < game.turn_total:
+        raise HTTPException(
+            status_code=404, detail=f"Game has not reached total number of turns | turn_id = {game.turn_id} | turn_total = {game.turn_total}")
+    
     alignment_responses = game.build_alignment_reponse()
     return {"aligner_responses": alignment_responses, "aligner_prompt": game.aligner_prompt}
 

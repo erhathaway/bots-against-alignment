@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/..')
 import time
 from pprint import pprint
 from fastapi.testclient import TestClient
-from .__init__ import app
+from src.__init__ import app
 client = TestClient(app)
 
 
@@ -86,7 +86,7 @@ def test_flow():
             time.sleep(1)  # Wait for bots to generate responses
 
         print("........Getting turn results...")
-        response = client.get(f"{BASE_URL}/turn_finale", params={"game_id": game_id, "turn_id": turn_id})
+        response = client.post(f"{BASE_URL}/process/turn", params={"game_id": game_id, "user_id": str(user_ids[1]), "turn_id": str(turn_id)})
         assert response.status_code == 200, response.text
         print(response)
         # import ipdb; ipdb.set_trace()

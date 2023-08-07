@@ -55,6 +55,7 @@ class Game:
         self.auto_players = 0
         self.max_auto_players = 0
         self.user_id_of_creator = ''
+        self.turn_total = 5 # before ending the game
 
     def to_dict(self):
         return {
