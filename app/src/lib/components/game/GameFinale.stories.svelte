@@ -4,7 +4,6 @@
 	import { globalState } from '$lib/state/store.svelte';
 
 	globalState.game_id = 'story-game-001';
-	globalState.bot_name = 'ChaosBot';
 	globalState.is_game_over = true;
 
 	const { Story } = defineMeta({
@@ -13,8 +12,18 @@
 	});
 </script>
 
-<Story name="Default">
+<Story name="Winner">
 	{#snippet template()}
+		{(globalState.bot_name = 'ChaosBot', '')}
+		<div style="max-width: 600px; height: 500px; padding: 1rem;">
+			<GameFinale />
+		</div>
+	{/snippet}
+</Story>
+
+<Story name="Loser">
+	{#snippet template()}
+		{(globalState.bot_name = 'SomeOtherBot', '')}
 		<div style="max-width: 600px; height: 500px; padding: 1rem;">
 			<GameFinale />
 		</div>
