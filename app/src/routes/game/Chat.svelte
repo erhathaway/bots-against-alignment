@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { globalState } from '$lib/state/store.svelte';
-	import { tick } from 'svelte';
+	import { tick, untrack } from 'svelte';
 
 	type ChatMessage = {
 		id: number;
@@ -45,7 +45,10 @@
 		messages = [];
 		lastMessageId = 0;
 
-		fetchMessages();
+		// Use untrack so fetchMessages' reads (lastMessageId) don't become
+		// effect dependencies — otherwise updating lastMessageId after each
+		// fetch would re-trigger this effect, clearing messages in a loop.
+		untrack(() => fetchMessages());
 		const intervalId = setInterval(fetchMessages, 1500);
 		return () => clearInterval(intervalId);
 	});

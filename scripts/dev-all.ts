@@ -3,7 +3,6 @@ import { spawn } from 'node:child_process';
 
 import { freePorts } from './free-ports.ts';
 
-const PORT_GUN = 8765;
 const PORT_APP = 5173;
 const DATABASE_URL = 'file:./dev.db';
 
@@ -100,7 +99,7 @@ async function terminateChildren(children: Array<{ exitCode: number | null; pid:
 }
 
 async function main() {
-	await freePorts([PORT_GUN, PORT_APP]);
+	await freePorts([PORT_APP]);
 	await runCommand(
 		'db:migrate',
 		'bash',
@@ -122,22 +121,12 @@ async function main() {
 	process.on('SIGTERM', () => shutdown(0));
 
 	children.push(
-		spawnService('gun', 'bun', ['app/scripts/gun-relay.ts'], {
-			env: {
-				...process.env,
-				GUN_HOST: '127.0.0.1',
-				GUN_PORT: String(PORT_GUN)
-			}
-		})
-	);
-
-	children.push(
 		spawnService(
 			'app',
 			'bash',
 			[
 				'-lc',
-				`cd app && PUBLIC_GUN_PEER=http://127.0.0.1:${PORT_GUN}/gun DATABASE_URL=${DATABASE_URL} bun run dev -- --host 127.0.0.1 --port ${PORT_APP}`
+				`cd app && DATABASE_URL=${DATABASE_URL} bun run dev -- --host 127.0.0.1 --port ${PORT_APP}`
 			],
 			{ env: { ...process.env } }
 		)
