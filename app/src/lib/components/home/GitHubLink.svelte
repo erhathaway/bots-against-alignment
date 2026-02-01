@@ -3,7 +3,7 @@
 		href?: string;
 	};
 
-	let { href = 'https://github.com/ethangclark/bots-against-alignment' }: Props = $props();
+	let { href = 'https://github.com/erhathaway/bots-against-alignment' }: Props = $props();
 </script>
 
 <a class="github-link" {href} target="_blank" rel="noopener noreferrer">
