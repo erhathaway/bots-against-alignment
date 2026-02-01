@@ -3,6 +3,7 @@
 	import { NotificationKind } from '$lib/types';
 	import LoadingSpinner from './LoadingSpinner.svelte';
 	import LoadingBars from './LoadingBars.svelte';
+	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { env } from '$env/dynamic/public';
 
@@ -281,7 +282,7 @@
 		}
 	}
 
-	$effect(() => {
+	onMount(() => {
 		if (env.PUBLIC_E2E === '1' || env.PUBLIC_E2E === 'true') return;
 		randomize_bot_name();
 		randomize_bot_prompt();
