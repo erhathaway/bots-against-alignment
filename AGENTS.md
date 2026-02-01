@@ -105,6 +105,7 @@ npm run dev:frontend
 ## Documentation discipline
 
 - If you add or change env vars, ports, or local dev entrypoints, update `README.md` and any relevant subproject README(s).
+- If you change user-visible behavior (gameplay flow, chat behavior, API contracts), update docs and tests so the change stays discoverable.
 - Keep the agent guide focused on stable, repo-wide guidance (avoid personal TODO lists here).
 
 ## Backend API (high level)
@@ -140,7 +141,7 @@ Note: games are in-memory (backend restart wipes games).
 ## Agent operating rules (repo-wide)
 
 - Fail loudly. Prefer explicit errors over silent fallbacks that mask broken state.
-- Ask clarifying questions when requirements are ambiguous or risky (ports, env, deploy target, etc.).
+- Ask clarifying questions when requirements are ambiguous or risky (ports, env, deploy target, etc.) — don’t rely on unchecked assumptions.
 - Keep diffs focused and easy to verify end-to-end.
 - If you change an API contract, update backend + frontend together and add/adjust E2E coverage.
 - Don’t introduce proxy/pass-through re-export files during refactors; update import sites.
@@ -148,6 +149,7 @@ Note: games are in-memory (backend restart wipes games).
 - Never run git commands that alter repo state (`git commit`, `git reset`, `git clean`, etc.).
 - Assume other work may be in progress; avoid overwriting changes you didn’t author.
 - Always add tests alongside behavior changes (prefer E2E for user-visible flows; unit tests where appropriate).
+- Before calling work “done”, run the relevant quality gates (tests/typecheck) or explicitly state what you did not run and why.
 - Always leave the repo in a runnable state (or clearly explain what is broken and why).
 
 ## Refactor guidelines
@@ -159,6 +161,8 @@ Note: games are in-memory (backend restart wipes games).
 
 - Treat `cd frontend && npm run check` as the type/source-of-truth signal.
 - Prefer explicit types over `any`; avoid type assertions/casts unless paired with runtime guards.
+- Don’t “fix” type errors by weakening types or casting away safety; fix the root cause and keep runtime checks aligned.
+- When handling untrusted runtime data (API responses, Gun messages, `localStorage`), validate it (guards/tests) instead of relying on casts.
 - If `npm run check` already has failures, do not introduce new ones.
 
 ## Quality gates (when touching code)
