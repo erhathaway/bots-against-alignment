@@ -28,6 +28,7 @@
 		"@sveltejs/adapter-auto": "^7.0.0",
 		"@sveltejs/kit": "^2.50.1",
 		"@sveltejs/vite-plugin-svelte": "^6.2.4",
+		"@types/canvas-confetti": "^1.9.0",
 		"@types/node": "^25.1.0",
 		"@vitest/browser-playwright": "^4.0.18",
 		"drizzle-kit": "^0.31.8",
@@ -52,6 +53,7 @@
 		"@ai-sdk/openai": "^3.0.24",
 		"@fontsource/fira-mono": "^5.2.7",
 		"ai": "^6.0.66",
+		"canvas-confetti": "^1.9.4",
 		"gun": "^0.2020.1241",
 		"zod": "^4.3.6"
 	}
