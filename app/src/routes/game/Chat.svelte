@@ -17,10 +17,49 @@
 	let lastMessageId = $state(0);
 	let hasJoined = $derived(Boolean(globalState.bot_name && globalState.has_player_joined));
 
+	// Typewriter state for aligner messages
+	let typewriterProgress = $state<Record<number, number>>({});
+	let typewriterTimers: Record<number, ReturnType<typeof setTimeout>> = {};
+
+	function randomWordDelay() {
+		return 80 + Math.random() * 200;
+	}
+
+	function isAlignerMessage(msg: ChatMessage) {
+		return msg.type === 'system' && msg.senderName === 'The Aligner';
+	}
+
+	function startTypewriter(msgId: number, wordCount: number) {
+		if (typewriterTimers[msgId]) return;
+		typewriterProgress[msgId] = 0;
+		const step = () => {
+			const current = typewriterProgress[msgId] ?? 0;
+			if (current >= wordCount) {
+				delete typewriterTimers[msgId];
+				return;
+			}
+			typewriterProgress[msgId] = current + 1;
+			scrollToBottom();
+			typewriterTimers[msgId] = setTimeout(step, randomWordDelay());
+		};
+		typewriterTimers[msgId] = setTimeout(step, randomWordDelay());
+	}
+
+	function getDisplayedText(msg: ChatMessage): string {
+		const words = msg.message.split(/\s+/);
+		const revealed = typewriterProgress[msg.id];
+		if (revealed === undefined || revealed >= words.length) return msg.message;
+		return words.slice(0, revealed).join(' ');
+	}
+
+	function isTypewriterDone(msg: ChatMessage): boolean {
+		const words = msg.message.split(/\s+/);
+		const revealed = typewriterProgress[msg.id];
+		return revealed === undefined || revealed >= words.length;
+	}
+
 	let alignerTyping = $derived(
-		messages.length > 0 &&
-			messages[messages.length - 1].senderName === 'The Aligner' &&
-			messages[messages.length - 1].type === 'system'
+		messages.some((m) => isAlignerMessage(m) && !isTypewriterDone(m))
 	);
 
 	async function fetchMessages() {
@@ -34,6 +73,13 @@
 			const data = await response.json();
 			if (data.messages && data.messages.length > 0) {
 				const newMessages = data.messages as ChatMessage[];
+				// Start typewriter for new aligner messages
+				for (const msg of newMessages) {
+					if (isAlignerMessage(msg)) {
+						const words = msg.message.split(/\s+/);
+						startTypewriter(msg.id, words.length);
+					}
+				}
 				messages = [...messages, ...newMessages];
 				lastMessageId = newMessages[newMessages.length - 1].id;
 				scrollToBottom();
@@ -50,6 +96,11 @@
 		// Reset on game change
 		messages = [];
 		lastMessageId = 0;
+		for (const id of Object.keys(typewriterTimers)) {
+			clearTimeout(typewriterTimers[Number(id)]);
+		}
+		typewriterTimers = {};
+		typewriterProgress = {};
 
 		// Use untrack so fetchMessages' reads (lastMessageId) don't become
 		// effect dependencies — otherwise updating lastMessageId after each
@@ -179,12 +230,15 @@
 					</div>
 				{/if}
 			{:else if message.type === 'system' && message.senderName === 'The Aligner'}
-				<div class="message aligner">
-					<div class="message-aligner-container">
-						<div class="message-text name">The Aligner</div>
-						<div class="message-text text">{message.message}</div>
+				{@const displayed = getDisplayedText(message)}
+				{#if displayed}
+					<div class="message aligner">
+						<div class="message-aligner-container">
+							<div class="message-text name">The Aligner</div>
+							<div class="message-text text">{displayed}{#if !isTypewriterDone(message)}<span class="typewriter-cursor">|</span>{/if}</div>
+						</div>
 					</div>
-				</div>
+				{/if}
 			{:else if message.type === 'system'}
 				<div class="message system">
 					<div class="message-part-bottom">
@@ -381,20 +435,19 @@
 	.aligner {
 		display: flex;
 		flex-direction: row;
-		justify-content: center;
-		align-items: center;
+		justify-content: flex-start;
+		align-items: flex-start;
 	}
 
 	.aligner .message-aligner-container {
 		display: flex;
 		flex-direction: column;
-		justify-content: center;
-		align-items: center;
+		align-items: flex-start;
 		background-color: #ffe2f5;
 		border-radius: 5px;
 		padding: 0.5rem;
 		border-left: 3px solid #ff00aa;
-		max-width: 90%;
+		max-width: 85%;
 	}
 
 	.aligner .name {
@@ -408,6 +461,20 @@
 		font-size: 13px;
 		color: #333;
 		font-style: italic;
+		text-align: left;
+	}
+
+	.typewriter-cursor {
+		animation: blink 0.7s step-end infinite;
+		color: #ff00aa;
+		font-style: normal;
+		font-weight: bold;
+	}
+
+	@keyframes blink {
+		50% {
+			opacity: 0;
+		}
 	}
 
 	.game-start {
