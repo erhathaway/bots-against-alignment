@@ -78,6 +78,8 @@
 		return revealed !== undefined && revealed < 0;
 	}
 
+	let initialFetchDone = false;
+
 	let alignerTyping = $derived(
 		messages.some((m) => isAlignerMessage(m) && !isTypewriterDone(m))
 	);
@@ -93,11 +95,13 @@
 			const data = await response.json();
 			if (data.messages && data.messages.length > 0) {
 				const newMessages = data.messages as ChatMessage[];
-				// Queue typewriter for new aligner messages
-				for (const msg of newMessages) {
-					if (isAlignerMessage(msg)) {
-						const words = msg.message.split(/\s+/);
-						enqueueTypewriter(msg.id, words.length);
+				// Only typewrite aligner messages that arrive after initial load
+				if (initialFetchDone) {
+					for (const msg of newMessages) {
+						if (isAlignerMessage(msg)) {
+							const words = msg.message.split(/\s+/);
+							enqueueTypewriter(msg.id, words.length);
+						}
 					}
 				}
 				messages = [...messages, ...newMessages];
@@ -107,6 +111,7 @@
 		} catch {
 			// silently ignore polling errors
 		}
+		initialFetchDone = true;
 	}
 
 	$effect(() => {
@@ -121,6 +126,7 @@
 		activeTypewriterId = null;
 		typewriterQueue = [];
 		typewriterProgress = {};
+		initialFetchDone = false;
 
 		// Use untrack so fetchMessages' reads (lastMessageId) don't become
 		// effect dependencies — otherwise updating lastMessageId after each
@@ -191,11 +197,24 @@
 	function isMe(senderName: string | null) {
 		return Boolean(senderName && senderName === globalState.bot_name);
 	}
+
+	// Hide messages after the last unfinished aligner typewriter message
+	let visibleMessages = $derived.by(() => {
+		let lastUnfinishedIdx = -1;
+		for (let i = messages.length - 1; i >= 0; i--) {
+			if (isAlignerMessage(messages[i]) && !isTypewriterDone(messages[i])) {
+				lastUnfinishedIdx = i;
+				break;
+			}
+		}
+		if (lastUnfinishedIdx === -1) return messages;
+		return messages.slice(0, lastUnfinishedIdx + 1);
+	});
 </script>
 
 <div class="chat-window">
 	<div class="message-container" bind:this={messageContainer}>
-		{#each messages as message (message.id)}
+		{#each visibleMessages as message (message.id)}
 			{#if message.type === 'system' && message.senderName === 'Game Start'}
 				{@const info = (() => { try { return JSON.parse(message.message); } catch { return null; } })()}
 				{#if info}
