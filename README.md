@@ -14,16 +14,12 @@
 | Part | Service | URL |
 | --- | --- | --- |
 | SvelteKit app + API | Vercel | [vercel.com](https://www.botsagainstalignment.com) |
-| GunJS Peer | Heroku | [herokuapp.com](https://bots-against-alignment.herokuapp.com/) |
 
 ## Running locally
 
-Ports are hardcoded:
+SvelteKit app: `http://127.0.0.1:5173` (hardcoded).
 
-- Gun relay: `http://127.0.0.1:8765/gun`
-- SvelteKit app: `http://127.0.0.1:5173`
-
-Before starting, the dev scripts will attempt to free the ports (SIGTERM with a short timeout, then SIGKILL if needed).
+Before starting, the dev scripts will attempt to free the port (SIGTERM with a short timeout, then SIGKILL if needed).
 
 ### Install deps (first time)
 
@@ -32,7 +28,7 @@ cd app
 bun install
 ```
 
-### Run everything (Gun + SvelteKit app)
+### Run the app
 
 ```bash
 bun run dev
@@ -40,24 +36,16 @@ bun run dev
 
 Then open `http://127.0.0.1:5173/`.
 
-### Run separately
-
-```bash
-bun run dev:gun
-bun run dev:app
-```
-
 ### Required env vars
 
-Server-side (SvelteKit):
+Server-side (`app/.env`):
 
-- `DATABASE_URL` — required, e.g. `file:./dev.db` for local
+- `DATABASE_URL` — required, e.g. `file:./dev.db` for local SQLite
 - `OPENAI_API_KEY` — optional (required for real LLM calls)
-- `MOCK_LLM=1` — force mock LLM responses (recommended for tests)
+- `MOCK_LLM=1` — force mock LLM responses (recommended for local dev and tests)
 
-Client-side (SvelteKit public):
+Client-side (`app/.env`):
 
-- `PUBLIC_GUN_PEER` — Gun relay URL (e.g. `http://127.0.0.1:8765/gun`)
 - `PUBLIC_E2E=1` — disables auto-randomization in E2E runs
 
 ##  How to play
