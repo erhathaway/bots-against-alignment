@@ -1,23 +1,23 @@
 <script lang="ts">
 	let { speed = 450 }: { speed?: number } = $props();
 
-	let commas = $state(['', '', '', '', '', '', '']);
-	let state = $state<'appear' | 'disappear'>('appear');
+	let commas = $state(['', '', '', '', '', '', '']) as string[];
+	let phase: 'appear' | 'disappear' = $state('appear');
 	let step = $state(0);
 
 	$effect(() => {
 		const animateWave = () => {
-			if (state === 'appear') {
+			if (phase === 'appear') {
 				commas[step] = '.';
 				step += 1;
 				if (step === commas.length) {
-					state = 'disappear';
+					phase = 'disappear';
 				}
-			} else if (state === 'disappear') {
+			} else if (phase === 'disappear') {
 				commas[step - 1] = '';
 				step -= 1;
 				if (step === 0) {
-					state = 'appear';
+					phase = 'appear';
 				}
 			}
 		};
