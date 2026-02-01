@@ -126,6 +126,11 @@ export const joinGame = async ({
 	const timestamp = now();
 	const trimmedPrompt = truncate(botPrompt, MAX_BOT_PROMPT_LENGTH);
 
+	// Auto-assign creator if game has no human owner yet (e.g. play-again games)
+	const shouldBecomeCreator =
+		(creatorId && creatorId === game.creatorId) || !game.creatorPlayerId;
+	let assignedCreatorId: string | null = null;
+
 	await db.transaction(async (tx) => {
 		await tx.insert(players).values({
 			id: playerId,
@@ -147,15 +152,19 @@ export const joinGame = async ({
 			prompt: alignerPrompt
 		});
 
-		if (creatorId && creatorId === game.creatorId) {
+		if (shouldBecomeCreator) {
+			const newCreatorId = creatorId && creatorId === game.creatorId
+				? game.creatorId
+				: crypto.randomUUID();
 			await tx
 				.update(games)
-				.set({ creatorPlayerId: playerId, updatedAt: timestamp })
+				.set({ creatorPlayerId: playerId, creatorId: newCreatorId, updatedAt: timestamp })
 				.where(eq(games.id, gameId));
+			assignedCreatorId = newCreatorId;
 		}
 	});
 
-	const isCreator = Boolean(creatorId && creatorId === game.creatorId);
+	const isCreator = Boolean(shouldBecomeCreator);
 	await postChatMessage({
 		gameId,
 		message: isCreator ? 'created the game' : 'joined the waiting room',
@@ -184,7 +193,7 @@ export const joinGame = async ({
 		seedAiBots();
 	}
 
-	return { playerId };
+	return { playerId, creatorId: assignedCreatorId };
 };
 
 const createAutoPlayer = async (gameId: string): Promise<{ playerId: string; botName: string }> => {

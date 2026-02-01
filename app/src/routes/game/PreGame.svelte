@@ -265,6 +265,9 @@
 				globalState.aligner_prompt = alignerPrompt;
 				globalState.bot_name = botName;
 				globalState.user_id = payload.playerId;
+				if (payload.creatorId) {
+					globalState.creator_id = payload.creatorId;
+				}
 				globalState.has_player_joined = true;
 			} else {
 				const error = await response.json();
