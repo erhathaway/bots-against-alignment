@@ -12,6 +12,7 @@ import {
 } from '$lib/server/llm/random';
 import { badRequest, forbidden, notFound } from '$lib/server/errors';
 import { postChatMessage } from '$lib/server/chat/service';
+import { checkLLMAvailability } from '$lib/server/llm/health';
 
 const DEFAULT_POINTS_TO_WIN = 2;
 const DEFAULT_BOT_PROMPT_CHANGES = 1;
@@ -200,6 +201,13 @@ export const startGame = async ({ gameId, creatorId }: { gameId: string; creator
 	const game = await requireGame(gameId);
 	if (game.creatorId !== creatorId) {
 		throw forbidden('Forbidden');
+	}
+
+	try {
+		await checkLLMAvailability();
+	} catch (error) {
+		const reason = error instanceof Error ? error.message : 'Unknown error';
+		throw badRequest(`LLM is not available: ${reason}`);
 	}
 
 	const playersCount = await db

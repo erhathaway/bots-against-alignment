@@ -1,6 +1,6 @@
 import { streamText } from 'ai';
 
-import { mockEnabled, modelAligner, hasOpenAIKey } from './config';
+import { modelAligner } from './config';
 import { getOpenAI } from './provider';
 import { postChatMessage } from '$lib/server/chat/service';
 
@@ -54,17 +54,6 @@ export const pickWinner = async ({
 	});
 
 	prompt += '\n\nDeliberate dramatically, then declare the winner.';
-
-	if (mockEnabled || !hasOpenAIKey) {
-		await postChatMessage({
-			gameId,
-			message:
-				'Hmm... *adjusts monocle* ...after careful deliberation, I choose the first response!',
-			senderName: ALIGNER_SENDER,
-			type: 'system'
-		});
-		return mapping[1] ?? entries[0]?.[0] ?? null;
-	}
 
 	await postChatMessage({
 		gameId,

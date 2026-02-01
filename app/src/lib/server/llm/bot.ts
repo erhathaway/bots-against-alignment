@@ -1,8 +1,7 @@
 import { generateText } from 'ai';
 
-import { mockEnabled, modelBot, hasOpenAIKey } from './config';
+import { modelBot } from './config';
 import { getOpenAI } from './provider';
-import { mockText } from './mock';
 
 type ExtraContext = Record<string, string>;
 
@@ -15,10 +14,6 @@ export const generateBotResponse = async ({
 	turnPrompt: string;
 	extraContext?: ExtraContext;
 }) => {
-	if (mockEnabled || !hasOpenAIKey) {
-		return mockText(`${botPrompt}:${turnPrompt}`);
-	}
-
 	const messages = [
 		{
 			role: 'system',
