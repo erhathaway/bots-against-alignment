@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { globalState } from '$lib/state/store.svelte';
 	import { tick } from 'svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 	import chat_manager from '$lib/chat_manager';
 	import type ChatGame from '$lib/chat_game';
 	import type { Message } from '$lib/types';
 
 	let chat = $state<ChatGame | null>(null);
 	let messages = $state<Message[]>([]);
-	const seenMessages = new Set<string>();
+	const seenMessages = new SvelteSet<string>();
 	let inputText = $state('');
 	let messageContainer: HTMLElement | null = null;
 	let joinedChatGameId = $state<string | null>(null);
@@ -60,15 +61,15 @@
 
 	function stringToColor(str: string) {
 		let hash = 0;
-		for (let i = 0; i < str.length; i++) {
-			hash = str.charCodeAt(i) + ((hash << 5) - hash);
+		for (let index = 0; index < str.length; index++) {
+			hash = str.charCodeAt(index) + ((hash << 5) - hash);
 		}
 		return hash;
 	}
 
-	function intToRGB(i: number) {
-		const c = (i & 0x00ffffff).toString(16).toUpperCase();
-		return '#' + '00000'.substring(0, 6 - c.length) + c;
+	function intToRGB(value: number) {
+		const hexValue = (value & 0x00ffffff).toString(16).toUpperCase();
+		return '#' + '00000'.substring(0, 6 - hexValue.length) + hexValue;
 	}
 
 	function getNameColor(name: string) {
@@ -147,7 +148,7 @@
 						<div
 							class="message-icon"
 							style="background-color: {getNameColor(message.botName ?? 'Unknown')};"
-						/>
+						></div>
 						<div class="message-text">{message.message}</div>
 					</div>
 				</div>

@@ -295,7 +295,7 @@
 	</div>
 	<div class="config-right">
 		<div class="input-wrapper">
-			<div class="embeded-button" onclick={randomize_bot_name}>
+			<button type="button" class="embeded-button" onclick={randomize_bot_name}>
 				{#if randomizeBotNameLoading}
 					<LoadingSpinner />
 				{:else}
@@ -305,7 +305,7 @@
 						/></svg
 					>
 				{/if}
-			</div>
+			</button>
 			<input
 				id="bot-name-input"
 				type="text"
@@ -326,7 +326,7 @@
 	</div>
 	<div class="config-right">
 		<div class="input-wrapper">
-			<div class="embeded-button" onclick={randomize_aligner_prompt}>
+			<button type="button" class="embeded-button" onclick={randomize_aligner_prompt}>
 				{#if randomizeAlignerPromptLoading}
 					<LoadingSpinner />
 				{:else}
@@ -336,8 +336,8 @@
 						/></svg
 					>
 				{/if}
-			</div>
-			<textarea id="aligner-input" bind:value={alignerPrompt} aria-label="Aligner Prompt" />
+			</button>
+			<textarea id="aligner-input" bind:value={alignerPrompt} aria-label="Aligner Prompt"></textarea>
 		</div>
 	</div>
 </section>
@@ -351,7 +351,7 @@
 	</div>
 	<div class="config-right">
 		<div class="input-wrapper">
-			<div class="embeded-button" onclick={randomize_bot_prompt}>
+			<button type="button" class="embeded-button" onclick={randomize_bot_prompt}>
 				{#if randomizeBotPromptLoading}
 					<LoadingSpinner />
 				{:else}
@@ -361,9 +361,9 @@
 						/></svg
 					>
 				{/if}
-			</div>
+			</button>
 
-			<textarea id="bot-prompt-input" bind:value={botPrompt} aria-label="Bot Prompt" />
+			<textarea id="bot-prompt-input" bind:value={botPrompt} aria-label="Bot Prompt"></textarea>
 		</div>
 	</div>
 </section>
@@ -389,15 +389,6 @@
 		align-items: center;
 		justify-content: center;
 	}
-	#screen {
-		display: flex;
-		flex-direction: row;
-		height: 100vh;
-		width: 100vw;
-		margin: 0;
-		padding: 0;
-	}
-
 	section {
 		display: flex;
 		flex-direction: row;
@@ -479,6 +470,8 @@
 		width: 2rem;
 		border-radius: 0.5rem;
 		border: 0px;
+		background: none;
+		padding: 0;
 		color: white;
 		font-size: 1.5rem;
 		font-weight: bold;

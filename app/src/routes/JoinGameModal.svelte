@@ -5,16 +5,7 @@
 	let { onClose }: { onClose?: () => void } = $props();
 
 	let rawGameId = $state('');
-	let gameId = $state('');
-	let oldgameId = $state('');
 	let showError = $state(false);
-
-	$effect(() => {
-		if (gameId !== oldgameId) {
-			showError = false;
-			oldgameId = gameId;
-		}
-	});
 
 	function extractGameIdFromString(str: string) {
 		const gameIdRegex = /(?:\?|&)game_id=([^&]+)/;
@@ -32,15 +23,20 @@
 		}
 	}
 
-	$effect(() => {
+	const gameId = $derived.by(() => {
 		const extractedGameId = extractGameIdFromString(rawGameId);
-		gameId = extractedGameId ?? '';
+		return extractedGameId ?? '';
 	});
 
 	let isJoinGamePending = $state(false);
 
 	async function joinGame() {
 		if (isJoinGamePending) {
+			return;
+		}
+
+		if (!gameId) {
+			showError = true;
 			return;
 		}
 
@@ -73,14 +69,36 @@
 	}
 </script>
 
-<div class="modal-overlay" onclick={closeModal}>
-	<div class="modal" onclick={(event) => event.stopPropagation()}>
+<div
+	class="modal-overlay"
+	role="button"
+	tabindex="0"
+	aria-label="Close join game modal"
+	onclick={closeModal}
+	onkeydown={(event) => {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			closeModal();
+		}
+	}}
+>
+	<div
+		class="modal"
+		role="dialog"
+		aria-modal="true"
+		aria-label="Join game"
+		tabindex="-1"
+		onpointerdown={(event) => event.stopPropagation()}
+	>
 		<div class="join-game-container">
 			<p>Enter Game ID</p>
 			<input
 				type="text"
 				bind:value={rawGameId}
 				placeholder="45210b0a-12cc-4be9-9bd3-69896b58dfad"
+				oninput={() => {
+					showError = false;
+				}}
 			/>
 			<span class="subtext">This is a UUID that the game creator should share with you</span>
 
@@ -88,7 +106,6 @@
 				<LoadingBars />
 			{:else}
 				<button
-					role="button"
 					onclick={joinGame}
 					onkeydown={(event) => {
 						if (event.key === 'Enter') joinGame();
@@ -123,12 +140,6 @@
 	.modal {
 		border-radius: 8px;
 		max-width: 500px;
-	}
-
-	h3 {
-		padding-top: 2rem;
-		margin-bottom: 1rem;
-		padding-left: 5rem;
 	}
 
 	button {

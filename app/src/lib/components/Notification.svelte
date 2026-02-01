@@ -47,7 +47,7 @@
 			<div class="middle">
 				<h2>{toast.body}</h2>
 
-				<span class="close-button" onclick={() => closeToast(toast)}>X</span>
+				<button type="button" class="close-button" onclick={() => closeToast(toast)}>X</button>
 			</div>
 			<BarAnimator duration={5} onFinish={() => closeToast(toast)} />
 		</div>
@@ -109,6 +109,10 @@
 	}
 
 	.close-button {
+		background: none;
+		border: none;
+		color: inherit;
+		font: inherit;
 		cursor: pointer;
 		font-weight: bold;
 		margin: 1rem;
