@@ -69,7 +69,7 @@
 		return hash;
 	}
 
-	function intToRGB(i) {
+	function intToRGB(i: number) {
 		const c = (i & 0x00ffffff).toString(16).toUpperCase();
 		return '#' + '00000'.substring(0, 6 - c.length) + c;
 	}
@@ -150,15 +150,18 @@
 			{:else if message.isStatusMessage}
 				<div class="message status">
 					<div class="message-status-contianer">
-						<div class="message-text name">{message.botName}</div>
+						<div class="message-text name">{message.botName ?? ''}</div>
 						<div class="message-text text">{message.message}</div>
 					</div>
 				</div>
 			{:else}
 				<div class="message {message.isUser ? 'user' : 'other'}">
-					<div class="message-part-top">{message.botName}</div>
+					<div class="message-part-top">{message.botName ?? 'Unknown'}</div>
 					<div class="message-part-bottom">
-						<div class="message-icon" style="background-color: {getNameColor(message.botName)};" />
+						<div
+							class="message-icon"
+							style="background-color: {getNameColor(message.botName ?? 'Unknown')};"
+						/>
 						<div class="message-text">{message.message}</div>
 					</div>
 				</div>

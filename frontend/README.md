@@ -1,14 +1,14 @@
 # Install Dependencies
 
-`npm install`
+`bun install`
 
 # Build 
 
-`npm run build`
+`bun run build`
 
 # Run Dev
 
-`npm run dev -- --open`
+`bun run dev -- --open`
 
 # Environment
 

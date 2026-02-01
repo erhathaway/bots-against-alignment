@@ -11,6 +11,7 @@ type GlobalState = {
 	last_turn_id: number | null;
 	has_player_joined: boolean;
 	is_game_started: boolean;
+	is_config_open: boolean;
 	last_alignment_request: string | null;
 	have_all_users_submitted: boolean;
 	is_game_over: boolean;
@@ -28,6 +29,7 @@ const defaultData = {
 	last_alignment_request: null,
 	has_player_joined: false,
 	is_game_started: false,
+	is_config_open: false,
 	have_all_users_submitted: false,
 	is_game_over: false
 };
@@ -49,34 +51,39 @@ export type Notification = {
 	action_url?: string | null;
 	action_text?: string | null;
 	unix_time_sec: number;
-  uuid: string;
+	uuid: string;
 };
 export const notificationStore = persisted<Notification[]>('notifications', []);
 
-notificationStore.set([])
+notificationStore.set([]);
 
 const MAX_NOTIFICATION_HISTORY = 1000;
 
-export const addNotification = (notification: Omit<Notification, 'uuid'|'unix_time_sec'>) => {
-  const uuid = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-  const unix_time_sec = Math.floor(Date.now() / 1000);
-	notificationStore.update(_notifications => {
-    if (_notifications.length >= MAX_NOTIFICATION_HISTORY) {
-      _notifications = _notifications.slice(0, MAX_NOTIFICATION_HISTORY - 1);
-    }
-		const body = notification.body;
-		if (typeof body === 'object') {
-			notification.body = JSON.stringify(body);
-		}
-		const newNotification = {
-			...notification,
-			uuid,
-			unix_time_sec
+type AddNotificationInput = Omit<Notification, 'uuid' | 'unix_time_sec' | 'body'> & {
+	body: unknown;
+};
+
+export const addNotification = (notification: AddNotificationInput) => {
+	const uuid =
+		Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+	const unix_time_sec = Math.floor(Date.now() / 1000);
+
+	const body = notification.body;
+	const bodyString = typeof body === 'string' ? body : JSON.stringify(body);
+
+	const newNotification: Notification = {
+		...notification,
+		uuid,
+		unix_time_sec,
+		body: bodyString
+	};
+
+	notificationStore.update((_notifications) => {
+		if (_notifications.length >= MAX_NOTIFICATION_HISTORY) {
+			_notifications = _notifications.slice(0, MAX_NOTIFICATION_HISTORY - 1);
 		}
 
 		return [..._notifications, newNotification];
 	});
 };
-
-
 

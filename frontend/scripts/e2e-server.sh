@@ -12,7 +12,7 @@ export MOCK_LLM="1"
 GUN_DATA_DIR="$(mktemp -d)"
 export GUN_DATA_DIR
 GUN_LOG="${GUN_DATA_DIR}/gun.log"
-node "${ROOT_DIR}/scripts/gun-relay.js" >"${GUN_LOG}" 2>&1 &
+bun "${ROOT_DIR}/scripts/gun-relay.ts" >"${GUN_LOG}" 2>&1 &
 GUN_PID=$!
 
 pushd "$BACKEND_DIR" >/dev/null
@@ -57,5 +57,5 @@ if [[ "${BACKEND_READY:-}" != "1" ]]; then
 fi
 
 cd "$ROOT_DIR"
-npm run build
-npm run preview -- --host 127.0.0.1 --port 4173
+bun run build
+bun run preview -- --host 127.0.0.1 --port 4173

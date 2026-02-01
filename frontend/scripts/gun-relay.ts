@@ -1,3 +1,4 @@
+#!/usr/bin/env bun
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -37,11 +38,11 @@ const server = http.createServer((req, res) => {
 
 Gun({
 	web: server,
-	file: gunFile
+	file: gunFile,
+	multicast: false
 });
 
 server.listen(port, host, () => {
 	// eslint-disable-next-line no-console
 	console.log(`gun-relay listening on http://${host}:${port}/gun`);
 });
-

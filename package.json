@@ -2,11 +2,11 @@
 	"name": "bots-against-alignment",
 	"private": true,
 	"type": "module",
+	"packageManager": "bun@1.1.34",
 	"scripts": {
-		"dev:gun": "node scripts/free-ports.mjs 8765 && GUN_HOST=127.0.0.1 GUN_PORT=8765 GUN_DATA_DIR=.gun node frontend/scripts/gun-relay.js",
-		"dev:backend": "node scripts/free-ports.mjs 8000 && cd backend && poetry run uvicorn src:app --host 127.0.0.1 --port 8000 --log-level info",
-		"dev:frontend": "node scripts/free-ports.mjs 5173 && cd frontend && VITE_BACKEND_API=http://127.0.0.1:8000 VITE_GUN_PEER=http://127.0.0.1:8765/gun npm run dev -- --host 127.0.0.1 --port 5173",
-		"dev": "node scripts/dev-all.mjs"
+		"dev:gun": "bun scripts/free-ports.ts 8765 && GUN_HOST=127.0.0.1 GUN_PORT=8765 GUN_DATA_DIR=.gun bun frontend/scripts/gun-relay.ts",
+		"dev:backend": "bun scripts/free-ports.ts 8000 && cd backend && poetry run uvicorn src:app --host 127.0.0.1 --port 8000 --log-level info",
+		"dev:frontend": "bun scripts/free-ports.ts 5173 && cd frontend && VITE_BACKEND_API=http://127.0.0.1:8000 VITE_GUN_PEER=http://127.0.0.1:8765/gun bun run dev -- --host 127.0.0.1 --port 5173",
+		"dev": "bun scripts/dev-all.ts"
 	}
 }
-

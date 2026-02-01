@@ -201,8 +201,12 @@
 			});
 
 			if (response.ok) {
-				const chat = chat_manager.findOrCreateChatGame($globalStore.game_id);
-				chat.sendStatusMessage('Submitted response', $globalStore.game_id, $globalStore.bot_name);
+				const botName = $globalStore.bot_name;
+				if (!botName) {
+					throw new Error('Bot name is missing');
+				}
+				const chat = chat_manager.findOrCreateChatGame(gameId);
+				chat.sendStatusMessage('Submitted response', gameId, botName);
 				globalStore.update((state) => ({
 					...state,
 					current_bot_prompt: botPrompt ?? state.current_bot_prompt

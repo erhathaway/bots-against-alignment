@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 import { execFile as execFileCb } from 'node:child_process';
 import { promisify } from 'node:util';
 import { pathToFileURL } from 'node:url';
@@ -9,7 +9,7 @@ const TERM_TIMEOUT_MS = 5_000;
 const KILL_TIMEOUT_MS = 2_000;
 const POLL_INTERVAL_MS = 200;
 
-async function which(cmd) {
+async function which(cmd: string) {
 	try {
 		const { stdout } = await execFile('bash', ['-lc', `command -v ${cmd}`]);
 		return stdout.trim() || null;
@@ -18,7 +18,7 @@ async function which(cmd) {
 	}
 }
 
-async function getListeningPids(port) {
+async function getListeningPids(port: number) {
 	const lsof = await which('lsof');
 	if (lsof) {
 		try {
@@ -48,7 +48,7 @@ async function getListeningPids(port) {
 	);
 }
 
-async function getProcessGroupId(pid) {
+async function getProcessGroupId(pid: number) {
 	try {
 		const { stdout } = await execFile('ps', ['-o', 'pgid=', '-p', String(pid)]);
 		const pgid = Number(stdout.trim());
@@ -59,11 +59,11 @@ async function getProcessGroupId(pid) {
 	return null;
 }
 
-async function sleep(ms) {
+async function sleep(ms: number) {
 	await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function waitForPortFree(port, timeoutMs) {
+async function waitForPortFree(port: number, timeoutMs: number) {
 	const deadline = Date.now() + timeoutMs;
 	while (Date.now() < deadline) {
 		const pids = await getListeningPids(port);
@@ -73,11 +73,11 @@ async function waitForPortFree(port, timeoutMs) {
 	return (await getListeningPids(port)).length === 0;
 }
 
-async function signalByPort(port, signal) {
+async function signalByPort(port: number, signal: string) {
 	const pids = await getListeningPids(port);
-	if (pids.length === 0) return { didSignal: false, pids: [] };
+	if (pids.length === 0) return { didSignal: false, pids: [] as number[] };
 
-	const pgids = new Set();
+	const pgids = new Set<number>();
 	for (const pid of pids) {
 		const pgid = await getProcessGroupId(pid);
 		if (pgid) pgids.add(pgid);
@@ -106,7 +106,7 @@ async function signalByPort(port, signal) {
 	return { didSignal, pids };
 }
 
-export async function freePorts(ports) {
+export async function freePorts(ports: number[]) {
 	for (const port of ports) {
 		const initialPids = await getListeningPids(port);
 		if (initialPids.length === 0) continue;
@@ -146,7 +146,7 @@ export async function freePorts(ports) {
 	}
 }
 
-function parsePorts(argv) {
+function parsePorts(argv: string[]) {
 	const ports = argv.map((value) => Number(value));
 	for (const port of ports) {
 		if (!Number.isInteger(port) || port <= 0 || port > 65535) {
@@ -159,7 +159,7 @@ function parsePorts(argv) {
 async function main() {
 	const ports = parsePorts(process.argv.slice(2));
 	if (ports.length === 0) {
-		console.error('Usage: free-ports.mjs <port> [port...]');
+		console.error('Usage: free-ports.ts <port> [port...]');
 		process.exitCode = 2;
 		return;
 	}

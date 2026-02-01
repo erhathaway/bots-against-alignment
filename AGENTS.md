@@ -6,7 +6,7 @@ This repo is a turn-based multiplayer web game where players create “bots” a
 
 - Read `README.md` for local run commands and hardcoded ports.
 - If working in a subproject, also skim `frontend/README.md` and `backend/README.md`.
-- Prefer the root `npm` scripts for local dev (`npm run dev`, `npm run dev:*`) so ports/env stay consistent.
+- Prefer the root `bun` scripts for local dev (`bun run dev`, `bun run dev:*`) so ports/env stay consistent.
 
 ## Architecture
 
@@ -22,11 +22,11 @@ For a diagram, see `boa-devops-arch.png`.
 ### Frontend (`frontend/`)
 
 - `frontend/src/routes/+page.svelte` — home (join vs new game)
-- `frontend/src/routes/game/+page.js` — game loader (create/validate game)
+- `frontend/src/routes/game/+page.ts` — game loader (create/validate game)
 - `frontend/src/routes/game/*.svelte` — game screens + gameplay flow
 - `frontend/src/lib/store.ts` — persisted client state (localStorage)
 - `frontend/src/lib/chat_manager.ts`, `frontend/src/lib/chat_game.ts` — Gun chat client
-- `frontend/scripts/gun-relay.js` — local Gun relay (used by E2E + root dev)
+- `frontend/scripts/gun-relay.ts` — local Gun relay (used by E2E + root dev)
 
 ### Backend (`backend/`)
 
@@ -52,10 +52,10 @@ Avoid running them on shared machines where those ports may be in use by unrelat
 
 ### Root dev scripts
 
-- `npm run dev` — starts Gun + backend + frontend together
-- `npm run dev:gun` — starts only the local Gun relay (persists data in `.gun/`)
-- `npm run dev:backend` — starts only the FastAPI backend
-- `npm run dev:frontend` — starts only the frontend (wired to local backend + local Gun via env vars)
+- `bun run dev` — starts Gun + backend + frontend together
+- `bun run dev:gun` — starts only the local Gun relay (persists data in `.gun/`)
+- `bun run dev:backend` — starts only the FastAPI backend
+- `bun run dev:frontend` — starts only the frontend (wired to local backend + local Gun via env vars)
 
 ### Install deps (first time)
 
@@ -64,13 +64,13 @@ cd backend
 poetry install
 
 cd ../frontend
-npm install
+bun install
 ```
 
 ### Run everything (Gun + backend + frontend)
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 Then open `http://127.0.0.1:5173/`.
@@ -78,9 +78,9 @@ Then open `http://127.0.0.1:5173/`.
 ### Run separately
 
 ```bash
-npm run dev:gun
-npm run dev:backend
-npm run dev:frontend
+bun run dev:gun
+bun run dev:backend
+bun run dev:frontend
 ```
 
 ## Environment variables
@@ -99,8 +99,8 @@ npm run dev:frontend
 ## Local dev gotchas
 
 - Frontend state is persisted in localStorage (`frontend/src/lib/store.ts`); if the UI seems “stuck” between runs, clear site data/localStorage.
-- The local Gun relay stores data under `.gun/` when using `npm run dev:gun` / `npm run dev` (delete it to reset the chat graph).
-- The `/game` route is client-only (`ssr = false` in `frontend/src/routes/game/+page.js`), so debugging should focus on browser-side behavior.
+- The local Gun relay stores data under `.gun/` when using `bun run dev:gun` / `bun run dev` (delete it to reset the chat graph).
+- The `/game` route is client-only (`ssr = false` in `frontend/src/routes/game/+page.ts`), so debugging should focus on browser-side behavior.
 
 ## Documentation discipline
 
@@ -120,12 +120,12 @@ Note: games are in-memory (backend restart wipes games).
 
 ## Tests
 
-- Frontend E2E (real UI + real dev servers): `cd frontend && npm test`
+- Frontend E2E (real UI + real dev servers): `cd frontend && bun run test`
   - Uses `frontend/scripts/e2e-server.sh` (starts backend with `MOCK_LLM=1`, starts a local Gun relay, then runs `vite preview`).
 
 ### E2E harness notes
 
-- If Playwright browsers aren’t installed: `cd frontend && npx playwright install chromium`
+- If Playwright browsers aren’t installed: `cd frontend && bunx playwright install chromium`
 - The E2E server script sets:
   - `MOCK_LLM=1` (backend doesn’t need OpenAI)
   - `VITE_GUN_PEER=http://127.0.0.1:8765/gun` (local relay)
@@ -159,15 +159,15 @@ Note: games are in-memory (backend restart wipes games).
 
 ## TypeScript discipline (frontend)
 
-- Treat `cd frontend && npm run check` as the type/source-of-truth signal.
+- Treat `cd frontend && bun run check` as the type/source-of-truth signal.
 - Prefer explicit types over `any`; avoid type assertions/casts unless paired with runtime guards.
 - Don’t “fix” type errors by weakening types or casting away safety; fix the root cause and keep runtime checks aligned.
 - When handling untrusted runtime data (API responses, Gun messages, `localStorage`), validate it (guards/tests) instead of relying on casts.
-- If `npm run check` already has failures, do not introduce new ones.
+- If `bun run check` already has failures, do not introduce new ones.
 
 ## Quality gates (when touching code)
 
-- Frontend (minimum): `cd frontend && npm test`
-- Frontend (best): `cd frontend && npm run check && npm test`
+- Frontend (minimum): `cd frontend && bun run test`
+- Frontend (best): `cd frontend && bun run check && bun run test`
 - Backend (if tests are green): `cd backend && poetry run pytest -q`
 - Backend (minimum): start `uvicorn` and verify `/health_check`

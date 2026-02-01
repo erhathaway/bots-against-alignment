@@ -2,7 +2,7 @@
 	import { globalStore } from '$lib/store';
 	import { browser } from '$app/environment';
 	
-	let gameLink: string;
+	let gameLink = '';
 
 	if (browser) {
 		gameLink = window.location.href;
@@ -11,7 +11,7 @@
 		}
 	}
 
-	function copyToClipboard(text) {
+	function copyToClipboard(text: string) {
 		navigator.clipboard.writeText(text);
 	}
 </script>

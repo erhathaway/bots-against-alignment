@@ -34,13 +34,13 @@ cd backend
 poetry install
 
 cd frontend
-npm install
+bun install
 ```
 
 ### Run everything (Gun + backend + frontend)
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 Then open `http://127.0.0.1:5173/`.
@@ -48,9 +48,9 @@ Then open `http://127.0.0.1:5173/`.
 ### Run separately
 
 ```bash
-npm run dev:gun
-npm run dev:backend
-npm run dev:frontend
+bun run dev:gun
+bun run dev:backend
+bun run dev:frontend
 ```
 
 ##  How to play

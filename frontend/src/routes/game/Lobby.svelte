@@ -6,7 +6,7 @@
 	import chat_manager from '$lib/chat_manager';
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 
-	let fetchStatusInterval: NodeJS.Timer | null = null;
+	let fetchStatusInterval: ReturnType<typeof setInterval> | null = null;
 
 	async function fetchStatus() {
 		const url = `${BACKEND_API}/game_status?game_id=${$globalStore.game_id}`;

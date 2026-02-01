@@ -1,11 +1,36 @@
-import GUN, { type IGunInstance } from 'gun';
+import GUN from 'gun';
 
 import ChatGame from './chat_game';
 
+type GunChain = {
+	on: (cb: (data: unknown) => void) => unknown;
+	off: () => unknown;
+	put: (data: unknown) => unknown;
+};
+
+type GunInstance = {
+	on: (event: string, data: unknown) => unknown;
+	get: (key: string) => GunChain;
+	back: (path: string) => unknown;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null;
+}
+
+function isGunInstance(value: unknown): value is GunInstance {
+	return (
+		isRecord(value) &&
+		typeof value.on === 'function' &&
+		typeof value.get === 'function' &&
+		typeof value.back === 'function'
+	);
+}
+
 class ChatManager {
-	gun: IGunInstance | null;
+	gun: GunInstance | null;
 	gameChats: Map<string, ChatGame>;
-	retryInterval: NodeJS.Timer | null;
+	retryInterval: ReturnType<typeof setInterval> | null;
 	sideEffectQueue: Array<() => void>;
 	peerUrl: string;
 
@@ -23,20 +48,25 @@ class ChatManager {
 	initGun() {
 		const tryConnect = () => {
 			try {
-				this.gun = GUN({
+				const gun = GUN({
 					peers: [this.peerUrl],
 					localStorage: false
 				});
 
+				if (!isGunInstance(gun)) {
+					throw new Error('Failed to initialize Gun client');
+				}
+				this.gun = gun;
+
 				this.gun.on('out', { get: { '#': { '*': '' } } }); // Requesting root graph data
 
 				// Listen to 'in' event to check for successful connection
-				this.gun.on('in', (msg) => {
-					if (
-						this.gun &&
-						msg &&
-						this.gun.back('opt.peers')[this.peerUrl]
-					) {
+				this.gun.on('in', (msg: unknown) => {
+					const peers = this.gun?.back('opt.peers');
+					const isConnected =
+						Boolean(msg) && isRecord(peers) && Boolean(peers[this.peerUrl]);
+
+					if (this.gun && isConnected) {
 						if (this.retryInterval) {
 							clearInterval(this.retryInterval);
 							this.retryInterval = null;
@@ -77,9 +107,8 @@ class ChatManager {
 	};
 
 	findOrCreateChatGame(gameId: string): ChatGame {
-		if (this.gameChats.has(gameId)) {
-			return this.gameChats.get(gameId) as ChatGame;
-		}
+		const existing = this.gameChats.get(gameId);
+		if (existing) return existing;
 
 		const chatGame = new ChatGame(this, gameId);
 		this.gameChats.set(gameId, chatGame);

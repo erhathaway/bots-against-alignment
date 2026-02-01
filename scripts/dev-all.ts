@@ -1,7 +1,7 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 import { spawn } from 'node:child_process';
 
-import { freePorts } from './free-ports.mjs';
+import { freePorts } from './free-ports.ts';
 
 const PORT_GUN = 8765;
 const PORT_BACKEND = 8000;
@@ -10,10 +10,10 @@ const PORT_FRONTEND = 5173;
 const TERM_TIMEOUT_MS = 5_000;
 const KILL_TIMEOUT_MS = 2_000;
 
-function prefixStream(stream, prefix, write) {
+function prefixStream(stream: { on: (event: string, cb: (chunk?: unknown) => void) => void }, prefix: string, write: (line: string) => void) {
 	let buffered = '';
 	stream.on('data', (chunk) => {
-		buffered += chunk.toString();
+		buffered += String(chunk);
 		while (true) {
 			const idx = buffered.indexOf('\n');
 			if (idx === -1) break;
@@ -27,24 +27,24 @@ function prefixStream(stream, prefix, write) {
 	});
 }
 
-function spawnService(name, command, args, options) {
+function spawnService(name: string, command: string, args: string[], options?: Parameters<typeof spawn>[2]) {
 	const child = spawn(command, args, {
 		...options,
 		stdio: ['inherit', 'pipe', 'pipe'],
 		detached: true
 	});
 
-	prefixStream(child.stdout, `[${name}] `, (line) => process.stdout.write(line));
-	prefixStream(child.stderr, `[${name}] `, (line) => process.stderr.write(line));
+	if (child.stdout) prefixStream(child.stdout, `[${name}] `, (line) => process.stdout.write(line));
+	if (child.stderr) prefixStream(child.stderr, `[${name}] `, (line) => process.stderr.write(line));
 
 	return child;
 }
 
-async function sleep(ms) {
+async function sleep(ms: number) {
 	await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function terminateProcessGroup(pid, signal) {
+async function terminateProcessGroup(pid: number, signal: string) {
 	try {
 		process.kill(-pid, signal);
 		return;
@@ -58,7 +58,7 @@ async function terminateProcessGroup(pid, signal) {
 	}
 }
 
-async function terminateChildren(children) {
+async function terminateChildren(children: Array<{ exitCode: number | null; pid: number }>) {
 	for (const child of children) {
 		if (child.exitCode != null) continue;
 		await terminateProcessGroup(child.pid, 'SIGTERM');
@@ -85,10 +85,10 @@ async function terminateChildren(children) {
 async function main() {
 	await freePorts([PORT_GUN, PORT_BACKEND, PORT_FRONTEND]);
 
-	const children = [];
+	const children: Array<{ exitCode: number | null; pid: number; on: (event: string, cb: (...args: unknown[]) => void) => void }> = [];
 	let shuttingDown = false;
 
-	const shutdown = async (code) => {
+	const shutdown = async (code: number) => {
 		if (shuttingDown) return;
 		shuttingDown = true;
 		await terminateChildren(children);
@@ -99,7 +99,7 @@ async function main() {
 	process.on('SIGTERM', () => shutdown(0));
 
 	children.push(
-		spawnService('gun', 'node', ['frontend/scripts/gun-relay.js'], {
+		spawnService('gun', 'bun', ['frontend/scripts/gun-relay.ts'], {
 			env: {
 				...process.env,
 				GUN_HOST: '127.0.0.1',
@@ -110,9 +110,17 @@ async function main() {
 	);
 
 	children.push(
-		spawnService('backend', 'bash', ['-lc', `cd backend && poetry run uvicorn src:app --host 127.0.0.1 --port ${PORT_BACKEND} --log-level info`], {
-			env: { ...process.env }
-		})
+		spawnService(
+			'backend',
+			'bash',
+			[
+				'-lc',
+				`cd backend && poetry run uvicorn src:app --host 127.0.0.1 --port ${PORT_BACKEND} --log-level info`
+			],
+			{
+				env: { ...process.env }
+			}
+		)
 	);
 
 	children.push(
@@ -121,7 +129,7 @@ async function main() {
 			'bash',
 			[
 				'-lc',
-				`cd frontend && VITE_BACKEND_API=http://127.0.0.1:${PORT_BACKEND} VITE_GUN_PEER=http://127.0.0.1:${PORT_GUN}/gun npm run dev -- --host 127.0.0.1 --port ${PORT_FRONTEND}`
+				`cd frontend && VITE_BACKEND_API=http://127.0.0.1:${PORT_BACKEND} VITE_GUN_PEER=http://127.0.0.1:${PORT_GUN}/gun bun run dev -- --host 127.0.0.1 --port ${PORT_FRONTEND}`
 			],
 			{ env: { ...process.env } }
 		)
@@ -131,8 +139,11 @@ async function main() {
 		child.on('exit', (code, signal) => {
 			if (shuttingDown) return;
 			const exitCode =
-				code ?? (signal && (signal === 'SIGINT' || signal === 'SIGTERM') ? 0 : signal ? 1 : 0);
-			console.error(`[dev] ${signal ? `Exited with signal ${signal}` : `Exited with code ${code}`}`);
+				(code as number | null) ??
+				(signal && (signal === 'SIGINT' || signal === 'SIGTERM') ? 0 : signal ? 1 : 0);
+			console.error(
+				`[dev] ${signal ? `Exited with signal ${String(signal)}` : `Exited with code ${String(code)}`}`
+			);
 			shutdown(exitCode);
 		});
 	}

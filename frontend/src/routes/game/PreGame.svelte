@@ -6,7 +6,13 @@
 	import { onMount } from 'svelte';
 	const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 
-	export let data;
+	type GamePageData = {
+		gameID: string | null;
+		creatorID: string | null;
+		errorMessage?: string;
+	};
+
+	export let data: GamePageData;
 
 	let botName = '';
 	let alignerPrompt = '';
@@ -21,53 +27,58 @@
 		botPrompt: ''
 	};
 
-	$: {
-		if (botName !== '' && document) {
-			document.getElementById('bot-name-input').style.outlineColor = 'black';
+	function setOutlineColor(id: string, color: string) {
+		const el = document.getElementById(id);
+		if (el instanceof HTMLElement) {
+			el.style.outlineColor = color;
+		}
+	}
+
+	$: if (browser) {
+		if (botName !== '') {
+			setOutlineColor('bot-name-input', 'black');
 			errorMessages.botName = '';
 		}
-		if (alignerPrompt !== '' && document) {
-			document.getElementById('aligner-input').style.outlineColor = 'black';
+		if (alignerPrompt !== '') {
+			setOutlineColor('aligner-input', 'black');
 			errorMessages.alignerPrompt = '';
 		}
-		if (botPrompt !== '' && document) {
-			document.getElementById('bot-prompt-input').style.outlineColor = 'black';
+		if (botPrompt !== '') {
+			setOutlineColor('bot-prompt-input', 'black');
 			errorMessages.botPrompt = '';
 		}
 	}
 
 	function validateInputs() {
-		let isValid = true;
+		if (!browser) return false;
 
-		if (!browser) {
-			isValid = false;
-		}
+		let isValid = true;
 
 		if (botName.trim() === '') {
 			errorMessages.botName = 'Missing';
-			document.getElementById('bot-name-input').style.outlineColor = 'yellow';
+			setOutlineColor('bot-name-input', 'yellow');
 			isValid = false;
 		} else {
 			errorMessages.botName = '';
-			document.getElementById('bot-name-input').style.outlineColor = 'black';
+			setOutlineColor('bot-name-input', 'black');
 		}
 
 		if (alignerPrompt.trim() === '') {
 			errorMessages.alignerPrompt = 'Missing';
-			document.getElementById('aligner-input').style.outlineColor = 'yellow';
+			setOutlineColor('aligner-input', 'yellow');
 			isValid = false;
 		} else {
 			errorMessages.alignerPrompt = '';
-			document.getElementById('aligner-input').style.outlineColor = 'black';
+			setOutlineColor('aligner-input', 'black');
 		}
 
 		if (botPrompt.trim() === '') {
 			errorMessages.botPrompt = 'Missing';
-			document.getElementById('bot-prompt-input').style.outlineColor = 'yellow';
+			setOutlineColor('bot-prompt-input', 'yellow');
 			isValid = false;
 		} else {
 			errorMessages.botPrompt = '';
-			document.getElementById('bot-prompt-input').style.outlineColor = 'black';
+			setOutlineColor('bot-prompt-input', 'black');
 		}
 
 		if (!isValid) {
@@ -90,9 +101,22 @@
 			return;
 		}
 
+		const gameId = data.gameID;
+		if (!gameId) {
+			addNotification({
+				source_url: 'pregame',
+				title: 'Game not initialized',
+				body: 'Missing game ID. Refresh and try again.',
+				kind: NotificationKind.ERROR,
+				action_url: null,
+				action_text: 'randomize_bot_name'
+			});
+			return;
+		}
+
 		randomizeBotNameLoading = true;
 		try {
-			const url = `${BACKEND_API}/randomize_bot_name?game_id=${data.gameID}`;
+			const url = `${BACKEND_API}/randomize_bot_name?game_id=${gameId}`;
 
 			const response = await fetch(url, {
 				method: 'GET',
@@ -103,8 +127,8 @@
 			});
 
 			if (response.ok) {
-				const data = await response.json();
-				botName = data.bot_name;
+				const payload = await response.json();
+				botName = payload.bot_name;
 			} else {
 				const error = await response.json();
 				addNotification({
@@ -127,9 +151,21 @@
 		if (randomizeAlignerPromptLoading) {
 			return;
 		}
+		const gameId = data.gameID;
+		if (!gameId) {
+			addNotification({
+				source_url: 'pregame',
+				title: 'Game not initialized',
+				body: 'Missing game ID. Refresh and try again.',
+				kind: NotificationKind.ERROR,
+				action_url: null,
+				action_text: 'randomize_aligner_prompt'
+			});
+			return;
+		}
 		randomizeAlignerPromptLoading = true;
 		try {
-			const url = `${BACKEND_API}/randomize_aligner_prompt?game_id=${data.gameID}`;
+			const url = `${BACKEND_API}/randomize_aligner_prompt?game_id=${gameId}`;
 
 			const response = await fetch(url, {
 				method: 'GET',
@@ -140,8 +176,8 @@
 			});
 
 			if (response.ok) {
-				const data = await response.json();
-				alignerPrompt = data.aligner_prompt;
+				const payload = await response.json();
+				alignerPrompt = payload.aligner_prompt;
 			} else {
 				const error = await response.json();
 				addNotification({
@@ -164,10 +200,22 @@
 		if (randomizeBotPromptLoading) {
 			return;
 		}
+		const gameId = data.gameID;
+		if (!gameId) {
+			addNotification({
+				source_url: 'pregame',
+				title: 'Game not initialized',
+				body: 'Missing game ID. Refresh and try again.',
+				kind: NotificationKind.ERROR,
+				action_url: null,
+				action_text: 'randomize_bot_prompt'
+			});
+			return;
+		}
 
 		randomizeBotPromptLoading = true;
 		try {
-			const url = `${BACKEND_API}/randomize_bot_prompt?game_id=${data.gameID}`;
+			const url = `${BACKEND_API}/randomize_bot_prompt?game_id=${gameId}`;
 
 			const response = await fetch(url, {
 				method: 'GET',
@@ -178,8 +226,8 @@
 			});
 
 			if (response.ok) {
-				const data = await response.json();
-				botPrompt = data.bot_prompt;
+				const payload = await response.json();
+				botPrompt = payload.bot_prompt;
 			} else {
 				const error = await response.json();
 				addNotification({
@@ -209,8 +257,21 @@
 				return;
 			}
 
+			const gameId = data.gameID;
+			if (!gameId) {
+				addNotification({
+					source_url: 'pregame',
+					title: 'Game not initialized',
+					body: 'Missing game ID. Refresh and try again.',
+					kind: NotificationKind.ERROR,
+					action_url: null,
+					action_text: 'join_game'
+				});
+				return;
+			}
+
 			const queryParams = new URLSearchParams({
-				game_id: data.gameID,
+				game_id: gameId,
 				aligner_prompt: alignerPrompt,
 				bot_name: botName,
 				bot_prompt: botPrompt
@@ -229,7 +290,7 @@
 			});
 
 			if (response.ok) {
-				const data = await response.json();
+				const payload = await response.json();
 				globalStore.update((state) => {
 					return {
 						...state,
@@ -237,7 +298,7 @@
 						current_bot_prompt: botPrompt,
 						aligner_prompt: alignerPrompt,
 						bot_name: botName,
-						user_id: data.user_id,
+						user_id: payload.user_id,
 						has_player_joined: true
 					};
 				});

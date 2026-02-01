@@ -24,7 +24,7 @@
 		visibleToasts = visibleToasts.filter((t) => t.uuid !== toast.uuid);
 	};
 
-	function onTransitionEnd(event, toast: Notification) {
+	function onTransitionEnd(event: TransitionEvent, toast: Notification) {
 		if (event.propertyName === 'opacity') {
 			closeToast(toast);
 		}

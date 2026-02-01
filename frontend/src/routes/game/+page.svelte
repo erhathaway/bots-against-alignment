@@ -10,8 +10,9 @@
 	import TurnFinale from './TurnFinale.svelte';
 	import GameFinale from './GameFinale.svelte';
 	import { fly } from 'svelte/transition'; // New import
+	import type { PageData } from './$types';
 
-	export let data;
+	export let data: PageData;
 
 	enum RouterState {
 		PreGame,
@@ -25,14 +26,14 @@
 	const customFly = (direction: 'in' | 'out') => ({
 		delay: direction === 'in' ? 300 : 0,
 		duration: 300,
-		easing: (t) => --t * t * t + 1,
+		easing: (t: number) => --t * t * t + 1,
 		y: direction === 'in' ? 200 : -200
 	});
 
 	const screenTransition = (direction: 'in' | 'out') => ({
 		delay: direction === 'in' ? 300 : 0,
 		duration: 300,
-		easing: (t) => --t * t * t + 1,
+		easing: (t: number) => --t * t * t + 1,
 		x: direction === 'in' ? 200 : 0,
 		y: direction === 'in' ? 0 : 500
 	});
@@ -40,13 +41,13 @@
 	const leftTransition = (direction: 'in' | 'out') => ({
 		delay: direction === 'in' ? 300 : 0,
 		duration: 300,
-		easing: (t) => --t * t * t + 1,
+		easing: (t: number) => --t * t * t + 1,
 		x: direction === 'in' ? 200 : 0,
 		y: direction === 'in' ? 0 : 500
 	});
 
 	const chatTransition = (direction: 'in' | 'out') => ({
-		easing: (t) => --t * t * t + 1
+		easing: (t: number) => --t * t * t + 1
 	});
 
 	$: {
