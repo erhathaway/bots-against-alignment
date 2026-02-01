@@ -39,6 +39,15 @@ export type ChatManagerLike = {
 	peerUrl: string;
 };
 
+export type AlignmentResponse = {
+	playerId: string;
+	name: string;
+	text: string;
+	score: number;
+	isRoundWinner: boolean;
+	isGlobalWinner: boolean;
+};
+
 export type GlobalState = {
 	game_id: string | null;
 	user_id: string | null;
@@ -54,6 +63,7 @@ export type GlobalState = {
 	last_alignment_request: string | null;
 	have_all_users_submitted: boolean;
 	is_game_over: boolean;
+	last_turn_results: AlignmentResponse[] | null;
 };
 
 export enum NotificationKind {

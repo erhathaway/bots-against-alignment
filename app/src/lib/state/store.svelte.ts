@@ -17,7 +17,8 @@ const defaultState: GlobalState = {
 	is_game_started: false,
 	is_config_open: false,
 	have_all_users_submitted: false,
-	is_game_over: false
+	is_game_over: false,
+	last_turn_results: null
 };
 
 export const globalState = $state<GlobalState>({ ...defaultState });

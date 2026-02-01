@@ -90,6 +90,7 @@
 			globalState.is_game_over = false;
 			globalState.last_turn_id = null;
 			globalState.last_alignment_request = null;
+			globalState.last_turn_results = null;
 		} else if (!globalState.game_id) {
 			globalState.game_id = gameId;
 		}

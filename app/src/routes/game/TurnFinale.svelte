@@ -1,12 +1,48 @@
 <script lang="ts">
 	import LoadingBars from './LoadingBars.svelte';
 	import { globalState } from '$lib/state/store.svelte';
-	import robot_comedy from '$lib/images/robot_comedy.png';
-	import LoadingAudioWave from './LoadingAudioWave.svelte';
 	import { addNotification } from '$lib/state/store.svelte';
-	import { isRecord, NotificationKind } from '$lib/types';
+	import { isRecord, NotificationKind, type AlignmentResponse } from '$lib/types';
 
 	let isForceNextTurnPending = $state(false);
+	let isCreator = $derived(Boolean(globalState.creator_id));
+	let results = $derived(globalState.last_turn_results);
+	let turnProcessed = $derived(results !== null && results.length > 0);
+
+	async function pollForResults() {
+		const gameId = globalState.game_id;
+		if (!gameId) return;
+
+		const url = `/api/game/${gameId}/status`;
+		try {
+			const response = await fetch(url);
+			const data = await response.json();
+			if (response.ok && data.bots) {
+				const bots = data.bots as Array<{ name: string; points: number; turnComplete: boolean }>;
+				const allReset = bots.every((bot) => !bot.turnComplete);
+				if (allReset && bots.length > 0) {
+					const mapped: AlignmentResponse[] = bots.map((bot) => ({
+						playerId: '',
+						name: bot.name,
+						text: '',
+						score: bot.points,
+						isRoundWinner: false,
+						isGlobalWinner: false
+					}));
+					globalState.last_turn_results = mapped;
+				}
+			}
+		} catch (error) {
+			console.error('Failed to poll results:', error);
+		}
+	}
+
+	$effect(() => {
+		if (isCreator || turnProcessed) return;
+		pollForResults();
+		const intervalId = setInterval(pollForResults, 2000);
+		return () => clearInterval(intervalId);
+	});
 
 	async function forceNextTurn() {
 		if (isForceNextTurnPending) return;
@@ -21,7 +57,7 @@
 			}
 
 			let isGameOver = false;
-			if (globalState.creator_id) {
+			if (isCreator) {
 				const url = `/api/game/${gameId}/turn/${turnId}/process`;
 				const response = await fetch(url, {
 					method: 'POST',
@@ -31,10 +67,9 @@
 				if (response.ok) {
 					const payload = await response.json();
 					if (isRecord(payload) && Array.isArray(payload.alignmentResponses)) {
-						isGameOver = payload.alignmentResponses.some(
-							(responseEntry) =>
-								isRecord(responseEntry) && responseEntry.isGlobalWinner === true
-						);
+						const responses = payload.alignmentResponses as AlignmentResponse[];
+						globalState.last_turn_results = responses;
+						isGameOver = responses.some((r) => r.isGlobalWinner === true);
 					}
 				} else {
 					const data = await response.json();
@@ -46,6 +81,7 @@
 						action_url: url,
 						action_text: 'process turn'
 					});
+					return;
 				}
 			}
 
@@ -55,21 +91,49 @@
 			isForceNextTurnPending = false;
 		}
 	}
+
+	function advanceTurn() {
+		globalState.last_turn_results = null;
+		globalState.have_all_users_submitted = false;
+	}
 </script>
 
 <div id="container">
-	<div class="padding"></div>
-	<img alt="a robots head talking" src={robot_comedy} />
-
-	<LoadingAudioWave />
-	<div class="padding"></div>
-	<button onclick={forceNextTurn}>
-		{#if isForceNextTurnPending}
-			<LoadingBars />
-		{:else}
+	{#if !turnProcessed && isCreator}
+		<h2>All bots submitted!</h2>
+		<p class="subtitle">Click below to have the Aligner judge the responses.</p>
+		<button onclick={forceNextTurn}>
+			{#if isForceNextTurnPending}
+				<LoadingBars />
+			{:else}
+				Judge Responses
+			{/if}
+		</button>
+	{:else if !turnProcessed && !isCreator}
+		<h2>Waiting for host to judge...</h2>
+		<p class="subtitle">The game creator will judge this round.</p>
+	{:else if results}
+		<h2>Round Results</h2>
+		<div class="results-list">
+			{#each results as entry}
+				<div class="result-card" class:winner={entry.isRoundWinner}>
+					<div class="result-header">
+						<span class="bot-name">{entry.name}</span>
+						{#if entry.isRoundWinner}
+							<span class="winner-badge">WINNER</span>
+						{/if}
+						<span class="bot-score">Score: {entry.score}</span>
+					</div>
+					{#if entry.text}
+						<p class="bot-response">"{entry.text}"</p>
+					{/if}
+				</div>
+			{/each}
+		</div>
+		<button onclick={advanceTurn}>
 			Next Turn
-		{/if}
-	</button>
+		</button>
+	{/if}
 </div>
 
 <style>
@@ -77,18 +141,64 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: center;
+		justify-content: flex-start;
 		height: 100%;
+		padding: 2rem;
 	}
-	.padding {
-		height: 0rem;
+	h2 {
+		font-size: 2rem;
+		font-weight: bold;
+		margin-bottom: 0.5rem;
 	}
-	img {
-		height: 30rem;
-		width: 30rem;
-		border: 3px solid rgb(255, 255, 255);
-		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.4);
-		border-radius: 0.7rem;
+	.subtitle {
+		color: #666;
+		margin-bottom: 1.5rem;
+		font-size: 1rem;
+	}
+	.results-list {
+		width: 100%;
+		max-width: 500px;
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		margin: 1rem 0;
+	}
+	.result-card {
+		padding: 1rem;
+		border-radius: 0.75rem;
+		border: 2px solid #ddd;
+		background: #fafafa;
+	}
+	.result-card.winner {
+		border-color: rgb(123, 255, 0);
+		background: rgb(240, 255, 220);
+	}
+	.result-header {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+	.bot-name {
+		font-weight: bold;
+		font-size: 1.1rem;
+	}
+	.winner-badge {
+		background: rgb(123, 255, 0);
+		color: black;
+		font-size: 0.7rem;
+		font-weight: bold;
+		padding: 0.15rem 0.5rem;
+		border-radius: 1rem;
+	}
+	.bot-score {
+		margin-left: auto;
+		color: #666;
+		font-size: 0.9rem;
+	}
+	.bot-response {
+		margin-top: 0.5rem;
+		font-style: italic;
+		color: #444;
 	}
 	button {
 		font-size: 1.5rem;

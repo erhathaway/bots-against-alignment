@@ -40,7 +40,7 @@ export const createGame = async () => {
 		status: 'LOBBY',
 		pointsToWin: DEFAULT_POINTS_TO_WIN,
 		alignerType: 'USER_ROUND_ROBIN',
-		maxAutoPlayers: 0,
+		maxAutoPlayers: 3,
 		turnId: 1,
 		turnStarted: false,
 		turnPrompt: null,

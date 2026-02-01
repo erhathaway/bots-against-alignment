@@ -5,12 +5,24 @@
 	import chat_manager from '$lib/chat_manager';
 	let botsSubmitted = $state(0);
 	let totalBots = $state(0);
+	let points = $state(0);
+	let promptsRemaining = $state(2);
+	let hasSubmittedThisTurn = $state(false);
+	let trackedTurnId = $state<number | null>(null);
 	let botPrompt = $state(globalState.current_bot_prompt ?? '');
 
 	$effect(() => {
 		const gameId = globalState.game_id;
 		if (!gameId) return;
 		botPrompt = globalState.current_bot_prompt ?? '';
+	});
+
+	$effect(() => {
+		const turnId = globalState.last_turn_id;
+		if (turnId !== null && turnId !== trackedTurnId) {
+			trackedTurnId = turnId;
+			hasSubmittedThisTurn = false;
+		}
 	});
 
 	async function fetchTurnFinale() {
@@ -118,7 +130,10 @@
 		const statusResponse = await fetch(userStatusUrl);
 		const statusData = await statusResponse.json();
 
-		if (!statusResponse.ok) {
+		if (statusResponse.ok) {
+			points = statusData.points ?? 0;
+			promptsRemaining = statusData.promptsRemaining ?? 0;
+		} else {
 			addNotification({
 				source_url: 'aligner says',
 				title: 'Error getting user status',
@@ -170,6 +185,7 @@
 				const chat = chat_manager.findOrCreateChatGame(gameId);
 				chat.sendStatusMessage('Submitted response', gameId, botName);
 				globalState.current_bot_prompt = botPrompt ?? globalState.current_bot_prompt;
+				hasSubmittedThisTurn = true;
 			} else {
 				const data = await response.json();
 				addNotification({
@@ -187,6 +203,11 @@
 	}
 </script>
 
+<div class="status-bar">
+	<span class="score">Score: {points}</span>
+	<span class="prompts-left">{promptsRemaining} prompt change{promptsRemaining === 1 ? '' : 's'} remaining</span>
+	<span class="progress">{botsSubmitted} / {totalBots} bots submitted</span>
+</div>
 <section id="aligner">
 	<div id="aligner-card" class="card">
 		<div class="config-top">
@@ -205,12 +226,14 @@
 			<h2>Bot Prompt</h2>
 		</div>
 		<div class="config-bottom">
-			<textarea id="bot-prompt-input" bind:value={botPrompt} aria-label="Bot Prompt"></textarea>
+			<textarea id="bot-prompt-input" bind:value={botPrompt} aria-label="Bot Prompt" disabled={hasSubmittedThisTurn}></textarea>
 		</div>
 	</div>
 </section>
 <div id="button-container">
-	{#if isCompleteTurnPending}
+	{#if hasSubmittedThisTurn}
+		<p class="submitted-text">Response submitted. Waiting for other players...</p>
+	{:else if isCompleteTurnPending}
 		<LoadingBars />
 	{:else}
 		<button onclick={completeTurn}> Tell Bot To Respond To Aligner </button>
@@ -218,6 +241,29 @@
 </div>
 
 <style>
+	.status-bar {
+		display: flex;
+		justify-content: space-between;
+		padding: 0.75rem 1.5rem;
+		font-size: 0.9rem;
+		font-weight: bold;
+		border-bottom: 1px solid #eee;
+	}
+	.status-bar .score {
+		color: rgb(0, 150, 0);
+	}
+	.status-bar .prompts-left {
+		color: #666;
+	}
+	.status-bar .progress {
+		color: #333;
+	}
+	.submitted-text {
+		font-size: 1.1rem;
+		color: #666;
+		margin: 2rem 0 3rem;
+		text-align: center;
+	}
 	#button-container {
 		display: flex;
 		flex-direction: column;

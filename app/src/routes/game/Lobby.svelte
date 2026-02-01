@@ -3,6 +3,7 @@
 	import { NotificationKind } from '$lib/types';
 	import LoadingBars from './LoadingBars.svelte';
 	import LoadingCommas from './LoadingCommas.svelte';
+	import GameLink from './GameLink.svelte';
 	import chat_manager from '$lib/chat_manager';
 
 	let fetchStatusInterval: ReturnType<typeof setInterval> | null = null;
@@ -97,6 +98,7 @@
 	{#if globalState.creator_id == null}
 		<p class="non-creator">Waiting for creator to start game<LoadingCommas /></p>
 	{:else}
+		<GameLink />
 		<p class="creator">Invite others to join</p>
 		<p class="creator highlight">and then</p>
 		{#if isStartGamePending}
