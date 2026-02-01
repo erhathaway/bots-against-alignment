@@ -2,9 +2,27 @@
 	import LoadingBars from './LoadingBars.svelte';
 	import { globalState } from '$lib/state/store.svelte';
 	import type { AlignmentResponse } from '$lib/types';
+	import confetti from 'canvas-confetti';
 
 	let results = $derived(globalState.last_turn_results);
 	let turnProcessed = $derived(results !== null && results.length > 0);
+	let showCelebration = $state(false);
+	let winnerName = $state('');
+
+	function fireRoundWinConfetti() {
+		confetti({
+			particleCount: 100,
+			spread: 70,
+			origin: { y: 0.6 }
+		});
+		setTimeout(() => {
+			confetti({
+				particleCount: 50,
+				spread: 100,
+				origin: { y: 0.5 }
+			});
+		}, 300);
+	}
 
 	async function pollForResults() {
 		const gameId = globalState.game_id;
@@ -48,15 +66,34 @@
 	});
 
 	$effect(() => {
-		if (turnProcessed && !globalState.is_game_over) {
+		if (!turnProcessed || globalState.is_game_over) return;
+
+		const userWon = results?.find(
+			(r) => r.playerId === globalState.user_id && r.isRoundWinner
+		);
+
+		if (userWon) {
+			showCelebration = true;
+			winnerName = userWon.name;
+			fireRoundWinConfetti();
+		}
+
+		const delay = userWon ? 3000 : 0;
+		const timeout = setTimeout(() => {
+			showCelebration = false;
 			globalState.last_turn_results = null;
 			globalState.have_all_users_submitted = false;
-		}
+		}, delay);
+
+		return () => clearTimeout(timeout);
 	});
 </script>
 
 <div id="container">
-	{#if !turnProcessed}
+	{#if showCelebration}
+		<h2 class="win-text">Your bot won this round!</h2>
+		<p class="winner-bot-name">{winnerName}</p>
+	{:else if !turnProcessed}
 		<h2>The Aligner is deliberating...</h2>
 		<p class="subtitle">Watch the chat for the Aligner's reasoning!</p>
 		<LoadingBars />
@@ -89,5 +126,26 @@
 		font-weight: bold;
 		color: rgb(0, 150, 0);
 		margin-top: 1.5rem;
+	}
+	.win-text {
+		font-size: 2.5rem;
+		font-weight: bold;
+		color: rgb(123, 255, 0);
+		text-shadow: 0 0 20px rgba(123, 255, 0, 0.5);
+		animation: pulse 0.5s ease-in-out infinite alternate;
+	}
+	.winner-bot-name {
+		font-size: 1.5rem;
+		font-weight: bold;
+		color: #333;
+		margin-top: 0.5rem;
+	}
+	@keyframes pulse {
+		from {
+			transform: scale(1);
+		}
+		to {
+			transform: scale(1.05);
+		}
 	}
 </style>
