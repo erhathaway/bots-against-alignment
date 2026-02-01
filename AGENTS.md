@@ -2,6 +2,11 @@
 
 This repo is a turn-based multiplayer web game where players create “bots” and a shared “aligner” prompt. Each turn, an LLM (or a mock) judges which bot response best matches the aligner’s instruction.
 
+## Before you start
+
+- Read `README.md` for local run commands and hardcoded ports.
+- If working in a subproject, also skim `frontend/README.md` and `backend/README.md`.
+
 ## Architecture
 
 - Frontend: SvelteKit (Svelte 3 + Vite) in `frontend/`
@@ -93,12 +98,26 @@ Note: games are in-memory (backend restart wipes games).
 - Frontend E2E (real UI + real dev servers): `cd frontend && npm test`
   - Uses `frontend/scripts/e2e-server.sh` (starts backend with `MOCK_LLM=1`, starts a local Gun relay, then runs `vite preview`).
 
-## Agent operating rules
+## Agent operating rules (repo-wide)
 
-- Keep diffs focused; prefer changes that are easy to verify end-to-end.
-- If you change an API contract, update both backend and frontend + E2E tests.
+- Fail loudly. Prefer explicit errors over silent fallbacks that mask broken state.
+- Ask clarifying questions when requirements are ambiguous or risky (ports, env, deploy target, etc.).
+- Keep diffs focused and easy to verify end-to-end.
+- If you change an API contract, update backend + frontend together and add/adjust E2E coverage.
+- Don’t introduce proxy/pass-through re-export files during refactors; update import sites.
 - Do not commit secrets; use `.env` locally and hosted env vars in production.
-- Validate changes:
-  - Frontend: `cd frontend && npm test`
-  - Backend: at minimum, start `uvicorn` and hit `/health_check`
+- Never run git commands that alter repo state (`git commit`, `git reset`, `git clean`, etc.).
+- Assume other work may be in progress; avoid overwriting changes you didn’t author.
 
+## TypeScript discipline (frontend)
+
+- Treat `cd frontend && npm run check` as the type/source-of-truth signal.
+- Prefer explicit types over `any`; avoid type assertions/casts unless paired with runtime guards.
+- If `npm run check` already has failures, do not introduce new ones.
+
+## Quality gates (when touching code)
+
+- Frontend (minimum): `cd frontend && npm test`
+- Frontend (best): `cd frontend && npm run check && npm test`
+- Backend (if tests are green): `cd backend && poetry run pytest -q`
+- Backend (minimum): start `uvicorn` and verify `/health_check`
