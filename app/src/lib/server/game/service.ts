@@ -302,7 +302,14 @@ export const startGame = async ({ gameId, creatorId }: { gameId: string; creator
 
 	await postChatMessage({
 		gameId,
-		message: `Game started with ${allPlayers.length} bots! First to ${game.pointsToWin} point${game.pointsToWin === 1 ? '' : 's'}, ${game.botPromptChanges} prompt change${game.botPromptChanges === 1 ? '' : 's'}. Players: ${humanNames.join(', ')}${autoNames.length ? `. AI bots: ${autoNames.join(', ')}` : ''}`,
+		senderName: 'Game Start',
+		message: JSON.stringify({
+			totalBots: allPlayers.length,
+			pointsToWin: game.pointsToWin,
+			botPromptChanges: game.botPromptChanges,
+			humans: humanNames,
+			ai: autoNames
+		}),
 		type: 'system'
 	});
 
