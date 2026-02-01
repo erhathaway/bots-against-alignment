@@ -7,7 +7,6 @@ import { postChatMessage } from '$lib/server/chat/service';
 type ResponseMap = Record<string, string>;
 
 const ALIGNER_SENDER = 'The Aligner';
-const REASONING_BATCH_SIZE = 120;
 
 const SYSTEM_PROMPT = `You are THE ALIGNER -- an all-powerful, melodramatic AI overlord presiding over a game of Bots Against Alignment. You take your role EXTREMELY seriously.
 
@@ -30,6 +29,17 @@ const parseWinner = (response: string, mapping: Record<number, string>) => {
 	}
 	const first = Object.values(mapping)[0];
 	return first ?? null;
+};
+
+const randomDelay = () =>
+	new Promise<void>((resolve) => setTimeout(resolve, 500 + Math.random() * 2500));
+
+/** Find the first sentence boundary (. ! ?) followed by whitespace in the buffer. */
+const extractSentence = (buffer: string): [sentence: string, remainder: string] | null => {
+	const match = buffer.match(/[.!?]["')\]]?\s/);
+	if (!match || match.index === undefined) return null;
+	const end = match.index + match[0].length;
+	return [buffer.slice(0, end).trim(), buffer.slice(end)];
 };
 
 export const pickWinner = async ({
@@ -78,42 +88,56 @@ export const pickWinner = async ({
 	});
 
 	let reasoningBuffer = '';
-	let textBuffer = '';
+	let sentenceBuffer = '';
 	let fullText = '';
 
-	const flushBuffer = async (buffer: 'reasoning' | 'text', force: boolean) => {
-		const content = buffer === 'reasoning' ? reasoningBuffer : textBuffer;
-		if (content.length === 0) return;
-		if (!force && content.length < REASONING_BATCH_SIZE) return;
-
-		if (buffer === 'reasoning') {
-			reasoningBuffer = '';
-		} else {
-			textBuffer = '';
-		}
-
-		const prefix = buffer === 'reasoning' ? '💭 ' : '';
+	const postAligner = async (message: string) => {
+		await randomDelay();
 		await postChatMessage({
 			gameId,
-			message: `${prefix}${content}`,
+			message,
 			senderName: ALIGNER_SENDER,
 			type: 'system'
 		});
 	};
 
+	const flushSentences = async () => {
+		let extracted: ReturnType<typeof extractSentence>;
+		while ((extracted = extractSentence(sentenceBuffer))) {
+			const [sentence, remainder] = extracted;
+			sentenceBuffer = remainder;
+			await postAligner(sentence);
+		}
+	};
+
+	const flushReasoning = async () => {
+		// Reasoning also posted sentence-by-sentence with 💭 prefix
+		let extracted: ReturnType<typeof extractSentence>;
+		while ((extracted = extractSentence(reasoningBuffer))) {
+			const [sentence, remainder] = extracted;
+			reasoningBuffer = remainder;
+			await postAligner(`💭 ${sentence}`);
+		}
+	};
+
 	for await (const part of result.fullStream) {
 		if (part.type === 'reasoning-delta') {
 			reasoningBuffer += part.text;
-			await flushBuffer('reasoning', false);
+			await flushReasoning();
 		} else if (part.type === 'text-delta') {
 			fullText += part.text;
-			textBuffer += part.text;
-			await flushBuffer('text', false);
+			sentenceBuffer += part.text;
+			await flushSentences();
 		}
 	}
 
-	await flushBuffer('reasoning', true);
-	await flushBuffer('text', true);
+	// Flush any remaining partial content
+	if (reasoningBuffer.trim()) {
+		await postAligner(`💭 ${reasoningBuffer.trim()}`);
+	}
+	if (sentenceBuffer.trim()) {
+		await postAligner(sentenceBuffer.trim());
+	}
 
 	return parseWinner(fullText, mapping);
 };

@@ -17,6 +17,12 @@
 	let lastMessageId = $state(0);
 	let hasJoined = $derived(Boolean(globalState.bot_name && globalState.has_player_joined));
 
+	let alignerTyping = $derived(
+		messages.length > 0 &&
+			messages[messages.length - 1].senderName === 'The Aligner' &&
+			messages[messages.length - 1].type === 'system'
+	);
+
 	async function fetchMessages() {
 		const gameId = globalState.game_id;
 		if (!gameId) return;
@@ -104,6 +110,16 @@
 	function getNameColor(name: string) {
 		return intToRGB(stringToColor(name));
 	}
+
+	function displayName(senderName: string | null) {
+		if (!senderName) return 'Unknown';
+		if (senderName === globalState.bot_name) return 'You';
+		return senderName;
+	}
+
+	function isMe(senderName: string | null) {
+		return Boolean(senderName && senderName === globalState.bot_name);
+	}
 </script>
 
 <div class="chat-window">
@@ -142,6 +158,17 @@
 				</div>
 			{/if}
 		{/each}
+		{#if alignerTyping}
+			<div class="message aligner">
+				<div class="message-aligner-container">
+					<div class="typing-dots">
+						<span class="dot"></span>
+						<span class="dot"></span>
+						<span class="dot"></span>
+					</div>
+				</div>
+			</div>
+		{/if}
 	</div>
 	{#if hasJoined}
 		<div class="input-container">
@@ -350,5 +377,43 @@
 		margin-right: 0.4rem;
 		margin-left: 0.4rem;
 		color: rgb(98, 98, 98);
+	}
+
+	.typing-dots {
+		display: flex;
+		gap: 4px;
+		padding: 6px 10px;
+		align-items: center;
+	}
+
+	.dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background-color: #ff00aa;
+		animation: bounce 1.4s infinite ease-in-out both;
+	}
+
+	.dot:nth-child(1) {
+		animation-delay: 0s;
+	}
+	.dot:nth-child(2) {
+		animation-delay: 0.2s;
+	}
+	.dot:nth-child(3) {
+		animation-delay: 0.4s;
+	}
+
+	@keyframes bounce {
+		0%,
+		80%,
+		100% {
+			transform: scale(0.4);
+			opacity: 0.3;
+		}
+		40% {
+			transform: scale(1);
+			opacity: 1;
+		}
 	}
 </style>

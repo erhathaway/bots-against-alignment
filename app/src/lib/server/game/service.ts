@@ -156,7 +156,7 @@ export const joinGame = async ({
 	const isCreator = Boolean(creatorId && creatorId === game.creatorId);
 	await postChatMessage({
 		gameId,
-		message: isCreator ? 'created the game' : 'joined the game',
+		message: isCreator ? 'created the game' : 'joined the waiting room',
 		senderName: botName,
 		type: 'status'
 	});
@@ -756,6 +756,7 @@ export const leaveGame = async ({
 	let hostTransferred = false;
 	let gameEnded = false;
 	let newHostName: string | null = null;
+	let gameStatus: string = 'LOBBY';
 
 	await db.transaction(async (tx) => {
 		// Soft-delete: set leftAt, mark turnComplete so they don't block the current turn
@@ -767,6 +768,7 @@ export const leaveGame = async ({
 		// Re-read game inside transaction for consistency
 		const gameRows = await tx.select().from(games).where(eq(games.id, gameId)).limit(1);
 		const game = gameRows[0]!;
+		gameStatus = game.status;
 		const isHost = game.creatorPlayerId === playerId;
 
 		// Find remaining active human players
@@ -803,7 +805,7 @@ export const leaveGame = async ({
 
 	await postChatMessage({
 		gameId,
-		message: 'left the game',
+		message: gameStatus === 'LOBBY' ? 'left the waiting room' : 'left the game',
 		senderName: player.botName,
 		type: 'status'
 	});

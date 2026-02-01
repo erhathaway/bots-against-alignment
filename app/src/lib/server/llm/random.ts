@@ -63,7 +63,7 @@ export const generateRandomBotName = async () => {
 				{ role: 'user', content: `Your three words are: ${seedWords}` }
 			],
 			providerOptions: {
-				openai: { reasoningEffort: 'medium' }
+				openai: { reasoningEffort: 'minimal' }
 			}
 		});
 
@@ -136,7 +136,7 @@ export const generateRandomBotPrompt = async () => {
 				{ role: 'user', content: `Give me a prompt for: ${word}` }
 			],
 			providerOptions: {
-				openai: { reasoningEffort: 'medium' }
+				openai: { reasoningEffort: 'minimal' }
 			}
 		});
 

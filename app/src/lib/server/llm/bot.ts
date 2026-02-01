@@ -54,7 +54,7 @@ export const generateBotResponse = async ({
 		output: Output.object({ schema: botResponseSchema }),
 		messages,
 		providerOptions: {
-			openai: { reasoningEffort: 'medium' }
+			openai: { reasoningEffort: 'minimal' }
 		}
 	});
 
