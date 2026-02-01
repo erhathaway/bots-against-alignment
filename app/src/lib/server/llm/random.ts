@@ -45,7 +45,10 @@ export const generateRandomBotName = async () => {
 				{ role: 'user', content: 'Your three words are dog, fish, truth.' },
 				{ role: 'assistant', content: '[CaninAquEataly]' },
 				{ role: 'user', content: `You three words are:${botName}` }
-			]
+			],
+			providerOptions: {
+				openai: { reasoningEffort: 'medium' }
+			}
 		});
 
 		const cleaned = result.text.trim();
@@ -79,7 +82,10 @@ export const generateRandomAlignerPrompt = async () => {
 						'The most "philosophical" and abstract answer will win in this game.'
 				},
 				{ role: 'user', content: `You words are${promptSeed}` }
-			]
+			],
+			providerOptions: {
+				openai: { reasoningEffort: 'medium' }
+			}
 		});
 
 		return result.text.trim() || randomAlignerPrompt();
@@ -110,7 +116,10 @@ export const generateRandomBotPrompt = async () => {
 				{ role: 'user', content: 'Give me a prompt milk.' },
 				{ role: 'assistant', content: 'I will respond in the third person like a muscle bro.' },
 				{ role: 'user', content: `Give me a prompt ${botName}` }
-			]
+			],
+			providerOptions: {
+				openai: { reasoningEffort: 'medium' }
+			}
 		});
 
 		return result.text.trim() || randomBotPrompt();

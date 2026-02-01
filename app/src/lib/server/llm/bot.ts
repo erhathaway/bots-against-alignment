@@ -46,7 +46,10 @@ export const generateBotResponse = async ({
 	const openai = getOpenAI();
 	const result = await generateText({
 		model: openai(modelBot),
-		messages
+		messages,
+		providerOptions: {
+			openai: { reasoningEffort: 'medium' }
+		}
 	});
 
 	const text = result.text;

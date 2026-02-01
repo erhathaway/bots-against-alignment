@@ -120,7 +120,7 @@
 				addNotification({
 					source_url: 'lobby',
 					title: 'Error starting game',
-					body: data,
+					body: data.error || data.message || JSON.stringify(data),
 					kind: NotificationKind.ERROR,
 					action_url: url,
 					action_text: 'start_game'

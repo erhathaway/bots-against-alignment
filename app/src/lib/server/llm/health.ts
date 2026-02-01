@@ -5,12 +5,17 @@ import { getOpenAI } from './provider';
 
 export const checkLLMAvailability = async () => {
 	const openai = getOpenAI();
-	const result = await generateText({
+	await generateText({
 		model: openai(modelBot),
-		messages: [{ role: 'user', content: 'Say OK.' }],
-		maxOutputTokens: 5
+		messages: [
+			{ role: 'system', content: 'You are a helpful assistant.' },
+			{ role: 'user', content: 'Respond with the word OK and nothing else.' }
+		],
+		maxOutputTokens: 32,
+		providerOptions: {
+			openai: {
+				reasoningEffort: 'minimal'
+			}
+		}
 	});
-	if (!result.text || result.text.trim().length === 0) {
-		throw new Error('LLM returned empty response');
-	}
 };
