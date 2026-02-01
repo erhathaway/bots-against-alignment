@@ -1,5 +1,5 @@
 <script lang="ts">
-	import LoadingBars from '../../../routes/game/LoadingBars.svelte';
+	import LoadingBars from '$lib/components/game/LoadingBars.svelte';
 
 	type Props = {
 		onClose?: () => void;

@@ -3,11 +3,11 @@
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import Chat from './Chat.svelte';
-	import PreGame1 from './PreGame.svelte';
-	import Lobby from './Lobby.svelte';
-	import AlignerSays from './AlignerSays.svelte';
-	import TurnFinale from './TurnFinale.svelte';
-	import GameFinale from './GameFinale.svelte';
+	import PreGame from '$lib/components/game/PreGame.svelte';
+	import Lobby from '$lib/components/game/Lobby.svelte';
+	import AlignerSays from '$lib/components/game/AlignerSays.svelte';
+	import TurnFinale from '$lib/components/game/TurnFinale.svelte';
+	import GameFinale from '$lib/components/game/GameFinale.svelte';
 	import { fly } from 'svelte/transition'; // New import
 	import type { PageData } from './$types';
 
@@ -38,7 +38,7 @@
 		y: direction === 'in' ? 0 : 500
 	});
 
-	const leftTransition = (direction: 'in' | 'out') => ({
+	const gameDetailsTransition = (direction: 'in' | 'out') => ({
 		delay: direction === 'in' ? 300 : 0,
 		duration: 300,
 		easing: (time: number) => --time * time * time + 1,
@@ -120,7 +120,7 @@
 </script>
 
 <div id="screen" role="region" aria-label="Game" in:fly={screenTransition('in')}>
-	<section id="left" out:fly={leftTransition('out')}>
+	<section id="game-details" out:fly={gameDetailsTransition('out')}>
 		{#if globalState.has_player_joined}
 			<div class="leave-bar">
 				<button class="leave-btn" onclick={handleLeave} disabled={isLeavePending}>
@@ -130,7 +130,7 @@
 		{/if}
 		{#if routerState === RouterState.PreGame}
 			<div in:fly={customFly('in')} out:fly={customFly('out')}>
-				<PreGame1 {data} />
+				<PreGame {data} />
 			</div>
 		{/if}
 		{#if routerState === RouterState.Lobby}
@@ -169,7 +169,7 @@
 		padding: 0;
 	}
 
-	#left {
+	#game-details {
 		display: flex;
 		flex-direction: column;
 		overflow-y: scroll;

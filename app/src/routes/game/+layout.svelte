@@ -1,5 +1,5 @@
 <script lang="ts">
-	import GameLink from './GameLink.svelte';
+	import GameLink from '$lib/components/game/GameLink.svelte';
 	import { goto } from '$app/navigation';
 
 	let { children } = $props();
