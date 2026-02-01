@@ -764,18 +764,23 @@ export const processTurn = async ({
 	if (winner) {
 		await postChatMessage({
 			gameId,
-			message: `The Aligner chose ${winner.botName} as the winner! (${winner.score} pts)`,
+			senderName: 'Round Winner',
+			message: JSON.stringify({
+				name: winner.botName,
+				score: winner.score,
+				isAuto: winner.isAuto
+			}),
 			type: 'system'
 		});
 	}
 
 	const standings = updatedPlayers
 		.sort((a, b) => b.score - a.score)
-		.map((p) => `${p.botName}: ${p.score}`)
-		.join(' | ');
+		.map((p) => ({ name: p.botName, score: p.score, isAuto: p.isAuto }));
 	await postChatMessage({
 		gameId,
-		message: `Standings: ${standings}`,
+		senderName: 'Standings',
+		message: JSON.stringify(standings),
 		type: 'system'
 	});
 

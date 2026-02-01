@@ -125,13 +125,59 @@
 <div class="chat-window">
 	<div class="message-container" bind:this={messageContainer}>
 		{#each messages as message (message.id)}
-			{#if message.type === 'system' && message.senderName === 'Turn Prompt'}
+			{#if message.type === 'system' && message.senderName === 'Game Start'}
+				{@const info = (() => { try { return JSON.parse(message.message); } catch { return null; } })()}
+				{#if info}
+					<div class="message game-start">
+						<div class="game-start-container">
+							<div class="game-start-title">Game On!</div>
+							<div class="game-start-rules">
+								First to {info.pointsToWin} point{info.pointsToWin === 1 ? '' : 's'} &middot; {info.botPromptChanges} prompt change{info.botPromptChanges === 1 ? '' : 's'} per turn
+							</div>
+							<div class="game-start-players">
+								{#each info.humans as name}
+									<span class="player-chip human">{name}</span>
+								{/each}
+								{#each info.ai as name}
+									<span class="player-chip ai">{name}</span>
+								{/each}
+							</div>
+						</div>
+					</div>
+				{/if}
+			{:else if message.type === 'system' && message.senderName === 'Turn Prompt'}
 				<div class="message turn-prompt">
 					<div class="turn-prompt-container">
 						<div class="turn-prompt-label">Turn Prompt</div>
 						<div class="turn-prompt-text">{message.message}</div>
 					</div>
 				</div>
+			{:else if message.type === 'system' && message.senderName === 'Round Winner'}
+				{@const win = (() => { try { return JSON.parse(message.message); } catch { return null; } })()}
+				{#if win}
+					<div class="message round-winner">
+						<div class="round-winner-container">
+							<div class="round-winner-label">Round Winner</div>
+							<div class="round-winner-name">{win.name}</div>
+							<div class="round-winner-score">{win.score} point{win.score === 1 ? '' : 's'}</div>
+						</div>
+					</div>
+				{/if}
+			{:else if message.type === 'system' && message.senderName === 'Standings'}
+				{@const rows = (() => { try { return JSON.parse(message.message); } catch { return null; } })()}
+				{#if rows}
+					<div class="message standings">
+						<div class="standings-container">
+							{#each rows as row, i}
+								<div class="standings-row" class:leader={i === 0}>
+									<span class="standings-rank">{i + 1}</span>
+									<span class="standings-name">{row.name}{#if row.isAuto}<span class="standings-ai">AI</span>{/if}</span>
+									<span class="standings-score">{row.score}</span>
+								</div>
+							{/each}
+						</div>
+					</div>
+				{/if}
 			{:else if message.type === 'system' && message.senderName === 'The Aligner'}
 				<div class="message aligner">
 					<div class="message-aligner-container">
@@ -338,6 +384,162 @@
 		font-size: 13px;
 		color: #333;
 		font-style: italic;
+	}
+
+	.game-start {
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.game-start .game-start-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		background: linear-gradient(135deg, #111 0%, #222 100%);
+		border: 2px solid rgb(123, 255, 0);
+		border-radius: 10px;
+		padding: 0.75rem 1rem;
+		width: 90%;
+		gap: 0.4rem;
+	}
+
+	.game-start .game-start-title {
+		font-size: 1rem;
+		font-weight: bold;
+		color: rgb(123, 255, 0);
+		letter-spacing: 0.05em;
+	}
+
+	.game-start .game-start-rules {
+		font-size: 11px;
+		color: #ccc;
+	}
+
+	.game-start .game-start-players {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.3rem;
+		justify-content: center;
+		margin-top: 0.2rem;
+	}
+
+	.game-start .player-chip {
+		font-size: 10px;
+		font-weight: bold;
+		padding: 0.15rem 0.5rem;
+		border-radius: 1rem;
+	}
+
+	.game-start .player-chip.human {
+		background: rgb(123, 255, 0);
+		color: #111;
+	}
+
+	.game-start .player-chip.ai {
+		background: rgb(100, 149, 237);
+		color: white;
+	}
+
+	.round-winner {
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.round-winner .round-winner-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		background: linear-gradient(135deg, #fff8e1 0%, #fff3c4 100%);
+		border: 2px solid #ffb300;
+		border-radius: 10px;
+		padding: 0.6rem 1rem;
+		width: 90%;
+		gap: 0.15rem;
+	}
+
+	.round-winner .round-winner-label {
+		font-size: 9px;
+		font-weight: bold;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: #b77b00;
+	}
+
+	.round-winner .round-winner-name {
+		font-size: 1rem;
+		font-weight: bold;
+		color: #333;
+	}
+
+	.round-winner .round-winner-score {
+		font-size: 11px;
+		color: #777;
+	}
+
+	.standings {
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.standings .standings-container {
+		display: flex;
+		flex-direction: column;
+		width: 90%;
+		border: 1px solid #ddd;
+		border-radius: 8px;
+		overflow: hidden;
+	}
+
+	.standings .standings-row {
+		display: flex;
+		align-items: center;
+		padding: 0.3rem 0.6rem;
+		font-size: 12px;
+		border-bottom: 1px solid #eee;
+		gap: 0.4rem;
+	}
+
+	.standings .standings-row:last-child {
+		border-bottom: none;
+	}
+
+	.standings .standings-row.leader {
+		background: #fff8e1;
+		font-weight: bold;
+	}
+
+	.standings .standings-rank {
+		width: 1.2rem;
+		color: #999;
+		font-weight: bold;
+		text-align: center;
+	}
+
+	.standings .standings-name {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+	}
+
+	.standings .standings-ai {
+		font-size: 8px;
+		font-weight: bold;
+		background: rgb(100, 149, 237);
+		color: white;
+		padding: 0.05rem 0.3rem;
+		border-radius: 0.5rem;
+	}
+
+	.standings .standings-score {
+		font-weight: bold;
+		color: #333;
 	}
 
 	.turn-prompt {
