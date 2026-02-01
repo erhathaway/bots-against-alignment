@@ -58,11 +58,11 @@
 </script>
 
 <div id="container">
-	<div class="padding" />
+	<div class="padding"></div>
 	<img alt="a robots head talking" src={robot_comedy} />
 
 	<LoadingAudioWave />
-	<div class="padding" />
+	<div class="padding"></div>
 	<button onclick={forceNextTurn}>
 		{#if isForceNextTurnPending}
 			<LoadingBars />
@@ -73,12 +73,6 @@
 </div>
 
 <style>
-	h2 {
-		font-size: 3rem;
-		font-weight: bold;
-		margin-bottom: 1.5rem;
-	}
-
 	#container {
 		display: flex;
 		flex-direction: column;

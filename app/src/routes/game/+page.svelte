@@ -13,13 +13,14 @@
 
 	let { data }: { data: PageData } = $props();
 
-	enum RouterState {
-		PreGame,
-		Lobby,
-		AlignerSays,
-		TurnFinale,
-		GameFinale
-	}
+	const RouterState = {
+		PreGame: 'PreGame',
+		Lobby: 'Lobby',
+		AlignerSays: 'AlignerSays',
+		TurnFinale: 'TurnFinale',
+		GameFinale: 'GameFinale'
+	} as const;
+	type RouterState = (typeof RouterState)[keyof typeof RouterState];
 	let routerState = $state<RouterState>(RouterState.PreGame);
 
 	const customFly = (direction: 'in' | 'out') => ({
@@ -141,11 +142,6 @@
 </div>
 
 <style>
-	.preGameContainer {
-		position: absolute;
-		width: 100%;
-		height: 100%;
-	}
 	#screen {
 		display: flex;
 		flex-direction: row;

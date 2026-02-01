@@ -7,7 +7,7 @@
 
 <div class="app">
 	<div>
-		<div id="home" onclick={() => goto('/')}>
+		<button id="home" type="button" aria-label="Go to home" onclick={() => goto('/')}>
 			<svg
 				width="18px"
 				height="18px"
@@ -24,7 +24,7 @@
 					stroke-linejoin="round"
 				/></svg
 			>
-		</div>
+		</button>
 		<div id="header">
 			<GameLink />
 		</div>
@@ -54,6 +54,7 @@
 		position: fixed;
 		top: 0;
 		left: 0;
+		font: inherit;
 		padding: 0.5rem;
 		margin: 0.5rem;
 		height: 24px;

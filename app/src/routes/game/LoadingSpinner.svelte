@@ -1,6 +1,6 @@
 <div class="lds-app">
-	<div />
-	<div />
+	<div></div>
+	<div></div>
 </div>
 
 <style>

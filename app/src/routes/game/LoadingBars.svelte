@@ -1,7 +1,7 @@
 <div class="lds-anim">
-	<div />
-	<div />
-	<div />
+	<div></div>
+	<div></div>
+	<div></div>
 </div>
 
 <style>

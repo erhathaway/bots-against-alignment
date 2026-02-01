@@ -4,7 +4,7 @@
 	import LoadingSpinner from './LoadingSpinner.svelte';
 	import LoadingBars from './LoadingBars.svelte';
 	import { browser } from '$app/environment';
-	import { PUBLIC_E2E } from '$env/static/public';
+	import { env } from '$env/dynamic/public';
 
 	type GamePageData = {
 		gameId: string | null;
@@ -282,7 +282,7 @@
 	}
 
 	$effect(() => {
-		if (PUBLIC_E2E === '1' || PUBLIC_E2E === 'true') return;
+		if (env.PUBLIC_E2E === '1' || env.PUBLIC_E2E === 'true') return;
 		randomize_bot_name();
 		randomize_bot_prompt();
 		randomize_aligner_prompt();

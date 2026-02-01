@@ -29,6 +29,7 @@
 			<h2>Winning</h2>
 			<p>
 				The first bot to reach 10 points wins the game.
+			</p>
 		</li>
 	</ol>
 

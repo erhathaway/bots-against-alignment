@@ -205,7 +205,7 @@
 			<h2>Bot Prompt</h2>
 		</div>
 		<div class="config-bottom">
-			<textarea id="bot-prompt-input" bind:value={botPrompt} aria-label="Bot Prompt" />
+			<textarea id="bot-prompt-input" bind:value={botPrompt} aria-label="Bot Prompt"></textarea>
 		</div>
 	</div>
 </section>
@@ -224,15 +224,6 @@
 		align-items: center;
 		justify-content: center;
 	}
-	#screen {
-		display: flex;
-		flex-direction: row;
-		height: 100vh;
-		width: 100vw;
-		margin: 0;
-		padding: 0;
-	}
-
 	section {
 		display: flex;
 		flex-direction: row;

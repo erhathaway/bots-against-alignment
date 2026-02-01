@@ -1,7 +1,8 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { fly } from 'svelte/transition';
 
-	let { url = '', children }: { url?: string; children?: () => unknown } = $props();
+	let { url = '', children }: { url?: string; children?: Snippet } = $props();
 </script>
 
 <div class="transition-outer">

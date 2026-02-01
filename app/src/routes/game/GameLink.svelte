@@ -21,10 +21,10 @@
 	}
 </script>
 
-<span tabindex="0" onclick={() => copyToClipboard(gameLink)}>
+<button type="button" class="game-link" onclick={() => copyToClipboard(gameLink)}>
 	<h2>Game # {globalState.game_id}</h2>
 	<div id="link-icon">
-		<div id="link-vertical-rule" />
+		<div id="link-vertical-rule"></div>
 		<svg
 			width="24px"
 			height="24px"
@@ -48,10 +48,10 @@
 			/></svg
 		>
 	</div>
-</span>
+</button>
 
 <style>
-	span {
+	.game-link {
 		display: flex;
 		flex-direction: row;
 		justify-content: space-between;
@@ -64,10 +64,15 @@
 		color: white;
 		color: rgb(123, 255, 0);
 		cursor: pointer;
+		font: inherit;
+		border: 2px solid black;
+		background: black;
+		padding: 0.1rem 1rem;
+		text-align: left;
 		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1), 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
 	}
 
-	span:hover {
+	.game-link:hover {
 		background-color: rgb(123, 255, 0);
 		color: black;
 	}

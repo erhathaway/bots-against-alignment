@@ -2,7 +2,7 @@ import GUN from 'gun';
 
 import ChatGame from './chat_game';
 import { isRecord, type GunInstance } from './types';
-import { PUBLIC_GUN_PEER } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 
 function isGunInstance(
 	value: { on?: Function; get?: Function; back?: Function } | null
@@ -26,7 +26,7 @@ class ChatManager {
 	constructor() {
 		this.retryInterval = null;
 		this.gun = null;
-		this.peerUrl = PUBLIC_GUN_PEER?.trim() || 'https://bots-against-alignment.herokuapp.com/gun';
+		this.peerUrl = env.PUBLIC_GUN_PEER?.trim() || 'https://bots-against-alignment.herokuapp.com/gun';
 		this.initGun();
 		this.gameChats = new Map();
 		this.sideEffectQueue = [];
