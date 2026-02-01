@@ -18,13 +18,6 @@ test('gun chat syncs across players through the core game flow', async ({ browse
 	const opponent = await opponentContext.newPage();
 
 	try {
-		if (process.env.DEBUG_GUN_CHAT === '1') {
-			creator.on('console', (msg) => console.log('[creator console]', msg.type(), msg.text()));
-			opponent.on('console', (msg) => console.log('[opponent console]', msg.type(), msg.text()));
-			creator.on('websocket', (ws) => console.log('[creator websocket]', ws.url()));
-			opponent.on('websocket', (ws) => console.log('[opponent websocket]', ws.url()));
-		}
-
 		await creator.goto(BASE_URL);
 		await creator.getByRole('button', { name: 'New Game' }).click();
 		await joinGame(creator, 'Alice');
@@ -36,64 +29,6 @@ test('gun chat syncs across players through the core game flow', async ({ browse
 
 		await opponent.goto(`${BASE_URL}/game?game_id=${gameId}`);
 		await joinGame(opponent, 'Bob');
-
-		if (process.env.DEBUG_GUN_CHAT === '1') {
-			console.log('[debug] creator .message count', await creator.locator('.message').count());
-			console.log('[debug] creator .message.status count', await creator.locator('.message.status').count());
-			console.log(
-				'[debug] creator messages',
-				await creator.locator('.message').allTextContents()
-			);
-			console.log('[debug] typeof window.Gun', await creator.evaluate(() => typeof (window as any).Gun));
-			console.log(
-				'[debug] window.Gun local put/on works?',
-				await creator.evaluate(async () => {
-					const Gun = (window as any).Gun;
-					if (typeof Gun !== 'function') return { ok: false, reason: 'window.Gun is not a function' };
-
-					const gun = Gun({ peers: ['http://127.0.0.1:8765/gun'], localStorage: false });
-					return await new Promise((resolve) => {
-						const node = gun.get(`pw-gun-local-${Date.now()}`);
-						node.on((data: any) => {
-							if (data?.hello === 'world') resolve({ ok: true });
-						});
-						node.put({ hello: 'world' });
-						setTimeout(() => resolve({ ok: false, reason: 'timeout' }), 2000);
-					});
-				})
-			);
-			console.log(
-				'[debug] window.Gun map/set works?',
-				await creator.evaluate(async () => {
-					const Gun = (window as any).Gun;
-					if (typeof Gun !== 'function') return { ok: false, reason: 'window.Gun is not a function' };
-
-					const gun = Gun({ peers: ['http://127.0.0.1:8765/gun'], localStorage: false });
-					return await new Promise((resolve) => {
-						const id = `pw-gun-map-${Date.now()}`;
-						const messages = gun.get(id).get('messages');
-						messages.map().on((data: any) => {
-							if (data?.uuid === 'u1') resolve({ ok: true });
-						});
-						messages.set({
-							uuid: 'u1',
-							message: 'hi',
-							timestamp: Date.now(),
-							botName: 'Alice',
-							isStatusMessage: true,
-							isSystemMessage: false
-						});
-						setTimeout(() => resolve({ ok: false, reason: 'timeout' }), 2000);
-					});
-				})
-			);
-			console.log('[debug] opponent .message count', await opponent.locator('.message').count());
-			console.log('[debug] opponent .message.status count', await opponent.locator('.message.status').count());
-			console.log(
-				'[debug] opponent messages',
-				await opponent.locator('.message').allTextContents()
-			);
-		}
 
 		await expect(
 			creator.locator('.message.status', { hasText: 'Bob' }).last()

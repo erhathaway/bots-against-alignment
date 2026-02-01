@@ -53,7 +53,7 @@ Avoid running them on shared machines where those ports may be in use by unrelat
 ### Root dev scripts
 
 - `bun run dev` — starts Gun + backend + frontend together
-- `bun run dev:gun` — starts only the local Gun relay (persists data in `.gun/`)
+- `bun run dev:gun` — starts only the local Gun relay (in-memory; restart to reset chat state)
 - `bun run dev:backend` — starts only the FastAPI backend
 - `bun run dev:frontend` — starts only the frontend (wired to local backend + local Gun via env vars)
 
@@ -99,7 +99,7 @@ bun run dev:frontend
 ## Local dev gotchas
 
 - Frontend state is persisted in localStorage (`frontend/src/lib/store.ts`); if the UI seems “stuck” between runs, clear site data/localStorage.
-- The local Gun relay stores data under `.gun/` when using `bun run dev:gun` / `bun run dev` (delete it to reset the chat graph).
+- The local Gun relay is in-memory; restarting it resets the chat graph.
 - The `/game` route is client-only (`ssr = false` in `frontend/src/routes/game/+page.ts`), so debugging should focus on browser-side behavior.
 
 ## Documentation discipline

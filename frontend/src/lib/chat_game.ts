@@ -58,19 +58,10 @@ class ChatGame {
 			throw new Error('**gun is null');
 		}
 
-		if (import.meta.env.VITE_E2E) {
-			// eslint-disable-next-line no-console
-			console.log('[chat] initGameWatcher', this.gameId);
-		}
-
 		const gameNode = this.manager.gun.get(this.gameId);
 		this.gameWatcher = gameNode;
 
 		gameNode.on((data: JsonValue) => {
-			if (import.meta.env.VITE_E2E) {
-				// eslint-disable-next-line no-console
-				console.log('[chat] incoming raw', data);
-			}
 			const newMessage = parseMessage(data);
 			if (!newMessage) return;
 
@@ -144,11 +135,6 @@ class ChatGame {
 			if (this.manager.gun == null) {
 				throw new Error('2gun is null');
 			}
-
-			if (import.meta.env.VITE_E2E) {
-				// eslint-disable-next-line no-console
-				console.log('[chat] put message', { gameId, botName, message, uuid });
-			}
 			this.manager.gun.get(gameId).put({
 				message,
 				timestamp: Date.now(),
@@ -167,10 +153,6 @@ class ChatGame {
 			if (this.manager.gun == null) {
 				throw new Error('gun is null');
 			}
-			if (import.meta.env.VITE_E2E) {
-				// eslint-disable-next-line no-console
-				console.log('[chat] put status', { gameId, botName, message, uuid });
-			}
 			this.manager.gun.get(gameId).put({
 				message,
 				timestamp: Date.now(),
@@ -188,10 +170,6 @@ class ChatGame {
 		const _run = () => {
 			if (this.manager.gun == null) {
 				throw new Error('gun is null');
-			}
-			if (import.meta.env.VITE_E2E) {
-				// eslint-disable-next-line no-console
-				console.log('[chat] put system', { gameId, message, uuid });
 			}
 			this.manager.gun.get(gameId).put({
 				message,

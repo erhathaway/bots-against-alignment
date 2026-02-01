@@ -9,9 +9,8 @@ export VITE_GUN_PEER="http://127.0.0.1:8765/gun"
 export VITE_E2E="1"
 export MOCK_LLM="1"
 
-GUN_DATA_DIR="$(mktemp -d)"
-export GUN_DATA_DIR
-GUN_LOG="${GUN_DATA_DIR}/gun.log"
+TMP_DIR="$(mktemp -d)"
+GUN_LOG="${TMP_DIR}/gun.log"
 bun "${ROOT_DIR}/scripts/gun-relay.ts" >"${GUN_LOG}" 2>&1 &
 GUN_PID=$!
 
@@ -27,7 +26,7 @@ cleanup() {
   if kill -0 "$BACKEND_PID" 2>/dev/null; then
     kill "$BACKEND_PID"
   fi
-  rm -rf "$GUN_DATA_DIR"
+  rm -rf "$TMP_DIR"
 }
 trap cleanup EXIT
 

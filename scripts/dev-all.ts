@@ -103,8 +103,7 @@ async function main() {
 			env: {
 				...process.env,
 				GUN_HOST: '127.0.0.1',
-				GUN_PORT: String(PORT_GUN),
-				GUN_DATA_DIR: '.gun'
+				GUN_PORT: String(PORT_GUN)
 			}
 		})
 	);

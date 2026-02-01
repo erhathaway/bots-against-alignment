@@ -41,18 +41,10 @@ class ChatManager {
 					localStorage: false
 				});
 
-				if (import.meta.env.VITE_E2E) {
-					// eslint-disable-next-line no-console
-					console.log('[chat] gun instance candidate', typeof gun);
-				}
 				if (!isGunInstance(gun)) {
 					throw new Error('Failed to initialize Gun client');
 				}
 				this.gun = gun;
-				if (import.meta.env.VITE_E2E) {
-					// eslint-disable-next-line no-console
-					console.log('[chat] gun initialized', this.peerUrl);
-				}
 
 				this.gun.on('out', { get: { '#': { '*': '' } } }); // Requesting root graph data
 
