@@ -58,31 +58,13 @@
 		<h2>The Aligner is deliberating...</h2>
 		<p class="subtitle">Watch the chat for the Aligner's reasoning!</p>
 		<LoadingBars />
-	{:else if results}
-		<h2>Round Results</h2>
-		<div class="results-list">
-			{#each results as entry}
-				<div class="result-card" class:winner={entry.isRoundWinner}>
-					<div class="result-header">
-						<span class="bot-name">{entry.name}</span>
-						{#if entry.isRoundWinner}
-							<span class="winner-badge">WINNER</span>
-						{/if}
-						<span class="bot-score">Score: {entry.score}</span>
-					</div>
-					{#if entry.text}
-						<p class="bot-response">"{entry.text}"</p>
-					{/if}
-				</div>
-			{/each}
-		</div>
-		{#if globalState.is_game_over}
-			<p class="game-over-text">Game Over!</p>
-		{:else}
-			<button onclick={advanceTurn}>
-				Next Turn
-			</button>
-		{/if}
+	{:else if globalState.is_game_over}
+		<p class="game-over-text">Game Over!</p>
+	{:else}
+		<p class="subtitle">See the results in the chat!</p>
+		<button onclick={advanceTurn}>
+			Next Turn
+		</button>
 	{/if}
 </div>
 
@@ -110,51 +92,6 @@
 		font-weight: bold;
 		color: rgb(0, 150, 0);
 		margin-top: 1.5rem;
-	}
-	.results-list {
-		width: 100%;
-		max-width: 500px;
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-		margin: 1rem 0;
-	}
-	.result-card {
-		padding: 1rem;
-		border-radius: 0.75rem;
-		border: 2px solid #ddd;
-		background: #fafafa;
-	}
-	.result-card.winner {
-		border-color: rgb(123, 255, 0);
-		background: rgb(240, 255, 220);
-	}
-	.result-header {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-	}
-	.bot-name {
-		font-weight: bold;
-		font-size: 1.1rem;
-	}
-	.winner-badge {
-		background: rgb(123, 255, 0);
-		color: black;
-		font-size: 0.7rem;
-		font-weight: bold;
-		padding: 0.15rem 0.5rem;
-		border-radius: 1rem;
-	}
-	.bot-score {
-		margin-left: auto;
-		color: #666;
-		font-size: 0.9rem;
-	}
-	.bot-response {
-		margin-top: 0.5rem;
-		font-style: italic;
-		color: #444;
 	}
 	button {
 		font-size: 1.5rem;
