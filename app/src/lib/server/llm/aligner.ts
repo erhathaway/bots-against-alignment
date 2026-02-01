@@ -34,7 +34,7 @@ const parseWinner = (response: string, mapping: Record<number, string>) => {
 };
 
 const randomDelay = () =>
-	new Promise<void>((resolve) => setTimeout(resolve, 500 + Math.random() * 2500));
+	new Promise<void>((resolve) => setTimeout(resolve, 1500 + Math.random() * 3500));
 
 /** Find the first sentence boundary (. ! ?) followed by whitespace in the buffer. */
 const extractSentence = (buffer: string): [sentence: string, remainder: string] | null => {
