@@ -89,7 +89,8 @@ The `app/` project is the migration target. We will keep it on the latest stable
 - `drizzle-orm`: **0.45.1**
 - `drizzle-kit`: **0.31.8**
 - `@libsql/client`: (use latest compatible with drizzle-orm; currently present in `app/`)
-- `openai`: **6.17.0**
+- `ai` (Vercel AI SDK): **6.0.66**
+- `@ai-sdk/openai`: **3.0.24**
 
 ---
 
@@ -260,7 +261,7 @@ Implementation approach:
 
 ---
 
-## LLM integration (OpenAI) and mock mode
+## LLM integration (AI SDK + OpenAI) and mock mode
 
 ### Requirements
 - Keep OpenAI API key server-side only.
@@ -270,15 +271,15 @@ Implementation approach:
 
 ### Proposed design
 Create `src/lib/server/llm/`:
-- `client.ts`: OpenAI client initialization
-- `bot.ts`: `generateBotResponse({ botPrompt, turnPrompt, extraContext })`
-- `aligner.ts`: `pickWinner({ alignerPrompt, turnPrompt, responsesByPlayer })`
+- `provider.ts`: AI SDK OpenAI provider wiring
+- `bot.ts`: `generateBotResponse({ botPrompt, turnPrompt, extraContext })` (AI SDK `generateText`)
+- `aligner.ts`: `pickWinner({ alignerPrompt, turnPrompt, responsesByPlayer })` (AI SDK `generateText` or `generateObject` for structured output)
 - `mock.ts`: deterministic mocks (hash-based), plus “always pick first option” for aligner parity
 
 Config via env:
 - `OPENAI_API_KEY` (required in production)
-- `OPENAI_MODEL_BOT` (default to a safe, cheap model)
-- `OPENAI_MODEL_ALIGNER` (default to a safe, cheap model)
+- `OPENAI_MODEL_BOT` (default: `gpt-5.2-nano`)
+- `OPENAI_MODEL_ALIGNER` (default: `gpt-5.2-nano`)
 - `MOCK_LLM` (boolean)
 
 ### Rate limiting
@@ -433,6 +434,7 @@ Deliverable: Single-app deployment, simplified infra, modern Svelte codebase.
 ### Non-functional
 - All `.svelte` and `.svelte.ts` files in `app/` use runes syntax (no legacy mode).
 - No secrets shipped to the browser (OpenAI key stays server-side).
+- LLM calls use AI SDK, defaulting to `gpt-5.2-nano` (configurable via env).
 - DB migrations are repeatable; local dev has a documented DB story.
 - E2E tests cover core flows; `MOCK_LLM=1` makes them deterministic.
 - UI is at least as responsive as current; fix obvious non-adaptive layouts (e.g. split-screen on small viewports).
