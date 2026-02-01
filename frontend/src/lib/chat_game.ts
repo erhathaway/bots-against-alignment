@@ -58,13 +58,19 @@ class ChatGame {
 			throw new Error('**gun is null');
 		}
 
-		// Store chat messages as individual nodes to avoid field-level merge conflicts.
-		// (Gun merges updates per-field; putting whole message objects on a single node can
-		// produce mixed/partial states across concurrent writes.)
-		const messageMap = this.manager.gun.get(this.gameId).get('messages').map();
-		this.gameWatcher = messageMap;
+		if (import.meta.env.VITE_E2E) {
+			// eslint-disable-next-line no-console
+			console.log('[chat] initGameWatcher', this.gameId);
+		}
 
-		messageMap.on((data: JsonValue) => {
+		const gameNode = this.manager.gun.get(this.gameId);
+		this.gameWatcher = gameNode;
+
+		gameNode.on((data: JsonValue) => {
+			if (import.meta.env.VITE_E2E) {
+				// eslint-disable-next-line no-console
+				console.log('[chat] incoming raw', data);
+			}
 			const newMessage = parseMessage(data);
 			if (!newMessage) return;
 
@@ -114,7 +120,7 @@ class ChatGame {
 			if (this.gameWatcher && typeof this.gameWatcher.off === 'function') {
 				this.gameWatcher.off();
 			} else {
-				this.manager.gun.get(this.gameId).get('messages').off();
+				this.manager.gun.get(this.gameId).off();
 			}
 			this.gameWatcher = null;
 		};
@@ -139,7 +145,11 @@ class ChatGame {
 				throw new Error('2gun is null');
 			}
 
-			this.manager.gun.get(gameId).get('messages').get(uuid).put({
+			if (import.meta.env.VITE_E2E) {
+				// eslint-disable-next-line no-console
+				console.log('[chat] put message', { gameId, botName, message, uuid });
+			}
+			this.manager.gun.get(gameId).put({
 				message,
 				timestamp: Date.now(),
 				botName: botName,
@@ -157,7 +167,11 @@ class ChatGame {
 			if (this.manager.gun == null) {
 				throw new Error('gun is null');
 			}
-			this.manager.gun.get(gameId).get('messages').get(uuid).put({
+			if (import.meta.env.VITE_E2E) {
+				// eslint-disable-next-line no-console
+				console.log('[chat] put status', { gameId, botName, message, uuid });
+			}
+			this.manager.gun.get(gameId).put({
 				message,
 				timestamp: Date.now(),
 				botName: botName,
@@ -175,7 +189,11 @@ class ChatGame {
 			if (this.manager.gun == null) {
 				throw new Error('gun is null');
 			}
-			this.manager.gun.get(gameId).get('messages').get(uuid).put({
+			if (import.meta.env.VITE_E2E) {
+				// eslint-disable-next-line no-console
+				console.log('[chat] put system', { gameId, message, uuid });
+			}
+			this.manager.gun.get(gameId).put({
 				message,
 				timestamp: Date.now(),
 				botName: null,

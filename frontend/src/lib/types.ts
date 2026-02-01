@@ -24,6 +24,7 @@ export type GunChain = {
 	on: (cb: (data: JsonValue) => void) => void;
 	off: () => void;
 	put: (data: JsonObject) => void;
+	set: (data: JsonObject) => GunChain;
 };
 
 export type GunInstance = {
