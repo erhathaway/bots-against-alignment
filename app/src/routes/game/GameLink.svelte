@@ -69,7 +69,9 @@
 		background: black;
 		padding: 0.1rem 1rem;
 		text-align: left;
-		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1), 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+		box-shadow:
+			0px 10px 15px -3px rgba(0, 0, 0, 0.1),
+			0px 10px 15px -3px rgba(0, 0, 0, 0.1);
 	}
 
 	.game-link:hover {

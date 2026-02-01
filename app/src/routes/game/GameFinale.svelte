@@ -122,7 +122,7 @@
 	{#if standings.length > 0}
 		<div class="standings">
 			<h2>Final Scores</h2>
-			{#each standings as bot, i}
+			{#each standings as bot, i (bot.name)}
 				<div class="standing-row" class:first-place={i === 0}>
 					<span class="rank">{i + 1}.</span>
 					<span class="name">{bot.name}</span>

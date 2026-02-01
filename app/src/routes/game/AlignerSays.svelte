@@ -225,7 +225,12 @@
 			{/if}
 		</div>
 		<div class="config-bottom">
-			<textarea id="bot-prompt-input" bind:value={botPrompt} aria-label="Bot Prompt" disabled={hasSubmittedThisTurn || promptLocked}></textarea>
+			<textarea
+				id="bot-prompt-input"
+				bind:value={botPrompt}
+				aria-label="Bot Prompt"
+				disabled={hasSubmittedThisTurn || promptLocked}
+			></textarea>
 		</div>
 	</div>
 </section>

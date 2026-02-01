@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 
 import { db } from '$lib/server/db';
 import { alignerPrompts, games, players, turnResponses, turns } from '$lib/server/db/schema';
@@ -127,8 +127,7 @@ export const joinGame = async ({
 	const trimmedPrompt = truncate(botPrompt, MAX_BOT_PROMPT_LENGTH);
 
 	// Auto-assign creator if game has no human owner yet (e.g. play-again games)
-	const shouldBecomeCreator =
-		(creatorId && creatorId === game.creatorId) || !game.creatorPlayerId;
+	const shouldBecomeCreator = (creatorId && creatorId === game.creatorId) || !game.creatorPlayerId;
 	let assignedCreatorId: string | null = null;
 
 	await db.transaction(async (tx) => {
@@ -153,9 +152,8 @@ export const joinGame = async ({
 		});
 
 		if (shouldBecomeCreator) {
-			const newCreatorId = creatorId && creatorId === game.creatorId
-				? game.creatorId
-				: crypto.randomUUID();
+			const newCreatorId =
+				creatorId && creatorId === game.creatorId ? game.creatorId : crypto.randomUUID();
 			await tx
 				.update(games)
 				.set({ creatorPlayerId: playerId, creatorId: newCreatorId, updatedAt: timestamp })
@@ -231,7 +229,13 @@ const createAutoPlayer = async (gameId: string): Promise<{ playerId: string; bot
 	return { playerId, botName };
 };
 
-export const startCountdown = async ({ gameId, creatorId }: { gameId: string; creatorId: string }) => {
+export const startCountdown = async ({
+	gameId,
+	creatorId
+}: {
+	gameId: string;
+	creatorId: string;
+}) => {
 	const game = await requireGame(gameId);
 	if (game.creatorId !== creatorId) {
 		throw forbidden('Forbidden');
@@ -804,13 +808,7 @@ export const processTurn = async ({
 	return { alignmentResponses };
 };
 
-export const leaveGame = async ({
-	gameId,
-	playerId
-}: {
-	gameId: string;
-	playerId: string;
-}) => {
+export const leaveGame = async ({ gameId, playerId }: { gameId: string; playerId: string }) => {
 	await requireGame(gameId);
 
 	const playerRows = await db
@@ -846,9 +844,7 @@ export const leaveGame = async ({
 		const activeHumans = await tx
 			.select({ id: players.id, botName: players.botName })
 			.from(players)
-			.where(
-				and(eq(players.gameId, gameId), eq(players.isAuto, false), isNull(players.leftAt))
-			);
+			.where(and(eq(players.gameId, gameId), eq(players.isAuto, false), isNull(players.leftAt)));
 
 		if (isHost && activeHumans.length > 0) {
 			// Transfer host to next human

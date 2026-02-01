@@ -46,9 +46,9 @@ test('join_game preserves prompt values', async ({ page }) => {
 	await page.getByRole('button', { name: 'Start Game' }).click();
 
 	await expect(page.getByRole('button', { name: /Tell Bot To Respond/i })).toBeVisible();
-	await expect(
-		page.locator('#bot-card').getByRole('textbox', { name: 'Bot Prompt' })
-	).toHaveValue(botPrompt);
+	await expect(page.locator('#bot-card').getByRole('textbox', { name: 'Bot Prompt' })).toHaveValue(
+		botPrompt
+	);
 	await expect(page.locator('.message.status', { hasText: botName })).toBeVisible();
 });
 
@@ -89,8 +89,12 @@ test('two-player game flow works end-to-end', async ({ browser }) => {
 		await creator.getByRole('button', { name: /Tell Bot To Respond/i }).click();
 		await opponent.getByRole('button', { name: /Tell Bot To Respond/i }).click();
 
-		await expect(creator.getByRole('button', { name: /Next Turn/i })).toBeVisible({ timeout: 20000 });
-		await expect(opponent.getByRole('button', { name: /Next Turn/i })).toBeVisible({ timeout: 20000 });
+		await expect(creator.getByRole('button', { name: /Next Turn/i })).toBeVisible({
+			timeout: 20000
+		});
+		await expect(opponent.getByRole('button', { name: /Next Turn/i })).toBeVisible({
+			timeout: 20000
+		});
 		await creator.getByRole('button', { name: /Next Turn/i }).click();
 		await opponent.getByRole('button', { name: /Next Turn/i }).click();
 

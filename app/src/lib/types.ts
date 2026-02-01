@@ -6,39 +6,6 @@ export type JsonArray = JsonValue[];
 export const isRecord = (value: JsonValue): value is JsonObject =>
 	typeof value === 'object' && value !== null && !Array.isArray(value);
 
-export type Message = {
-	message: string;
-	timestamp: number;
-	botName: string | null;
-	isStatusMessage: boolean;
-	isSystemMessage: boolean;
-	isUser?: boolean;
-	uuid: string;
-};
-
-export type Subscriber = (message: Message, messages: Message[]) => void;
-
-export type GunChain = {
-	get: (key: string) => GunChain;
-	map: () => GunChain;
-	on: (cb: (data: JsonValue) => void) => void;
-	off: () => void;
-	put: (data: JsonObject) => void;
-	set: (data: JsonObject) => GunChain;
-};
-
-export type GunInstance = {
-	on: (event: string, data: JsonObject | ((msg: JsonValue) => void)) => void;
-	get: (key: string) => GunChain;
-	back: (path: string) => JsonValue;
-};
-
-export type ChatManagerLike = {
-	gun: GunInstance | null;
-	enqueue: (fn: () => void) => void;
-	peerUrl: string;
-};
-
 export type AlignmentResponse = {
 	playerId: string;
 	name: string;

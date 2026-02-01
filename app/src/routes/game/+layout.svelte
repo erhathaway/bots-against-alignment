@@ -66,7 +66,9 @@
 		background-color: black;
 		border-radius: 5rem;
 		border: 2px solid black;
-		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1), 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+		box-shadow:
+			0px 10px 15px -3px rgba(0, 0, 0, 0.1),
+			0px 10px 15px -3px rgba(0, 0, 0, 0.1);
 	}
 
 	#home:hover {

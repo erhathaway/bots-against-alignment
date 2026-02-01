@@ -41,9 +41,7 @@ export const rateLimit = async ({ key, limit, windowMs }: RateLimitConfig) => {
 
 	const current =
 		existing ??
-		(
-			await db.select().from(rateLimits).where(eq(rateLimits.key, bucketKey)).limit(1)
-		)[0];
+		(await db.select().from(rateLimits).where(eq(rateLimits.key, bucketKey)).limit(1))[0];
 
 	if (!current) {
 		return {

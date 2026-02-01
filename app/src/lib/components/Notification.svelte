@@ -80,7 +80,9 @@
 	}
 
 	small {
-		text-shadow: 0px 0px 0px #3e3d3d, -1px -1px 0px rgb(53, 53, 53);
+		text-shadow:
+			0px 0px 0px #3e3d3d,
+			-1px -1px 0px rgb(53, 53, 53);
 		color: rgba(29, 29, 29, 0.884);
 		font-weight: bold;
 		letter-spacing: 0.3rem;

@@ -12,7 +12,9 @@ checkLLMAvailability()
 		console.log('[startup] LLM health check passed');
 	})
 	.catch((error) => {
-		console.error(`\n[FATAL] LLM health check failed: ${error instanceof Error ? error.message : error}`);
+		console.error(
+			`\n[FATAL] LLM health check failed: ${error instanceof Error ? error.message : error}`
+		);
 		console.error('The game cannot function without a working LLM connection.\n');
 		process.exit(1);
 	});

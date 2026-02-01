@@ -120,26 +120,32 @@
 	function isMe(senderName: string | null) {
 		return Boolean(senderName && senderName === globalState.bot_name);
 	}
-
 </script>
 
 <div class="chat-window">
 	<div class="message-container" bind:this={messageContainer}>
 		{#each messages as message (message.id)}
 			{#if message.type === 'system' && message.senderName === 'Game Start'}
-				{@const info = (() => { try { return JSON.parse(message.message); } catch { return null; } })()}
+				{@const info = (() => {
+					try {
+						return JSON.parse(message.message);
+					} catch {
+						return null;
+					}
+				})()}
 				{#if info}
 					<div class="message game-start">
 						<div class="game-start-container">
 							<div class="game-start-title">Game On!</div>
 							<div class="game-start-rules">
-								First to {info.pointsToWin} point{info.pointsToWin === 1 ? '' : 's'} &middot; {info.botPromptChanges} prompt change{info.botPromptChanges === 1 ? '' : 's'} per turn
+								First to {info.pointsToWin} point{info.pointsToWin === 1 ? '' : 's'} &middot; {info.botPromptChanges}
+								prompt change{info.botPromptChanges === 1 ? '' : 's'} per turn
 							</div>
 							<div class="game-start-players">
-								{#each info.humans as name}
+								{#each info.humans as name (name)}
 									<span class="player-chip human">{name}</span>
 								{/each}
-								{#each info.ai as name}
+								{#each info.ai as name (name)}
 									<span class="player-chip ai">{name}</span>
 								{/each}
 							</div>
@@ -154,7 +160,13 @@
 					</div>
 				</div>
 			{:else if message.type === 'system' && message.senderName === 'Round Winner'}
-				{@const win = (() => { try { return JSON.parse(message.message); } catch { return null; } })()}
+				{@const win = (() => {
+					try {
+						return JSON.parse(message.message);
+					} catch {
+						return null;
+					}
+				})()}
 				{#if win}
 					<div class="message round-winner">
 						<div class="round-winner-container">
@@ -165,14 +177,22 @@
 					</div>
 				{/if}
 			{:else if message.type === 'system' && message.senderName === 'Standings'}
-				{@const rows = (() => { try { return JSON.parse(message.message); } catch { return null; } })()}
+				{@const rows = (() => {
+					try {
+						return JSON.parse(message.message);
+					} catch {
+						return null;
+					}
+				})()}
 				{#if rows}
 					<div class="message standings">
 						<div class="standings-container">
-							{#each rows as row, i}
+							{#each rows as row, i (row.name)}
 								<div class="standings-row" class:leader={i === 0}>
 									<span class="standings-rank">{i + 1}</span>
-									<span class="standings-name">{row.name}{#if row.isAuto}<span class="standings-ai">AI</span>{/if}</span>
+									<span class="standings-name"
+										>{row.name}{#if row.isAuto}<span class="standings-ai">AI</span>{/if}</span
+									>
 									<span class="standings-score">{row.score}</span>
 								</div>
 							{/each}
@@ -193,7 +213,13 @@
 					</div>
 				</div>
 			{:else if message.type === 'status' && message.senderName === 'Bot Response'}
-				{@const bot = (() => { try { return JSON.parse(message.message); } catch { return null; } })()}
+				{@const bot = (() => {
+					try {
+						return JSON.parse(message.message);
+					} catch {
+						return null;
+					}
+				})()}
 				{#if bot}
 					{@const mine = bot.name === globalState.bot_name}
 					<div class="message bot-response" class:mine class:theirs={!mine}>
@@ -219,7 +245,9 @@
 			{:else if message.type === 'status'}
 				<div class="message status">
 					<div class="message-status-container">
-						<div class="message-text name" class:you={isMe(message.senderName)}>{displayName(message.senderName)}</div>
+						<div class="message-text name" class:you={isMe(message.senderName)}>
+							{displayName(message.senderName)}
+						</div>
 						<div class="message-text text">{message.message}</div>
 					</div>
 				</div>
@@ -410,7 +438,6 @@
 		font-style: italic;
 		text-align: left;
 	}
-
 
 	.game-start {
 		display: flex;

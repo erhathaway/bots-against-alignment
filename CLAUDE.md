@@ -81,7 +81,6 @@ Random generators (UI suggestion buttons):
 
 ### Scripts (`app/scripts/`)
 
-- `gun-relay.ts` — legacy GunJS relay (no longer used by the app; kept for reference)
 - `e2e-server.sh` — E2E test bootstrap (DB migrate + build + preview)
 
 ## Running locally

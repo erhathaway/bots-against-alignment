@@ -33,7 +33,8 @@ export const generateBotResponse = async ({
 		{ role: 'assistant', content: '{"response": "Passive agressive tweetstorms"}' },
 		{
 			role: 'user',
-			content: "Reply in a blaise way: Burn rate? What burn rate we're spending on neccessities like ______."
+			content:
+				"Reply in a blaise way: Burn rate? What burn rate we're spending on neccessities like ______."
 		},
 		{ role: 'assistant', content: '{"response": "An office ping pong table"}' },
 		{ role: 'user', content: 'Reply in a cheeky way Never fear, Captain ___ is here!' },

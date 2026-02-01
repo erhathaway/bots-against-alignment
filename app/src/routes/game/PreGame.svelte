@@ -9,8 +9,6 @@
 
 	type GamePageData = {
 		gameId: string | null;
-		creatorId: string | null;
-		errorMessage?: string;
 	};
 
 	let { data }: { data: GamePageData } = $props();
@@ -116,7 +114,10 @@
 		randomizeBotNameLoading = true;
 		try {
 			const url = `/api/game/${gameId}/random/bot-name`;
-			const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' }
+			});
 
 			if (response.ok) {
 				const payload = await response.json();
@@ -158,7 +159,10 @@
 		randomizeAlignerPromptLoading = true;
 		try {
 			const url = `/api/game/${gameId}/random/aligner-prompt`;
-			const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' }
+			});
 
 			if (response.ok) {
 				const payload = await response.json();
@@ -201,7 +205,10 @@
 		randomizeBotPromptLoading = true;
 		try {
 			const url = `/api/game/${gameId}/random/bot-prompt`;
-			const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' }
+			});
 
 			if (response.ok) {
 				const payload = await response.json();
@@ -341,7 +348,8 @@
 					>
 				{/if}
 			</button>
-			<textarea id="aligner-input" bind:value={alignerPrompt} aria-label="Aligner Prompt"></textarea>
+			<textarea id="aligner-input" bind:value={alignerPrompt} aria-label="Aligner Prompt"
+			></textarea>
 		</div>
 	</div>
 </section>
@@ -349,8 +357,7 @@
 	<div class="config-left">
 		<h2>Bot Prompt</h2>
 		<p>
-			This guides your bot's response. You can change it during the game (limited by game
-			settings).
+			This guides your bot's response. You can change it during the game (limited by game settings).
 		</p>
 	</div>
 	<div class="config-right">

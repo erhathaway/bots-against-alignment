@@ -75,7 +75,7 @@
 
 			if (status === 'STARTED' || status === 'ENDED') {
 				globalState.is_game_started = true;
-				fetchStatusInterval && clearInterval(fetchStatusInterval);
+				if (fetchStatusInterval) clearInterval(fetchStatusInterval);
 			}
 		} else {
 			addNotification({
@@ -261,7 +261,7 @@
 		<div class="player-list">
 			<h3>{joinedBots.length} player{joinedBots.length === 1 ? '' : 's'} in the waiting room</h3>
 			<div class="players">
-				{#each joinedBots as bot}
+				{#each joinedBots as bot (bot.id)}
 					<span class="player-chip" class:host={bot.isHost} class:ai={bot.isAuto}>
 						{bot.name}
 						{#if bot.isHost}<span class="host-badge">Host</span>{/if}
@@ -277,11 +277,7 @@
 
 	{#if isCreator}
 		<div class="ai-controls">
-			<button
-				class="ai-btn"
-				onclick={addAiPlayer}
-				disabled={addingAi || joinedBots.length >= 8}
-			>
+			<button class="ai-btn" onclick={addAiPlayer} disabled={addingAi || joinedBots.length >= 8}>
 				{#if addingAi}
 					Adding<LoadingCommas />
 				{:else}
@@ -347,9 +343,7 @@
 		{#if isForceStartPending}
 			<LoadingBars />
 		{:else}
-			<button onclick={forceStart} disabled={globalState.is_game_started}>
-				Start Now
-			</button>
+			<button onclick={forceStart} disabled={globalState.is_game_started}> Start Now </button>
 		{/if}
 	{:else}
 		<GameLink />
@@ -357,9 +351,7 @@
 		{#if isCountdownPending}
 			<LoadingBars />
 		{:else}
-			<button onclick={beginCountdown} disabled={globalState.is_game_started}>
-				Start Game
-			</button>
+			<button onclick={beginCountdown} disabled={globalState.is_game_started}> Start Game </button>
 		{/if}
 	{/if}
 </div>

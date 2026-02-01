@@ -46,17 +46,14 @@
 		y: direction === 'in' ? 0 : 500
 	});
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const chatTransition = (_direction: 'in' | 'out') => ({
 		easing: (time: number) => --time * time * time + 1
 	});
 
 	$effect(() => {
-		const {
-			has_player_joined,
-			is_game_started,
-			have_all_users_submitted,
-			is_game_over
-		} = globalState;
+		const { has_player_joined, is_game_started, have_all_users_submitted, is_game_over } =
+			globalState;
 		if (!has_player_joined) {
 			routerState = RouterState.PreGame;
 		} else if (!is_game_started) {
@@ -75,7 +72,8 @@
 		if (!gameId) return;
 
 		const shouldReset =
-			globalState.game_id !== gameId || (data.creatorId && globalState.creator_id !== data.creatorId);
+			globalState.game_id !== gameId ||
+			(data.creatorId && globalState.creator_id !== data.creatorId);
 
 		if (shouldReset) {
 			globalState.game_id = gameId;

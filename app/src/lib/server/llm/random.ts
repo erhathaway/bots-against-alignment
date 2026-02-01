@@ -10,11 +10,15 @@ const botNameSchema = z.object({
 });
 
 const alignerPromptSchema = z.object({
-	prompt: z.string().describe('A judging rule for a cards-against-humanity-style game, under 10 words')
+	prompt: z
+		.string()
+		.describe('A judging rule for a cards-against-humanity-style game, under 10 words')
 });
 
 const botPromptSchema = z.object({
-	prompt: z.string().describe('A bot behavior rule, under 20 words, starting with "I will respond..."')
+	prompt: z
+		.string()
+		.describe('A bot behavior rule, under 20 words, starting with "I will respond..."')
 });
 
 const fallbackWords = ['alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot', 'golf'];
@@ -91,8 +95,7 @@ export const generateRandomAlignerPrompt = async () => {
 				{ role: 'user', content: 'Your words are: theoretical, posters.' },
 				{
 					role: 'assistant',
-					content:
-						'{"prompt": "The most philosophical and abstract answer wins."}'
+					content: '{"prompt": "The most philosophical and abstract answer wins."}'
 				},
 				{ role: 'user', content: `Your words are: ${promptSeed}` }
 			],

@@ -65,7 +65,9 @@ export const turns = sqliteTable(
 			.references(() => games.id, { onDelete: 'cascade' }),
 		turnId: integer('turn_id').notNull(),
 		prompt: text('prompt').notNull(),
-		status: text('status', { enum: ['OPEN', 'PROCESSED'] }).notNull().default('OPEN'),
+		status: text('status', { enum: ['OPEN', 'PROCESSED'] })
+			.notNull()
+			.default('OPEN'),
 		winnerPlayerId: text('winner_player_id').references(() => players.id, { onDelete: 'set null' }),
 		processedAt: integer('processed_at')
 	},

@@ -68,9 +68,7 @@
 	$effect(() => {
 		if (!turnProcessed || globalState.is_game_over) return;
 
-		const userWon = results?.find(
-			(r) => r.playerId === globalState.user_id && r.isRoundWinner
-		);
+		const userWon = results?.find((r) => r.playerId === globalState.user_id && r.isRoundWinner);
 
 		if (userWon) {
 			showCelebration = true;

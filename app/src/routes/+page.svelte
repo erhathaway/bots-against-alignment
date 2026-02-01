@@ -19,13 +19,13 @@
 	</div>
 
 	<div class="buttons-container">
-	<button onclick={openModal}>Join Game</button>
-	<button onclick={navigateToGame}>New Game</button>
-</div>
+		<button onclick={openModal}>Join Game</button>
+		<button onclick={navigateToGame}>New Game</button>
+	</div>
 
-{#if showModal}
-	<JoinGameModal onClose={() => (showModal = false)} />
-{/if}
+	{#if showModal}
+		<JoinGameModal onClose={() => (showModal = false)} />
+	{/if}
 </main>
 
 <style>
@@ -34,7 +34,9 @@
 		flex-direction: row;
 		align-items: center;
 		justify-content: center;
-		font: 1.5rem/1.5 'Roboto', sans-serif;
+		font:
+			1.5rem/1.5 'Roboto',
+			sans-serif;
 		height: 100vh;
 	}
 
@@ -43,7 +45,9 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		font: 1.5rem/1.5 'Roboto', sans-serif;
+		font:
+			1.5rem/1.5 'Roboto',
+			sans-serif;
 		height: 100%;
 		padding: 100px;
 	}
@@ -141,7 +145,9 @@
 			flex-direction: column;
 			align-items: center;
 			justify-content: center;
-			font: 1.5rem/1.5 'Roboto', sans-serif;
+			font:
+				1.5rem/1.5 'Roboto',
+				sans-serif;
 			height: 100vh;
 		}
 

@@ -3,7 +3,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 
 if (process.platform === 'darwin' && process.arch === 'arm64' && os.cpus().length === 0) {
-	const ver = os.release().split('.').map((a) => Number.parseInt(a, 10));
+	const ver = os
+		.release()
+		.split('.')
+		.map((a) => Number.parseInt(a, 10));
 	let macVersion = '';
 	if (ver[0] < 18) {
 		macVersion = 'mac10.13';
