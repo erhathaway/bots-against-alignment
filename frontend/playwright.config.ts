@@ -1,4 +1,5 @@
 import type { PlaywrightTestConfig } from '@playwright/test';
+import fs from 'node:fs';
 import os from 'node:os';
 
 // In some sandboxed environments `os.cpus()` may be empty, which makes Playwright mis-detect
@@ -23,12 +24,23 @@ if (process.platform === 'darwin' && process.arch === 'arm64' && os.cpus().lengt
 	process.env.PLAYWRIGHT_HOST_PLATFORM_OVERRIDE ??= macVersion;
 }
 
+// Prefer a system Chrome on local macOS runs. Some sandboxed environments can
+// crash Playwright's bundled Chromium on launch.
+const systemChromePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const configuredChannel = process.env.PLAYWRIGHT_CHANNEL?.trim();
+const channel =
+	configuredChannel ||
+	(!process.env.CI && process.platform === 'darwin' && fs.existsSync(systemChromePath)
+		? 'chrome'
+		: undefined);
+
 const config: PlaywrightTestConfig = {
 	webServer: {
 		command: 'bash scripts/e2e-server.sh',
 		port: 4173,
 		reuseExistingServer: !process.env.CI
 	},
+	use: channel ? { channel } : undefined,
 	testDir: 'tests'
 };
 
