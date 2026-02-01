@@ -216,18 +216,6 @@
 	</span>
 	<span class="progress">{botsSubmitted} / {totalBots} bots submitted</span>
 </div>
-<section id="aligner">
-	<div id="aligner-card" class="card">
-		<div class="config-top">
-			<h2>Turn Prompt</h2>
-		</div>
-		<div class="config-bottom">
-			<p>
-				{globalState.last_alignment_request}
-			</p>
-		</div>
-	</div>
-</section>
 <section id="bot">
 	<div id="bot-card" class="card">
 		<div class="config-top">
@@ -306,23 +294,6 @@
 	button:hover {
 		background-color: rgb(123, 255, 0);
 		color: rgb(0, 0, 0);
-	}
-
-	#aligner {
-		margin-top: 0;
-
-		display: flex;
-		flex-direction: row;
-		justify-content: center;
-		align-items: center;
-	}
-
-	#aligner .config-bottom {
-		display: flex;
-		flex-direction: row;
-		justify-content: center;
-		align-items: center;
-		font-size: 2rem;
 	}
 
 	#bot {

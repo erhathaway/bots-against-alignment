@@ -125,7 +125,14 @@
 <div class="chat-window">
 	<div class="message-container" bind:this={messageContainer}>
 		{#each messages as message (message.id)}
-			{#if message.type === 'system' && message.senderName === 'The Aligner'}
+			{#if message.type === 'system' && message.senderName === 'Turn Prompt'}
+				<div class="message turn-prompt">
+					<div class="turn-prompt-container">
+						<div class="turn-prompt-label">Turn Prompt</div>
+						<div class="turn-prompt-text">{message.message}</div>
+					</div>
+				</div>
+			{:else if message.type === 'system' && message.senderName === 'The Aligner'}
 				<div class="message aligner">
 					<div class="message-aligner-container">
 						<div class="message-text name">The Aligner</div>
@@ -331,6 +338,40 @@
 		font-size: 13px;
 		color: #333;
 		font-style: italic;
+	}
+
+	.turn-prompt {
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.turn-prompt .turn-prompt-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		background-color: rgb(123, 255, 0);
+		border: 2px solid rgb(80, 180, 0);
+		border-radius: 10px;
+		padding: 0.75rem 1.25rem;
+		width: 90%;
+	}
+
+	.turn-prompt .turn-prompt-label {
+		font-size: 10px;
+		font-weight: bold;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: rgb(50, 100, 0);
+		margin-bottom: 0.3rem;
+	}
+
+	.turn-prompt .turn-prompt-text {
+		font-size: 1rem;
+		font-weight: bold;
+		color: #000;
+		text-align: center;
 	}
 
 	.system {

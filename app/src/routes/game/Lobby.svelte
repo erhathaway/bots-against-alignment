@@ -102,10 +102,43 @@
 		}
 	}
 
-	let isStartGamePending = $state(false);
-	async function startGame() {
-		if (isStartGamePending) return;
-		isStartGamePending = true;
+	let isCountdownPending = $state(false);
+	async function beginCountdown() {
+		if (isCountdownPending) return;
+		isCountdownPending = true;
+		try {
+			if (globalState.creator_id == null) throw new Error('Only the creator can start the game');
+			if (globalState.game_id == null) throw new Error('Game ID is null');
+			const url = `/api/game/${globalState.game_id}/countdown`;
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ creatorId: globalState.creator_id })
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				countdownStartedAt = data.countdownStartedAt;
+			} else {
+				const data = await response.json();
+				addNotification({
+					source_url: 'lobby',
+					title: 'Error starting countdown',
+					body: data.error || data.message || JSON.stringify(data),
+					kind: NotificationKind.ERROR,
+					action_url: url,
+					action_text: 'start_countdown'
+				});
+			}
+		} finally {
+			isCountdownPending = false;
+		}
+	}
+
+	let isForceStartPending = $state(false);
+	async function forceStart() {
+		if (isForceStartPending) return;
+		isForceStartPending = true;
 		try {
 			if (globalState.creator_id == null) throw new Error('Only the creator can start the game');
 			if (globalState.is_game_started) throw new Error('Game already started');
@@ -131,7 +164,7 @@
 				});
 			}
 		} finally {
-			isStartGamePending = false;
+			isForceStartPending = false;
 		}
 	}
 
@@ -305,15 +338,27 @@
 	{/if}
 
 	{#if globalState.creator_id == null}
-		<p class="non-creator">Waiting for the host to start the game<LoadingCommas /></p>
+		{#if countdownRemaining != null}
+			<p class="non-creator">Game starting soon<LoadingCommas /></p>
+		{:else}
+			<p class="non-creator">Waiting for the host to start the game<LoadingCommas /></p>
+		{/if}
+	{:else if countdownRemaining != null}
+		{#if isForceStartPending}
+			<LoadingBars />
+		{:else}
+			<button onclick={forceStart} disabled={globalState.is_game_started}>
+				Start Now
+			</button>
+		{/if}
 	{:else}
 		<GameLink />
 		<p class="creator">Invite others to join</p>
-		{#if isStartGamePending}
+		{#if isCountdownPending}
 			<LoadingBars />
 		{:else}
-			<button onclick={startGame} disabled={globalState.is_game_started}>
-				{countdownRemaining != null ? 'Start Now' : 'Start Game'}
+			<button onclick={beginCountdown} disabled={globalState.is_game_started}>
+				Start Game
 			</button>
 		{/if}
 	{/if}

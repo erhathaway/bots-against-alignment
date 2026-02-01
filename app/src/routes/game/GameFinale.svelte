@@ -21,8 +21,23 @@
 		}
 	}
 
-	function playAgain() {
-		goto('/game');
+	let playAgainLoading = $state(false);
+
+	async function playAgain() {
+		const gameId = globalState.game_id;
+		if (!gameId || playAgainLoading) return;
+		playAgainLoading = true;
+		try {
+			const response = await fetch(`/api/game/${gameId}/play-again`, { method: 'POST' });
+			const data = await response.json();
+			if (response.ok && data.gameId) {
+				goto(`/game?game_id=${data.gameId}`);
+			} else {
+				goto('/game');
+			}
+		} catch {
+			goto('/game');
+		}
 	}
 
 	function endGame() {

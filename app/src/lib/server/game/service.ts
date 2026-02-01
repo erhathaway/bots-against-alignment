@@ -163,26 +163,25 @@ export const joinGame = async ({
 		type: 'status'
 	});
 
-	// Start countdown if 2+ players and not already started
-	if (!isCreator) {
-		const countResult = await db
-			.select({ count: sql<number>`count(*)` })
-			.from(players)
-			.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
-		const totalCount = countResult[0]?.count ?? 0;
-		const freshGame = await requireGame(gameId);
-		if (totalCount >= 2 && !freshGame.countdownStartedAt) {
-			await db
-				.update(games)
-				.set({ countdownStartedAt: now(), updatedAt: now() })
-				.where(eq(games.id, gameId));
-
-			await postChatMessage({
-				gameId,
-				message: 'Reminder: make sure your bot prompt and aligner prompt are set before the game starts!',
-				type: 'system'
-			});
-		}
+	// Seed default AI bots in the background when the creator joins
+	if (isCreator) {
+		const seedAiBots = async () => {
+			const DEFAULT_AI_BOTS = 2;
+			for (let i = 0; i < DEFAULT_AI_BOTS; i++) {
+				try {
+					const { botName: aiBotName } = await createAutoPlayer(gameId);
+					await postChatMessage({
+						gameId,
+						message: 'joined the waiting room',
+						senderName: aiBotName,
+						type: 'status'
+					});
+				} catch (error) {
+					console.error(`[seedAiBots] Failed to create AI bot for game ${gameId}:`, error);
+				}
+			}
+		};
+		seedAiBots();
 	}
 
 	return { playerId };
@@ -221,6 +220,33 @@ const createAutoPlayer = async (gameId: string): Promise<{ playerId: string; bot
 	});
 
 	return { playerId, botName };
+};
+
+export const startCountdown = async ({ gameId, creatorId }: { gameId: string; creatorId: string }) => {
+	const game = await requireGame(gameId);
+	if (game.creatorId !== creatorId) {
+		throw forbidden('Forbidden');
+	}
+	if (game.status !== 'LOBBY') {
+		throw badRequest('Game is not in lobby');
+	}
+	if (game.countdownStartedAt) {
+		return { countdownStartedAt: game.countdownStartedAt };
+	}
+
+	const timestamp = now();
+	await db
+		.update(games)
+		.set({ countdownStartedAt: timestamp, updatedAt: timestamp })
+		.where(eq(games.id, gameId));
+
+	await postChatMessage({
+		gameId,
+		message: 'The host started the countdown! Make sure your prompts are ready!',
+		type: 'system'
+	});
+
+	return { countdownStartedAt: timestamp };
 };
 
 export const startGame = async ({ gameId, creatorId }: { gameId: string; creatorId: string }) => {
@@ -400,7 +426,8 @@ export const ensureTurn = async (gameId: string) => {
 	if (result.isNew) {
 		await postChatMessage({
 			gameId,
-			message: `Turn ${result.turnId}: "${result.alignmentPrompt}"`,
+			senderName: 'Turn Prompt',
+			message: result.alignmentPrompt,
 			type: 'system'
 		});
 	}
@@ -897,21 +924,6 @@ export const addAutoPlayer = async ({
 		type: 'status'
 	});
 
-	// Start countdown if we now have 2+ players
-	const newCount = currentCount + 1;
-	if (newCount >= 2 && !game.countdownStartedAt) {
-		await db
-			.update(games)
-			.set({ countdownStartedAt: now(), updatedAt: now() })
-			.where(eq(games.id, gameId));
-
-		await postChatMessage({
-			gameId,
-			message: 'Reminder: make sure your bot prompt and aligner prompt are set before the game starts!',
-			type: 'system'
-		});
-	}
-
 	return { playerId, botName };
 };
 
@@ -976,6 +988,34 @@ export const removeAutoPlayer = async ({
 	}
 
 	return { removed: true };
+};
+
+export const playAgain = async (gameId: string) => {
+	const game = await requireGame(gameId);
+	if (game.status !== 'ENDED') {
+		throw badRequest('Game has not ended');
+	}
+
+	// If a next game already exists, return it
+	if (game.nextGameId) {
+		return { gameId: game.nextGameId };
+	}
+
+	// Create a new game and link it
+	const { gameId: newGameId, creatorId: newCreatorId } = await createGame();
+	await db
+		.update(games)
+		.set({ nextGameId: newGameId, updatedAt: now() })
+		.where(and(eq(games.id, gameId), isNull(games.nextGameId)));
+
+	// Re-read in case of race condition (another player created one first)
+	const freshGame = await requireGame(gameId);
+	if (freshGame.nextGameId !== newGameId) {
+		// Another player won the race; return their game instead
+		return { gameId: freshGame.nextGameId! };
+	}
+
+	return { gameId: newGameId, creatorId: newCreatorId };
 };
 
 export const checkCountdownExpiry = async (gameId: string) => {
