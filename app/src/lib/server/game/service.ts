@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 
 import { db } from '$lib/server/db';
 import { alignerPrompts, games, players, turnResponses, turns } from '$lib/server/db/schema';
@@ -113,9 +113,10 @@ export const joinGame = async ({
 		}
 	});
 
+	const isCreator = Boolean(creatorId && creatorId === game.creatorId);
 	await postChatMessage({
 		gameId,
-		message: 'joined the game',
+		message: isCreator ? 'created the game' : 'joined the game',
 		senderName: botName,
 		type: 'status'
 	});
@@ -165,7 +166,7 @@ export const startGame = async ({ gameId, creatorId }: { gameId: string; creator
 	const playersCount = await db
 		.select({ count: sql<number>`count(*)` })
 		.from(players)
-		.where(eq(players.gameId, gameId));
+		.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
 	const count = playersCount[0]?.count ?? 0;
 
 	if (count < 4 && game.maxAutoPlayers > 0) {
@@ -196,7 +197,7 @@ export const startGame = async ({ gameId, creatorId }: { gameId: string; creator
 	const allPlayers = await db
 		.select({ botName: players.botName, isAuto: players.isAuto })
 		.from(players)
-		.where(eq(players.gameId, gameId));
+		.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
 	const humanNames = allPlayers.filter((p) => !p.isAuto).map((p) => p.botName);
 	const autoNames = allPlayers.filter((p) => p.isAuto).map((p) => p.botName);
 
@@ -211,25 +212,34 @@ export const startGame = async ({ gameId, creatorId }: { gameId: string; creator
 
 export const getGameStatus = async (gameId: string) => {
 	const game = await requireGame(gameId);
-	const bots = await db
+	const allPlayers = await db
 		.select({
+			id: players.id,
 			name: players.botName,
 			points: players.score,
 			turnComplete: players.turnComplete
 		})
 		.from(players)
-		.where(eq(players.gameId, gameId));
+		.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
+
+	const bots = allPlayers.map((p) => ({
+		name: p.name,
+		points: p.points,
+		turnComplete: p.turnComplete,
+		isHost: p.id === game.creatorPlayerId
+	}));
 
 	return { status: game.status, bots };
 };
 
 export const getUserStatus = async (gameId: string, playerId: string) => {
-	await requireGame(gameId);
+	const game = await requireGame(gameId);
 	const rows = await db
 		.select({
 			points: players.score,
 			promptsRemaining: players.promptsRemaining,
-			submittedPrompts: players.submittedBotPrompt
+			submittedPrompts: players.submittedBotPrompt,
+			leftAt: players.leftAt
 		})
 		.from(players)
 		.where(and(eq(players.gameId, gameId), eq(players.id, playerId)))
@@ -239,7 +249,15 @@ export const getUserStatus = async (gameId: string, playerId: string) => {
 	if (!player) {
 		throw new Error('User not found');
 	}
-	return player;
+	if (player.leftAt) {
+		throw badRequest('Player has left the game');
+	}
+	return {
+		points: player.points,
+		promptsRemaining: player.promptsRemaining,
+		submittedPrompts: player.submittedPrompts,
+		creatorId: game.creatorPlayerId === playerId ? game.creatorId : null
+	};
 };
 
 export const ensureTurn = async (gameId: string) => {
@@ -262,7 +280,10 @@ export const ensureTurn = async (gameId: string) => {
 				.set({ turnStarted: true, turnPrompt: prompt, updatedAt: timestamp })
 				.where(eq(games.id, gameId));
 
-			await tx.update(players).set({ turnComplete: false }).where(eq(players.gameId, gameId));
+			await tx
+				.update(players)
+				.set({ turnComplete: false })
+				.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
 
 			await tx
 				.insert(turns)
@@ -315,7 +336,7 @@ const completeAutoPlayers = async (gameId: string, turnId: number, turnPrompt: s
 			turnComplete: players.turnComplete
 		})
 		.from(players)
-		.where(and(eq(players.gameId, gameId), eq(players.isAuto, true)));
+		.where(and(eq(players.gameId, gameId), eq(players.isAuto, true), isNull(players.leftAt)));
 
 	for (const bot of bots) {
 		if (bot.turnComplete) continue;
@@ -371,6 +392,9 @@ export const submitTurn = async ({
 	const player = playerRows[0];
 	if (!player) {
 		throw notFound('User not found');
+	}
+	if (player.leftAt) {
+		throw badRequest('Player has left the game');
 	}
 
 	const currentPrompt = player.botPrompt;
@@ -433,7 +457,10 @@ export const submitTurn = async ({
 export const turnFinale = async (gameId: string, turnId: number) => {
 	const game = await requireGame(gameId);
 
-	const allPlayers = await db.select().from(players).where(eq(players.gameId, gameId));
+	const allPlayers = await db
+		.select()
+		.from(players)
+		.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
 	const botsSubmitted = allPlayers.filter((p) => p.turnComplete).length;
 	const totalBots = allPlayers.length;
 
@@ -499,7 +526,10 @@ export const processTurn = async ({
 		throw notFound('Turn not found');
 	}
 
-	const allPlayers = await db.select().from(players).where(eq(players.gameId, gameId));
+	const allPlayers = await db
+		.select()
+		.from(players)
+		.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
 	if (!allPlayers.length) {
 		throw badRequest('No players');
 	}
@@ -555,7 +585,10 @@ export const processTurn = async ({
 			.where(eq(games.id, gameId));
 	});
 
-	const updatedPlayers = await db.select().from(players).where(eq(players.gameId, gameId));
+	const updatedPlayers = await db
+		.select()
+		.from(players)
+		.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
 	const isGameOver = updatedPlayers.some((player) => player.score >= game.pointsToWin);
 	if (isGameOver) {
 		await db.update(games).set({ status: 'ENDED', updatedAt: now() }).where(eq(games.id, gameId));
@@ -597,4 +630,98 @@ export const processTurn = async ({
 	}
 
 	return { alignmentResponses };
+};
+
+export const leaveGame = async ({
+	gameId,
+	playerId
+}: {
+	gameId: string;
+	playerId: string;
+}) => {
+	await requireGame(gameId);
+
+	const playerRows = await db
+		.select()
+		.from(players)
+		.where(and(eq(players.gameId, gameId), eq(players.id, playerId), isNull(players.leftAt)))
+		.limit(1);
+	const player = playerRows[0];
+	if (!player) {
+		throw notFound('Player not found or already left');
+	}
+
+	const timestamp = now();
+	let hostTransferred = false;
+	let gameEnded = false;
+	let newHostName: string | null = null;
+
+	await db.transaction(async (tx) => {
+		// Soft-delete: set leftAt, mark turnComplete so they don't block the current turn
+		await tx
+			.update(players)
+			.set({ leftAt: timestamp, turnComplete: true, updatedAt: timestamp })
+			.where(eq(players.id, playerId));
+
+		// Re-read game inside transaction for consistency
+		const gameRows = await tx.select().from(games).where(eq(games.id, gameId)).limit(1);
+		const game = gameRows[0]!;
+		const isHost = game.creatorPlayerId === playerId;
+
+		// Find remaining active human players
+		const activeHumans = await tx
+			.select({ id: players.id, botName: players.botName })
+			.from(players)
+			.where(
+				and(eq(players.gameId, gameId), eq(players.isAuto, false), isNull(players.leftAt))
+			);
+
+		if (isHost && activeHumans.length > 0) {
+			// Transfer host to next human
+			const newHost = activeHumans[0];
+			const newCreatorId = crypto.randomUUID();
+			await tx
+				.update(games)
+				.set({
+					creatorPlayerId: newHost.id,
+					creatorId: newCreatorId,
+					updatedAt: timestamp
+				})
+				.where(eq(games.id, gameId));
+			hostTransferred = true;
+			newHostName = newHost.botName;
+		} else if (activeHumans.length === 0) {
+			// No humans remain — end the game
+			await tx
+				.update(games)
+				.set({ status: 'ENDED', updatedAt: timestamp })
+				.where(eq(games.id, gameId));
+			gameEnded = true;
+		}
+	});
+
+	await postChatMessage({
+		gameId,
+		message: 'left the game',
+		senderName: player.botName,
+		type: 'status'
+	});
+
+	if (hostTransferred && newHostName) {
+		await postChatMessage({
+			gameId,
+			message: `${newHostName} is now the host`,
+			type: 'system'
+		});
+	}
+
+	if (gameEnded) {
+		await postChatMessage({
+			gameId,
+			message: 'Game ended — all players left',
+			type: 'system'
+		});
+	}
+
+	return { left: true, hostTransferred, gameEnded };
 };

@@ -14,7 +14,8 @@ export const GET = async ({ params, url }) => {
 		return json({
 			points: payload.points,
 			botPromptsRemaining: payload.promptsRemaining,
-			submittedPrompts: payload.submittedPrompts
+			submittedPrompts: payload.submittedPrompts,
+			creatorId: payload.creatorId
 		});
 	} catch (error) {
 		return handleApiError(error);

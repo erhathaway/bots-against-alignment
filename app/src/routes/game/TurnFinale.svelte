@@ -12,6 +12,7 @@
 	async function pollForResults() {
 		const gameId = globalState.game_id;
 		const turnId = globalState.last_turn_id;
+		const userId = globalState.user_id;
 		if (!gameId || !turnId) return;
 
 		const url = `/api/game/${gameId}/turn/${turnId}/finale`;
@@ -26,6 +27,19 @@
 			}
 		} catch (error) {
 			console.error('Failed to poll results:', error);
+		}
+
+		// Also poll /me for host transfer detection
+		if (userId) {
+			try {
+				const meResponse = await fetch(`/api/game/${gameId}/me?playerId=${userId}`);
+				const meData = await meResponse.json();
+				if (meResponse.ok && meData.creatorId) {
+					globalState.creator_id = meData.creatorId;
+				}
+			} catch {
+				// ignore
+			}
 		}
 	}
 

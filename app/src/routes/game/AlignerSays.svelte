@@ -138,6 +138,9 @@
 		if (statusResponse.ok) {
 			points = statusData.points ?? 0;
 			promptsRemaining = statusData.promptsRemaining ?? 0;
+			if (statusData.creatorId) {
+				globalState.creator_id = statusData.creatorId;
+			}
 		} else {
 			addNotification({
 				source_url: 'aligner says',

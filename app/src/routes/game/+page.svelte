@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { globalState } from '$lib/state/store.svelte';
+	import { globalState, leaveCurrentGame } from '$lib/state/store.svelte';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import Chat from './Chat.svelte';
@@ -104,10 +104,32 @@
 			goto(`?${url.searchParams.toString()}`, { replaceState: true });
 		}
 	});
+
+	let isLeavePending = $state(false);
+	async function handleLeave() {
+		if (isLeavePending) return;
+		if (!confirm('Are you sure you want to leave this game?')) return;
+		isLeavePending = true;
+		try {
+			const success = await leaveCurrentGame();
+			if (success) {
+				goto('/');
+			}
+		} finally {
+			isLeavePending = false;
+		}
+	}
 </script>
 
 <div id="screen" role="region" aria-label="Game" in:fly={screenTransition('in')}>
 	<section id="left" out:fly={leftTransition('out')}>
+		{#if globalState.has_player_joined}
+			<div class="leave-bar">
+				<button class="leave-btn" onclick={handleLeave} disabled={isLeavePending}>
+					{isLeavePending ? 'Leaving...' : 'Leave Game'}
+				</button>
+			</div>
+		{/if}
 		{#if routerState === RouterState.PreGame}
 			<div in:fly={customFly('in')} out:fly={customFly('out')}>
 				<PreGame1 {data} />
@@ -172,5 +194,30 @@
 		margin-top: 1rem;
 		width: 100%;
 		flex-grow: 2;
+	}
+
+	.leave-bar {
+		display: flex;
+		justify-content: flex-end;
+		width: 100%;
+		padding: 0.5rem 1rem;
+		flex-grow: 0;
+	}
+	.leave-btn {
+		font-size: 0.8rem;
+		padding: 0.3rem 0.8rem;
+		cursor: pointer;
+		border: 1px solid #ccc;
+		background: white;
+		border-radius: 1rem;
+		color: #666;
+	}
+	.leave-btn:hover {
+		border-color: red;
+		color: red;
+	}
+	.leave-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 </style>

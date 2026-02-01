@@ -32,6 +32,7 @@ export const players = sqliteTable('players', {
 	score: integer('score').notNull().default(0),
 	isAuto: integer('is_auto', { mode: 'boolean' }).notNull().default(false),
 	turnComplete: integer('turn_complete', { mode: 'boolean' }).notNull().default(false),
+	leftAt: integer('left_at'),
 	createdAt: integer('created_at').notNull(),
 	updatedAt: integer('updated_at').notNull()
 });

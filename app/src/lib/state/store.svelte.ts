@@ -47,6 +47,28 @@ export const addNotification = (notification: AddNotificationInput) => {
 	}
 };
 
+export async function leaveCurrentGame(): Promise<boolean> {
+	const gameId = globalState.game_id;
+	const playerId = globalState.user_id;
+	if (!gameId || !playerId) return false;
+
+	try {
+		const response = await fetch(`/api/game/${gameId}/leave`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ playerId })
+		});
+
+		if (response.ok) {
+			Object.assign(globalState, { ...defaultState });
+			return true;
+		}
+		return false;
+	} catch {
+		return false;
+	}
+}
+
 if (browser) {
 	try {
 		const raw = localStorage.getItem(STORAGE_KEY);

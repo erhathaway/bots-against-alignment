@@ -5,12 +5,13 @@
 	import LoadingCommas from './LoadingCommas.svelte';
 	import GameLink from './GameLink.svelte';
 
-	type BotInfo = { name: string; points: number; turnComplete: boolean };
+	type BotInfo = { name: string; points: number; turnComplete: boolean; isHost: boolean };
 	let joinedBots = $state<BotInfo[]>([]);
 	let fetchStatusInterval: ReturnType<typeof setInterval> | null = null;
 
 	async function fetchStatus() {
 		const gameId = globalState.game_id;
+		const userId = globalState.user_id;
 		if (!gameId) return;
 		const url = `/api/game/${gameId}/status`;
 
@@ -39,6 +40,19 @@
 				action_url: url,
 				action_text: 'fetch_status'
 			});
+		}
+
+		// Poll /me for host transfer detection
+		if (userId) {
+			try {
+				const meResponse = await fetch(`/api/game/${gameId}/me?playerId=${userId}`);
+				const meData = await meResponse.json();
+				if (meResponse.ok && meData.creatorId) {
+					globalState.creator_id = meData.creatorId;
+				}
+			} catch {
+				// ignore
+			}
 		}
 	}
 
@@ -99,7 +113,7 @@
 			<h3>{joinedBots.length} player{joinedBots.length === 1 ? '' : 's'} joined</h3>
 			<div class="players">
 				{#each joinedBots as bot}
-					<span class="player-chip">{bot.name}</span>
+					<span class="player-chip" class:host={bot.isHost}>{bot.name}{#if bot.isHost} <span class="host-badge">Host</span>{/if}</span>
 				{/each}
 			</div>
 		</div>
@@ -149,6 +163,20 @@
 		padding: 0.3rem 0.8rem;
 		font-size: 0.9rem;
 		font-weight: bold;
+	}
+	.player-chip.host {
+		background: rgb(255, 245, 200);
+		border: 2px solid rgb(255, 180, 0);
+	}
+	.host-badge {
+		background: rgb(255, 180, 0);
+		color: white;
+		font-size: 0.65rem;
+		font-weight: bold;
+		padding: 0.1rem 0.4rem;
+		border-radius: 0.5rem;
+		margin-left: 0.2rem;
+		vertical-align: middle;
 	}
 	p.non-creator {
 		font-size: 3rem;
