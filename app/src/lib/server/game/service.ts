@@ -390,7 +390,7 @@ export const ensureTurn = async (gameId: string) => {
 
 			await tx
 				.update(players)
-				.set({ turnComplete: false })
+				.set({ turnComplete: false, promptsRemaining: game.botPromptChanges })
 				.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
 
 			await tx
