@@ -1,11 +1,16 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import LoadingBars from './game/LoadingBars.svelte';
+	import LoadingBars from '../../../routes/game/LoadingBars.svelte';
 
-	let { onClose }: { onClose?: () => void } = $props();
+	type Props = {
+		onClose?: () => void;
+		onJoin?: (gameId: string) => void;
+	};
+
+	let { onClose, onJoin }: Props = $props();
 
 	let rawGameId = $state('');
 	let showError = $state(false);
+	let isJoinGamePending = $state(false);
 
 	function extractGameIdFromString(str: string) {
 		const gameIdRegex = /(?:\?|&)game_id=([^&]+)/;
@@ -28,12 +33,8 @@
 		return extractedGameId ?? '';
 	});
 
-	let isJoinGamePending = $state(false);
-
 	async function joinGame() {
-		if (isJoinGamePending) {
-			return;
-		}
+		if (isJoinGamePending) return;
 
 		if (!gameId) {
 			showError = true;
@@ -42,30 +43,14 @@
 
 		isJoinGamePending = true;
 		try {
-			const response = await fetch(`/api/game/${gameId}`, {
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json',
-					'Access-Control-Allow-Origin': '*'
-				}
-			});
-			if (response.ok) {
-				goto(`/game?game_id=${gameId}`);
-			} else {
-				showError = true;
-			}
-		} catch (error) {
-			console.error('Error:', error);
-			showError = true;
+			onJoin?.(gameId);
 		} finally {
 			isJoinGamePending = false;
 		}
 	}
 
 	function closeModal() {
-		if (typeof onClose === 'function') {
-			onClose();
-		}
+		onClose?.();
 	}
 </script>
 
@@ -131,7 +116,6 @@
 		width: 100%;
 		height: 100%;
 		background-color: rgb(0 255 51);
-
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -142,9 +126,6 @@
 		max-width: 500px;
 	}
 
-	button {
-		cursor: pointer;
-	}
 	.join-game-container {
 		display: flex;
 		flex-direction: column;
@@ -168,11 +149,6 @@
 	}
 
 	button {
-		font-size: 1rem;
-		padding: 0.5rem 1rem;
-		cursor: pointer;
-	}
-	button {
 		font-size: 1.5rem;
 		font-weight: bold;
 		padding: 0.75rem 1.5rem;
@@ -189,6 +165,7 @@
 		background-color: rgb(123, 255, 0);
 		color: rgb(0, 0, 0);
 	}
+
 	.error {
 		color: rgb(123, 255, 0);
 	}
@@ -198,8 +175,6 @@
 		height: 3rem;
 		background-color: black;
 		padding: 2rem;
-		border-bottom-left-radius: 8px;
-		border-bottom-right-radius: 8px;
 		border-radius: 7px;
 		display: flex;
 		align-items: center;
@@ -214,17 +189,15 @@
 
 	::-webkit-input-placeholder {
 		color: #edc5c5;
-		opacity: 1 !important; /* for older chrome versions. may no longer apply. */
+		opacity: 1 !important;
 	}
 
 	:-moz-placeholder {
-		/* Firefox 18- */
 		color: #edc5c5;
 		opacity: 1 !important;
 	}
 
 	::-moz-placeholder {
-		/* Firefox 19+ */
 		color: #edc5c5;
 		opacity: 1 !important;
 	}
