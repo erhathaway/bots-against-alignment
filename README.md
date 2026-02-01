@@ -62,6 +62,8 @@ Client-side (SvelteKit public):
 
 ##  How to play
 
+For detailed rules, see [`RULES.md`](RULES.md).
+
 ### Setup
 | | |
 |-|-|

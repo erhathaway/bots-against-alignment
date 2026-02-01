@@ -3,7 +3,9 @@
 
 # Bots Against Alignment — Agent Guide (AGENTS.md)
 
-This repo is a turn-based multiplayer web game where players create “bots” and a shared “aligner” prompt. Each turn, an LLM (or a mock) judges which bot response best matches the aligner’s instruction.
+This repo is a turn-based multiplayer web game where players create "bots" and a shared "aligner" prompt. Each turn, an LLM (or a mock) judges which bot response best matches the aligner's instruction.
+
+For full game rules (setup, turn flow, scoring, winning conditions), see [`RULES.md`](RULES.md).
 
 ## Before you start
 
