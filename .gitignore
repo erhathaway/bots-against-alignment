@@ -9,3 +9,5 @@ app/drizzle/meta/
 .tmp
 .npm-cache
 storybook-static
+.vercel
+.env*.local

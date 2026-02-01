@@ -2,6 +2,8 @@
 	import HomeTitle from '$lib/components/home/HomeTitle.svelte';
 	import HomeActions from '$lib/components/home/HomeActions.svelte';
 	import JoinGameModal from '$lib/components/home/JoinGameModal.svelte';
+	import StorybookLink from '$lib/components/home/StorybookLink.svelte';
+	import GitHubLink from '$lib/components/home/GitHubLink.svelte';
 	import { goto } from '$app/navigation';
 
 	let showModal = $state(false);
@@ -31,6 +33,9 @@
 	{#if showModal}
 		<JoinGameModal onClose={() => (showModal = false)} onJoin={handleJoin} />
 	{/if}
+
+	<GitHubLink />
+	<StorybookLink />
 </main>
 
 <style>
