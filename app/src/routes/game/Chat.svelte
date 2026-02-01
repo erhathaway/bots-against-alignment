@@ -17,38 +17,53 @@
 	let lastMessageId = $state(0);
 	let hasJoined = $derived(Boolean(globalState.bot_name && globalState.has_player_joined));
 
-	// Typewriter state for aligner messages
+	// Typewriter state for aligner messages — queued so only one types at a time
 	let typewriterProgress = $state<Record<number, number>>({});
-	let typewriterTimers: Record<number, ReturnType<typeof setTimeout>> = {};
+	let typewriterQueue: { msgId: number; wordCount: number }[] = [];
+	let activeTypewriterId: number | null = null;
+	let activeTimer: ReturnType<typeof setTimeout> | null = null;
 
 	function randomWordDelay() {
-		return 80 + Math.random() * 200;
+		return 150 + Math.random() * 350;
 	}
 
 	function isAlignerMessage(msg: ChatMessage) {
 		return msg.type === 'system' && msg.senderName === 'The Aligner';
 	}
 
-	function startTypewriter(msgId: number, wordCount: number) {
-		if (typewriterTimers[msgId]) return;
-		typewriterProgress[msgId] = 0;
+	function processQueue() {
+		if (activeTypewriterId !== null) return;
+		const next = typewriterQueue.shift();
+		if (!next) return;
+		activeTypewriterId = next.msgId;
+		typewriterProgress[next.msgId] = 0;
 		const step = () => {
-			const current = typewriterProgress[msgId] ?? 0;
-			if (current >= wordCount) {
-				delete typewriterTimers[msgId];
+			const current = typewriterProgress[next.msgId] ?? 0;
+			if (current >= next.wordCount) {
+				activeTimer = null;
+				activeTypewriterId = null;
+				processQueue();
 				return;
 			}
-			typewriterProgress[msgId] = current + 1;
+			typewriterProgress[next.msgId] = current + 1;
 			scrollToBottom();
-			typewriterTimers[msgId] = setTimeout(step, randomWordDelay());
+			activeTimer = setTimeout(step, randomWordDelay());
 		};
-		typewriterTimers[msgId] = setTimeout(step, randomWordDelay());
+		activeTimer = setTimeout(step, randomWordDelay());
+	}
+
+	function enqueueTypewriter(msgId: number, wordCount: number) {
+		if (typewriterProgress[msgId] !== undefined) return;
+		typewriterProgress[msgId] = -1; // mark as queued
+		typewriterQueue.push({ msgId, wordCount });
+		processQueue();
 	}
 
 	function getDisplayedText(msg: ChatMessage): string {
 		const words = msg.message.split(/\s+/);
 		const revealed = typewriterProgress[msg.id];
 		if (revealed === undefined || revealed >= words.length) return msg.message;
+		if (revealed <= 0) return '';
 		return words.slice(0, revealed).join(' ');
 	}
 
@@ -56,6 +71,11 @@
 		const words = msg.message.split(/\s+/);
 		const revealed = typewriterProgress[msg.id];
 		return revealed === undefined || revealed >= words.length;
+	}
+
+	function isTypewriterQueued(msg: ChatMessage): boolean {
+		const revealed = typewriterProgress[msg.id];
+		return revealed !== undefined && revealed < 0;
 	}
 
 	let alignerTyping = $derived(
@@ -73,11 +93,11 @@
 			const data = await response.json();
 			if (data.messages && data.messages.length > 0) {
 				const newMessages = data.messages as ChatMessage[];
-				// Start typewriter for new aligner messages
+				// Queue typewriter for new aligner messages
 				for (const msg of newMessages) {
 					if (isAlignerMessage(msg)) {
 						const words = msg.message.split(/\s+/);
-						startTypewriter(msg.id, words.length);
+						enqueueTypewriter(msg.id, words.length);
 					}
 				}
 				messages = [...messages, ...newMessages];
@@ -96,10 +116,10 @@
 		// Reset on game change
 		messages = [];
 		lastMessageId = 0;
-		for (const id of Object.keys(typewriterTimers)) {
-			clearTimeout(typewriterTimers[Number(id)]);
-		}
-		typewriterTimers = {};
+		if (activeTimer) clearTimeout(activeTimer);
+		activeTimer = null;
+		activeTypewriterId = null;
+		typewriterQueue = [];
 		typewriterProgress = {};
 
 		// Use untrack so fetchMessages' reads (lastMessageId) don't become
