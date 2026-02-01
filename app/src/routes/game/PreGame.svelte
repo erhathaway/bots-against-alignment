@@ -120,7 +120,7 @@
 			if (response.ok) {
 				const payload = await response.json();
 				botName = payload.botName;
-			} else {
+			} else if (response.status !== 429) {
 				const error = await response.json();
 				addNotification({
 					source_url: 'pregame',
@@ -162,7 +162,7 @@
 			if (response.ok) {
 				const payload = await response.json();
 				alignerPrompt = payload.alignerPrompt;
-			} else {
+			} else if (response.status !== 429) {
 				const error = await response.json();
 				addNotification({
 					source_url: 'pregame',
@@ -205,7 +205,7 @@
 			if (response.ok) {
 				const payload = await response.json();
 				botPrompt = payload.botPrompt;
-			} else {
+			} else if (response.status !== 429) {
 				const error = await response.json();
 				addNotification({
 					source_url: 'pregame',

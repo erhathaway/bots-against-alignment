@@ -74,7 +74,7 @@
 	role="button"
 	tabindex="0"
 	aria-label="Close join game modal"
-	onclick={closeModal}
+	onpointerdown={closeModal}
 	onkeydown={(event) => {
 		if (event.key === 'Enter' || event.key === ' ') {
 			event.preventDefault();

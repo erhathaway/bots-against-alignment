@@ -11,7 +11,9 @@
 
 <div class="app">
 	<Notification />
-	<PageTransition url={data.url} {children} />
+	<PageTransition url={data.url}>
+		{@render children()}
+	</PageTransition>
 </div>
 
 <style>

@@ -57,8 +57,10 @@ if (browser) {
 		console.warn('Failed to load persisted state', error);
 	}
 
-	$effect(() => {
-		const snapshot: GlobalState = { ...globalState };
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+	$effect.root(() => {
+		$effect(() => {
+			const snapshot: GlobalState = { ...globalState };
+			localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+		});
 	});
 }

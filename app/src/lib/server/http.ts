@@ -11,3 +11,21 @@ export const handleApiError = (error: unknown) => {
 	console.error(error);
 	return jsonError(500, 'Internal server error');
 };
+
+export const getClientAddressSafe = (event: {
+	getClientAddress?: () => string;
+	request: Request;
+}) => {
+	try {
+		if (event.getClientAddress) {
+			return event.getClientAddress();
+		}
+	} catch {
+		// fall back to headers
+	}
+	const forwarded = event.request.headers.get('x-forwarded-for');
+	if (forwarded) {
+		return forwarded.split(',')[0]?.trim() || 'unknown';
+	}
+	return event.request.headers.get('x-real-ip')?.trim() || 'unknown';
+};

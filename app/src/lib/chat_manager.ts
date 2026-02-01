@@ -22,11 +22,13 @@ class ChatManager {
 	retryInterval: ReturnType<typeof setInterval> | null;
 	sideEffectQueue: Array<() => void>;
 	peerUrl: string;
+	isConnected: boolean;
 
 	constructor() {
 		this.retryInterval = null;
 		this.gun = null;
 		this.peerUrl = env.PUBLIC_GUN_PEER?.trim() || 'https://bots-against-alignment.herokuapp.com/gun';
+		this.isConnected = false;
 		this.initGun();
 		this.gameChats = new Map();
 		this.sideEffectQueue = [];
@@ -57,16 +59,18 @@ class ChatManager {
 					const isConnected =
 						Boolean(msg) && isRecord(peers) && Boolean(peers[this.peerUrl]);
 
-					if (this.gun && isConnected) {
-						if (this.retryInterval) {
-							clearInterval(this.retryInterval);
-							this.retryInterval = null;
-						}
-					} else {
-						if (!this.retryInterval) {
-							this.retryInterval = setInterval(() => {
-								console.log('Retrying WebSocket connection...');
-								tryConnect();
+				if (this.gun && isConnected) {
+					this.isConnected = true;
+					if (this.retryInterval) {
+						clearInterval(this.retryInterval);
+						this.retryInterval = null;
+					}
+				} else {
+					this.isConnected = false;
+					if (!this.retryInterval) {
+						this.retryInterval = setInterval(() => {
+							console.log('Retrying WebSocket connection...');
+							tryConnect();
 							}, 10000); // Retry every 10 seconds
 						}
 					}

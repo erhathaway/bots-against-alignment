@@ -58,10 +58,10 @@ class ChatGame {
 			throw new Error('**gun is null');
 		}
 
-		const gameNode = this.manager.gun.get(this.gameId);
+		const gameNode = this.manager.gun.get(this.gameId).get('messages');
 		this.gameWatcher = gameNode;
 
-		gameNode.on((data: JsonValue) => {
+		gameNode.map().on((data: JsonValue) => {
 			const newMessage = parseMessage(data);
 			if (!newMessage) return;
 
@@ -135,7 +135,7 @@ class ChatGame {
 			if (this.manager.gun == null) {
 				throw new Error('2gun is null');
 			}
-			this.manager.gun.get(gameId).put({
+			this.manager.gun.get(gameId).get('messages').get(uuid).put({
 				message,
 				timestamp: Date.now(),
 				botName: botName,
@@ -153,7 +153,7 @@ class ChatGame {
 			if (this.manager.gun == null) {
 				throw new Error('gun is null');
 			}
-			this.manager.gun.get(gameId).put({
+			this.manager.gun.get(gameId).get('messages').get(uuid).put({
 				message,
 				timestamp: Date.now(),
 				botName: botName,
@@ -171,7 +171,7 @@ class ChatGame {
 			if (this.manager.gun == null) {
 				throw new Error('gun is null');
 			}
-			this.manager.gun.get(gameId).put({
+			this.manager.gun.get(gameId).get('messages').get(uuid).put({
 				message,
 				timestamp: Date.now(),
 				botName: null,

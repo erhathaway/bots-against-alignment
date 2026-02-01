@@ -5,6 +5,7 @@ import { freePorts } from './free-ports.ts';
 
 const PORT_GUN = 8765;
 const PORT_APP = 5173;
+const DATABASE_URL = 'file:./dev.db';
 
 const TERM_TIMEOUT_MS = 5_000;
 const KILL_TIMEOUT_MS = 2_000;
@@ -41,6 +42,23 @@ function spawnService(name: string, command: string, args: string[], options?: P
 
 async function sleep(ms: number) {
 	await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function runCommand(name: string, command: string, args: string[], options?: Parameters<typeof spawn>[2]) {
+	return new Promise<void>((resolve, reject) => {
+		const child = spawn(command, args, {
+			...options,
+			stdio: 'inherit'
+		});
+		child.on('error', reject);
+		child.on('exit', (code) => {
+			if (code === 0) {
+				resolve();
+			} else {
+				reject(new Error(`[${name}] exited with code ${String(code)}`));
+			}
+		});
+	});
 }
 
 async function terminateProcessGroup(pid: number, signal: string) {
@@ -83,6 +101,12 @@ async function terminateChildren(children: Array<{ exitCode: number | null; pid:
 
 async function main() {
 	await freePorts([PORT_GUN, PORT_APP]);
+	await runCommand(
+		'db:migrate',
+		'bash',
+		['-lc', `cd app && DATABASE_URL=${DATABASE_URL} bun run db:migrate`],
+		{ env: { ...process.env, DATABASE_URL } }
+	);
 
 	const children: Array<{ exitCode: number | null; pid: number; on: (event: string, cb: (...args: unknown[]) => void) => void }> = [];
 	let shuttingDown = false;
@@ -113,7 +137,7 @@ async function main() {
 			'bash',
 			[
 				'-lc',
-				`cd app && PUBLIC_GUN_PEER=http://127.0.0.1:${PORT_GUN}/gun DATABASE_URL=file:./dev.db bun run dev -- --host 127.0.0.1 --port ${PORT_APP}`
+				`cd app && PUBLIC_GUN_PEER=http://127.0.0.1:${PORT_GUN}/gun DATABASE_URL=${DATABASE_URL} bun run dev -- --host 127.0.0.1 --port ${PORT_APP}`
 			],
 			{ env: { ...process.env } }
 		)

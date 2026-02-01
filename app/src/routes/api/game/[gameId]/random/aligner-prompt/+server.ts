@@ -1,13 +1,13 @@
 import { json } from '@sveltejs/kit';
 
 import { generateRandomAlignerPrompt } from '$lib/server/llm/random';
-import { handleApiError, jsonError } from '$lib/server/http';
+import { getClientAddressSafe, handleApiError, jsonError } from '$lib/server/http';
 import { rateLimit } from '$lib/server/rate-limit';
 
-export const POST = async ({ getClientAddress }) => {
+export const POST = async (event) => {
 	try {
 		const limit = await rateLimit({
-			key: `${getClientAddress()}:random-aligner-prompt`,
+			key: `${getClientAddressSafe(event)}:${event.params.gameId}:random-aligner-prompt`,
 			limit: 10,
 			windowMs: 60_000
 		});
