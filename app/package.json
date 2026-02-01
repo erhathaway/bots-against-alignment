@@ -8,7 +8,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"storybook": "storybook dev -p 6006 -h 127.0.0.1 --no-open",
-		"storybook:build": "storybook build --output-dir static/storybook && sed -i '' 's#src=\"/vite-inject-mocker-entry.js\"#src=\"./vite-inject-mocker-entry.js\"#' static/storybook/iframe.html",
+		"storybook:build": "storybook build --output-dir static/storybook && sed -i.bak 's#src=\"/vite-inject-mocker-entry.js\"#src=\"./vite-inject-mocker-entry.js\"#' static/storybook/iframe.html && rm -f static/storybook/iframe.html.bak",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
