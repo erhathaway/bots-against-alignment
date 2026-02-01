@@ -1,9 +1,14 @@
-import { generateText } from 'ai';
+import { generateText, Output } from 'ai';
+import { z } from 'zod';
 
 import { modelBot } from './config';
 import { getOpenAI } from './provider';
 
 type ExtraContext = Record<string, string>;
+
+const botResponseSchema = z.object({
+	response: z.string().describe('A short, funny answer to the prompt card, under 5 words')
+});
 
 export const generateBotResponse = async ({
 	botPrompt,
@@ -25,14 +30,14 @@ export const generateBotResponse = async ({
 			content:
 				'You will answer with the funniest possible answer to the following prompt: What Killed our food delivery startup.'
 		},
-		{ role: 'assistant', content: 'Passive agressive tweetstorms' },
+		{ role: 'assistant', content: '{"response": "Passive agressive tweetstorms"}' },
 		{
 			role: 'user',
 			content: "Reply in a blaise way: Burn rate? What burn rate we're spending on neccessities like ______."
 		},
-		{ role: 'assistant', content: 'An office ping pong table' },
+		{ role: 'assistant', content: '{"response": "An office ping pong table"}' },
 		{ role: 'user', content: 'Reply in a cheeky way Never fear, Captain ___ is here!' },
-		{ role: 'assistant', content: 'Going to the emergency room.' },
+		{ role: 'assistant', content: '{"response": "Going to the emergency room."}' },
 		{ role: 'user', content: `${botPrompt} ${turnPrompt}` }
 	] as Array<{ role: 'system' | 'user' | 'assistant'; content: string }>;
 
@@ -46,13 +51,14 @@ export const generateBotResponse = async ({
 	const openai = getOpenAI();
 	const result = await generateText({
 		model: openai(modelBot),
+		output: Output.object({ schema: botResponseSchema }),
 		messages,
 		providerOptions: {
 			openai: { reasoningEffort: 'medium' }
 		}
 	});
 
-	const text = result.text;
+	const text = result.output?.response || 'bad bot';
 	if (text.toLowerCase().includes('sorry')) {
 		return 'bad bot';
 	}

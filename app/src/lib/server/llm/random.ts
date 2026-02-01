@@ -1,8 +1,21 @@
-import { generateText } from 'ai';
+import { generateText, Output } from 'ai';
+import { z } from 'zod';
 
 import { modelAligner, modelBot } from './config';
 import { getOpenAI } from './provider';
 import { randomAlignerPrompt, randomBotName, randomBotPrompt } from '$lib/server/game/data';
+
+const botNameSchema = z.object({
+	name: z.string().describe('A single funny startup-style name, 1-4 words')
+});
+
+const alignerPromptSchema = z.object({
+	prompt: z.string().describe('A judging rule for a cards-against-humanity-style game, under 10 words')
+});
+
+const botPromptSchema = z.object({
+	prompt: z.string().describe('A bot behavior rule, under 20 words, starting with "I will respond..."')
+});
 
 const fallbackWords = ['alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot', 'golf'];
 
@@ -31,31 +44,30 @@ const sample = <T>(items: T[]) => items[Math.floor(Math.random() * items.length)
 export const generateRandomBotName = async () => {
 	try {
 		const words = await fetchWordList();
-		const botName = `${sample(words)} ${sample(words)} ${sample(words)}`;
+		const seedWords = `${sample(words)}, ${sample(words)}, ${sample(words)}`;
 
 		const openai = getOpenAI();
 		const result = await generateText({
 			model: openai(modelBot),
+			output: Output.object({ schema: botNameSchema }),
 			messages: [
 				{
 					role: 'system',
 					content:
-						'You are NameGPT, you will come up with funny names based on three words  make it like the name of a terrible startup with vaguely non real words. Use no racist, sexist, or homophobic language.'
+						'You are NameGPT. Given three random words, mash them together into ONE funny fake startup name. The name should be 1-3 words, use vaguely non-real words (like portmanteaus), and sound like a terrible tech startup. Return ONLY the name. No racist, sexist, or homophobic language.'
 				},
-				{ role: 'user', content: 'Your three words are dog, fish, truth.' },
-				{ role: 'assistant', content: '[CaninAquEataly]' },
-				{ role: 'user', content: `You three words are:${botName}` }
+				{ role: 'user', content: 'Your three words are: dog, fish, truth.' },
+				{ role: 'assistant', content: '{"name": "CaninAquEataly"}' },
+				{ role: 'user', content: 'Your three words are: moon, keyboard, salad.' },
+				{ role: 'assistant', content: '{"name": "LunaTypoGreens"}' },
+				{ role: 'user', content: `Your three words are: ${seedWords}` }
 			],
 			providerOptions: {
 				openai: { reasoningEffort: 'medium' }
 			}
 		});
 
-		const cleaned = result.text.trim();
-		if (cleaned.startsWith('[') && cleaned.endsWith(']')) {
-			return cleaned.slice(1, -1).trim();
-		}
-		return cleaned || randomBotName();
+		return result.output?.name || randomBotName();
 	} catch {
 		return randomBotName();
 	}
@@ -69,26 +81,27 @@ export const generateRandomAlignerPrompt = async () => {
 		const openai = getOpenAI();
 		const result = await generateText({
 			model: openai(modelAligner),
+			output: Output.object({ schema: alignerPromptSchema }),
 			messages: [
 				{
 					role: 'system',
 					content:
-						'You will be the judge of a game of cards against humanity  come up with a consistent rule you will use to judge related to concepts related to a single word make it under 10 words. If the word is offenisve replace it with "funny". Use no racist, sexist, or homophobic language. '
+						'You are the judge of a cards-against-humanity-style game. Come up with a consistent judging rule related to concepts inspired by the given words. Keep it under 10 words. If a word is offensive, replace it with "funny". No racist, sexist, or homophobic language.'
 				},
-				{ role: 'user', content: 'Your words are theoretical , posters.' },
+				{ role: 'user', content: 'Your words are: theoretical, posters.' },
 				{
 					role: 'assistant',
 					content:
-						'The most "philosophical" and abstract answer will win in this game.'
+						'{"prompt": "The most philosophical and abstract answer wins."}'
 				},
-				{ role: 'user', content: `You words are${promptSeed}` }
+				{ role: 'user', content: `Your words are: ${promptSeed}` }
 			],
 			providerOptions: {
 				openai: { reasoningEffort: 'medium' }
 			}
 		});
 
-		return result.text.trim() || randomAlignerPrompt();
+		return result.output?.prompt || randomAlignerPrompt();
 	} catch {
 		return randomAlignerPrompt();
 	}
@@ -97,32 +110,37 @@ export const generateRandomAlignerPrompt = async () => {
 export const generateRandomBotPrompt = async () => {
 	try {
 		const words = await fetchWordList();
-		const botName = sample(words);
+		const word = sample(words);
 
 		const openai = getOpenAI();
 		const result = await generateText({
 			model: openai(modelBot),
+			output: Output.object({ schema: botPromptSchema }),
 			messages: [
 				{
 					role: 'system',
 					content:
-						"You will be playing of a game of cards against humanity come up with a consistent rule you will use to pick a few words to reply to Prompt Cards (as if you were making Response Cards). Make it under 20 words. Don't use the words 'quote', 'pun', or 'pick up line'. MAKE IT WEIRD. I'm going to give you a random word. I want you to use ever letter of that word in your prompt. Use no racist, sexist, or homophobic language. "
+						"You are playing a cards-against-humanity-style game. Come up with a consistent rule for picking a few words to reply to Prompt Cards. Make it under 20 words. Don't use the words 'quote', 'pun', or 'pick up line'. MAKE IT WEIRD. I'm going to give you a random word. Use every letter of that word in your prompt. No racist, sexist, or homophobic language."
 				},
-				{ role: 'user', content: 'Give me a prompt hornet' },
+				{ role: 'user', content: 'Give me a prompt for: hornet' },
 				{
 					role: 'assistant',
-					content: 'I will respond with super honest responses in language from the old west.'
+					content:
+						'{"prompt": "I will respond with super honest responses in language from the old west."}'
 				},
-				{ role: 'user', content: 'Give me a prompt milk.' },
-				{ role: 'assistant', content: 'I will respond in the third person like a muscle bro.' },
-				{ role: 'user', content: `Give me a prompt ${botName}` }
+				{ role: 'user', content: 'Give me a prompt for: milk' },
+				{
+					role: 'assistant',
+					content: '{"prompt": "I will respond in the third person like a muscle bro."}'
+				},
+				{ role: 'user', content: `Give me a prompt for: ${word}` }
 			],
 			providerOptions: {
 				openai: { reasoningEffort: 'medium' }
 			}
 		});
 
-		return result.text.trim() || randomBotPrompt();
+		return result.output?.prompt || randomBotPrompt();
 	} catch {
 		return randomBotPrompt();
 	}
