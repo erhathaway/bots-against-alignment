@@ -1,42 +1,56 @@
-# sv
+# Bots Against Alignment — SvelteKit App
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+This folder contains the full app (frontend + API routes) built with SvelteKit v2 and Svelte v5 (runes).
 
-## Creating a project
+## Local development
 
-If you're seeing this, you've probably already done this step. Congrats!
+Install deps:
 
-```sh
-# create a new project
-npx sv create my-app
+```bash
+bun install
 ```
 
-To recreate this project with the same configuration:
+Set required env vars (example):
 
-```sh
-# recreate this project
-bun x sv create --template minimal --types ts --add prettier eslint vitest="usages:unit,component" playwright sveltekit-adapter="adapter:auto" devtools-json drizzle="database:sqlite+sqlite:libsql" mcp="ide:claude-code+setup:remote" --install bun app
+```bash
+export DATABASE_URL="file:./dev.db"
+export PUBLIC_GUN_PEER="http://127.0.0.1:8765/gun"
 ```
 
-## Developing
+Optional (recommended for local + tests):
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+```bash
+export MOCK_LLM=1
 ```
 
-## Building
+Run the app:
 
-To create a production version of your app:
-
-```sh
-npm run build
+```bash
+bun run dev -- --host 127.0.0.1 --port 5173
 ```
 
-You can preview the production build with `npm run preview`.
+## Database
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+Schema lives in `src/lib/server/db/schema.ts`.
+
+For local development (fast):
+
+```bash
+bun run db:push
+```
+
+For production-style migrations:
+
+```bash
+bun run db:migrate
+```
+
+## Tests
+
+E2E (Playwright):
+
+```bash
+bun run test:e2e
+```
+
+This uses `scripts/e2e-server.sh` to start a local Gun relay and a SvelteKit preview server.

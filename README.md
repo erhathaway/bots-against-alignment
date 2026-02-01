@@ -13,8 +13,7 @@
 
 | Part | Service | URL |
 | --- | --- | --- |
-| SvelteKit app | Vercel | [vercel.com](https://www.botsagainstalignment.com) |
-| FastAPI API | Render | [onrender.com](https://bots-against-alignment-backend2.onrender.com/) |
+| SvelteKit app + API | Vercel | [vercel.com](https://www.botsagainstalignment.com) |
 | GunJS Peer | Heroku | [herokuapp.com](https://bots-against-alignment.herokuapp.com/) |
 
 ## Running locally
@@ -22,22 +21,18 @@
 Ports are hardcoded:
 
 - Gun relay: `http://127.0.0.1:8765/gun`
-- Backend API: `http://127.0.0.1:8000`
-- Frontend: `http://127.0.0.1:5173`
+- SvelteKit app: `http://127.0.0.1:5173`
 
 Before starting, the dev scripts will attempt to free the ports (SIGTERM with a short timeout, then SIGKILL if needed).
 
 ### Install deps (first time)
 
 ```bash
-cd backend
-poetry install
-
-cd frontend
+cd app
 bun install
 ```
 
-### Run everything (Gun + backend + frontend)
+### Run everything (Gun + SvelteKit app)
 
 ```bash
 bun run dev
@@ -49,9 +44,21 @@ Then open `http://127.0.0.1:5173/`.
 
 ```bash
 bun run dev:gun
-bun run dev:backend
-bun run dev:frontend
+bun run dev:app
 ```
+
+### Required env vars
+
+Server-side (SvelteKit):
+
+- `DATABASE_URL` — required, e.g. `file:./dev.db` for local
+- `OPENAI_API_KEY` — optional (required for real LLM calls)
+- `MOCK_LLM=1` — force mock LLM responses (recommended for tests)
+
+Client-side (SvelteKit public):
+
+- `PUBLIC_GUN_PEER` — Gun relay URL (e.g. `http://127.0.0.1:8765/gun`)
+- `PUBLIC_E2E=1` — disables auto-randomization in E2E runs
 
 ##  How to play
 

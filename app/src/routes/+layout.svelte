@@ -1,11 +1,24 @@
 <script lang="ts">
-	import favicon from '$lib/assets/favicon.svg';
+	import '../app.css';
+	import Notification from '$lib/components/Notification.svelte';
+	import PageTransition from '$lib/components/PageTransition.svelte';
 
-	let { children } = $props();
+	import type { LayoutData } from './$types';
+
+	let { data, children }: { data: LayoutData; children: () => unknown } = $props();
 </script>
 
-<svelte:head>
-	<link rel="icon" href={favicon} />
-</svelte:head>
+<div class="app">
+	<Notification />
+	<PageTransition url={data.url}>
+		{@render children()}
+	</PageTransition>
+</div>
 
-{@render children()}
+<style>
+	.app {
+		display: flex;
+		flex-direction: column;
+		min-height: 100vh;
+	}
+</style>

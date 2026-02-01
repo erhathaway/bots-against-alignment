@@ -1,4 +1,8 @@
-# Install Dependencies
+# Legacy frontend (deprecated)
+
+This folder is kept for reference only. The active app is in `app/` (SvelteKit v2 + Svelte v5).
+
+## Install Dependencies
 
 `bun install`
 

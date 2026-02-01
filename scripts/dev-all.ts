@@ -4,8 +4,7 @@ import { spawn } from 'node:child_process';
 import { freePorts } from './free-ports.ts';
 
 const PORT_GUN = 8765;
-const PORT_BACKEND = 8000;
-const PORT_FRONTEND = 5173;
+const PORT_APP = 5173;
 
 const TERM_TIMEOUT_MS = 5_000;
 const KILL_TIMEOUT_MS = 2_000;
@@ -83,7 +82,7 @@ async function terminateChildren(children: Array<{ exitCode: number | null; pid:
 }
 
 async function main() {
-	await freePorts([PORT_GUN, PORT_BACKEND, PORT_FRONTEND]);
+	await freePorts([PORT_GUN, PORT_APP]);
 
 	const children: Array<{ exitCode: number | null; pid: number; on: (event: string, cb: (...args: unknown[]) => void) => void }> = [];
 	let shuttingDown = false;
@@ -99,7 +98,7 @@ async function main() {
 	process.on('SIGTERM', () => shutdown(0));
 
 	children.push(
-		spawnService('gun', 'bun', ['frontend/scripts/gun-relay.ts'], {
+		spawnService('gun', 'bun', ['app/scripts/gun-relay.ts'], {
 			env: {
 				...process.env,
 				GUN_HOST: '127.0.0.1',
@@ -110,25 +109,11 @@ async function main() {
 
 	children.push(
 		spawnService(
-			'backend',
+			'app',
 			'bash',
 			[
 				'-lc',
-				`cd backend && poetry run uvicorn src:app --host 127.0.0.1 --port ${PORT_BACKEND} --log-level info`
-			],
-			{
-				env: { ...process.env }
-			}
-		)
-	);
-
-	children.push(
-		spawnService(
-			'frontend',
-			'bash',
-			[
-				'-lc',
-				`cd frontend && VITE_BACKEND_API=http://127.0.0.1:${PORT_BACKEND} VITE_GUN_PEER=http://127.0.0.1:${PORT_GUN}/gun bun run dev -- --host 127.0.0.1 --port ${PORT_FRONTEND}`
+				`cd app && PUBLIC_GUN_PEER=http://127.0.0.1:${PORT_GUN}/gun DATABASE_URL=file:./dev.db bun run dev -- --host 127.0.0.1 --port ${PORT_APP}`
 			],
 			{ env: { ...process.env } }
 		)

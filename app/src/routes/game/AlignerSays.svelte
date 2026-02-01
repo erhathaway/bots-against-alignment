@@ -1,0 +1,333 @@
+<script lang="ts">
+	import { addNotification, globalState } from '$lib/state/store.svelte';
+	import { NotificationKind } from '$lib/types';
+	import LoadingBars from './LoadingBars.svelte';
+	import chat_manager from '$lib/chat_manager';
+	let botsSubmitted = $state(0);
+	let totalBots = $state(0);
+	let botPrompt = $state(globalState.current_bot_prompt ?? '');
+
+	$effect(() => {
+		const gameId = globalState.game_id;
+		if (!gameId) return;
+		botPrompt = globalState.current_bot_prompt ?? '';
+	});
+
+	async function fetchTurnFinale() {
+		const gameId = globalState.game_id;
+		const currentTurnId = globalState.last_turn_id;
+		if (!gameId || !currentTurnId) return;
+
+		try {
+			const url = `/api/game/${gameId}/turn/${currentTurnId}/finale`;
+			const response = await fetch(url);
+			const data = await response.json();
+			if (response.ok) {
+				botsSubmitted = data.botsSubmitted;
+				totalBots = data.totalBots;
+			} else if (response.status !== 404) {
+				addNotification({
+					source_url: 'aligner says',
+					title: 'Error getting turn finale',
+					body: data,
+					kind: NotificationKind.ERROR,
+					action_url: url,
+					action_text: 'get turn finale'
+				});
+			}
+		} catch (error) {
+			console.error('Failed to fetch turn finale:', error);
+		}
+	}
+
+	async function fetchGameStatus() {
+		const gameId = globalState.game_id;
+		const botName = globalState.bot_name;
+		if (!gameId) return;
+
+		const url = `/api/game/${gameId}/status`;
+		const response = await fetch(url);
+		const data = await response.json();
+
+		if (response.ok) {
+			let allBotsTurnComplete = true;
+			let completedBots = 0;
+
+			if (data && data.bots) {
+				for (const bot of data.bots) {
+					if (bot.turnComplete) {
+						completedBots++;
+					} else {
+						allBotsTurnComplete = false;
+					}
+				}
+				botsSubmitted = completedBots;
+				totalBots = data.bots.length;
+
+				if (botName && totalBots > 0) {
+					globalState.have_all_users_submitted = allBotsTurnComplete;
+				}
+			}
+		} else {
+			addNotification({
+				source_url: 'aligner says',
+				title: 'Error getting game status',
+				body: data,
+				kind: NotificationKind.ERROR,
+				action_url: url,
+				action_text: 'get game status'
+			});
+		}
+	}
+
+	async function ensureTurn() {
+		const gameId = globalState.game_id;
+		if (!gameId) return;
+		const response = await fetch(`/api/game/${gameId}/turn/ensure`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' }
+		});
+		const data = await response.json();
+
+		if (response.ok) {
+			const alignmentPrompt = data.alignmentPrompt;
+			if (data.turnId && data.turnId !== globalState.last_turn_id) {
+				globalState.last_turn_id = data.turnId;
+			}
+			if (alignmentPrompt && alignmentPrompt !== globalState.last_alignment_request) {
+				globalState.last_alignment_request = alignmentPrompt;
+			}
+		} else {
+			addNotification({
+				source_url: 'aligner says',
+				title: 'Error getting turn',
+				body: data,
+				kind: NotificationKind.ERROR,
+				action_url: `/api/game/${gameId}/turn/ensure`,
+				action_text: 'get turn'
+			});
+		}
+	}
+
+	async function fetchUserStatus() {
+		const gameId = globalState.game_id;
+		const userId = globalState.user_id;
+		if (!gameId || !userId) return;
+
+		const userStatusUrl = `/api/game/${gameId}/me?playerId=${userId}`;
+		const statusResponse = await fetch(userStatusUrl);
+		const statusData = await statusResponse.json();
+
+		if (!statusResponse.ok) {
+			addNotification({
+				source_url: 'aligner says',
+				title: 'Error getting user status',
+				body: statusData,
+				kind: NotificationKind.ERROR,
+				action_url: userStatusUrl,
+				action_text: 'get user status'
+			});
+		}
+	}
+
+	async function fetchData() {
+		await ensureTurn();
+		await Promise.all([fetchGameStatus(), fetchTurnFinale(), fetchUserStatus()]);
+	}
+
+	$effect(() => {
+		if (!globalState.game_id) return;
+		fetchData();
+		const intervalId = setInterval(fetchData, 3000);
+		return () => clearInterval(intervalId);
+	});
+
+	let isCompleteTurnPending = $state(false);
+	async function completeTurn() {
+		if (isCompleteTurnPending) return;
+
+		isCompleteTurnPending = true;
+		try {
+			const gameId = globalState.game_id;
+			const userId = globalState.user_id;
+			const turnId = globalState.last_turn_id;
+			if (!gameId || !userId || !turnId) {
+				throw new Error('Missing game/user/turn context');
+			}
+			const suggestion = botPrompt ?? '';
+
+			const response = await fetch(`/api/game/${gameId}/turn/${turnId}/submit`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ playerId: userId, suggestion })
+			});
+
+			if (response.ok) {
+				const botName = globalState.bot_name;
+				if (!botName) {
+					throw new Error('Bot name is missing');
+				}
+				const chat = chat_manager.findOrCreateChatGame(gameId);
+				chat.sendStatusMessage('Submitted response', gameId, botName);
+				globalState.current_bot_prompt = botPrompt ?? globalState.current_bot_prompt;
+			} else {
+				const data = await response.json();
+				addNotification({
+					source_url: 'aligner says',
+					title: 'Error completing turn',
+					body: data,
+					kind: NotificationKind.ERROR,
+					action_url: `/api/game/${gameId}/turn/${turnId}/submit`,
+					action_text: 'complete turn'
+				});
+			}
+		} finally {
+			isCompleteTurnPending = false;
+		}
+	}
+</script>
+
+<section id="aligner">
+	<div id="aligner-card" class="card">
+		<div class="config-top">
+			<h2>Aligner:</h2>
+		</div>
+		<div class="config-bottom">
+			<p>
+				{globalState.last_alignment_request}
+			</p>
+		</div>
+	</div>
+</section>
+<section id="bot">
+	<div id="bot-card" class="card">
+		<div class="config-top">
+			<h2>Bot Prompt</h2>
+		</div>
+		<div class="config-bottom">
+			<textarea id="bot-prompt-input" bind:value={botPrompt} aria-label="Bot Prompt" />
+		</div>
+	</div>
+</section>
+<div id="button-container">
+	{#if isCompleteTurnPending}
+		<LoadingBars />
+	{:else}
+		<button onclick={completeTurn}> Tell Bot To Respond To Aligner </button>
+	{/if}
+</div>
+
+<style>
+	#button-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+	}
+	#screen {
+		display: flex;
+		flex-direction: row;
+		height: 100vh;
+		width: 100vw;
+		margin: 0;
+		padding: 0;
+	}
+
+	section {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		margin-top: 1rem;
+		flex-grow: 2;
+	}
+
+	button {
+		font-size: 1.5rem;
+		font-weight: bold;
+		padding: 0.75rem 1.5rem;
+		margin: 0.5rem 0.5rem;
+		margin-top: 2rem;
+		margin-bottom: 3rem;
+		cursor: pointer;
+		border: 1px solid rgb(0, 0, 0);
+		background-color: rgb(0, 0, 0);
+		border-radius: 2rem;
+		color: white;
+		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+	}
+	button:hover {
+		background-color: rgb(123, 255, 0);
+		color: rgb(0, 0, 0);
+	}
+
+	#aligner {
+		margin-top: 0;
+
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+	}
+
+	#aligner .config-bottom {
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+		font-size: 2rem;
+	}
+
+	#bot {
+		padding-top: 2rem;
+		margin-top: 0;
+
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.card {
+		background-color: rgb(123, 255, 0);
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		align-items: center;
+		padding: 2rem;
+		padding-top: 1rem;
+		width: 70%;
+		border-radius: 1rem;
+	}
+	.card .config-top {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		width: 100%;
+	}
+	.card h2 {
+		font-size: 1.5rem;
+		font-weight: bold;
+		margin-bottom: 0.5rem;
+	}
+
+	#bot-card {
+		background-color: rgb(0, 204, 255);
+	}
+
+	#bot-prompt-input {
+		margin-top: 1rem;
+		border-radius: 1rem;
+		padding: 1rem;
+
+		width: 100%;
+	}
+
+	.config-bottom {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		align-items: center;
+		width: 100%;
+	}
+</style>

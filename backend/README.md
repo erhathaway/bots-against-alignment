@@ -1,4 +1,8 @@
-# Install
+# Legacy backend (deprecated)
+
+This FastAPI backend is deprecated. The active backend is implemented as SvelteKit server routes in `app/`.
+
+## Install
 
 `poetry shell`
 
