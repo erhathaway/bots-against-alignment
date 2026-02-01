@@ -502,7 +502,34 @@ export const submitTurn = async ({
 		await completeAutoPlayers(gameId, turnId, turnPrompt);
 	}
 
+	// Fire-and-forget: auto-trigger judging if all players have submitted
+	tryAutoProcess(gameId);
+
 	return { responseText };
+};
+
+const tryAutoProcess = async (gameId: string) => {
+	try {
+		const game = await requireGame(gameId);
+		if (game.status !== 'STARTED' || !game.turnStarted) return;
+
+		const allPlayers = await db
+			.select({ turnComplete: players.turnComplete })
+			.from(players)
+			.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
+
+		if (allPlayers.length === 0) return;
+		if (!allPlayers.every((p) => p.turnComplete)) return;
+
+		await processTurn({
+			gameId,
+			playerId: game.creatorPlayerId ?? '',
+			turnId: game.turnId,
+			_serverTriggered: true
+		});
+	} catch (error) {
+		console.error(`[tryAutoProcess] Error auto-processing game ${gameId}:`, error);
+	}
 };
 
 export const turnFinale = async (gameId: string, turnId: number) => {
@@ -563,18 +590,30 @@ export const turnFinale = async (gameId: string, turnId: number) => {
 export const processTurn = async ({
 	gameId,
 	playerId,
-	turnId
+	turnId,
+	_serverTriggered = false
 }: {
 	gameId: string;
 	playerId: string;
 	turnId: number;
+	_serverTriggered?: boolean;
 }) => {
 	const game = await requireGame(gameId);
-	if (game.creatorPlayerId !== playerId) {
+	if (!_serverTriggered && game.creatorPlayerId !== playerId) {
 		throw forbidden('Forbidden');
 	}
 	if (game.turnId !== turnId) {
 		throw notFound('Turn not found');
+	}
+
+	// Idempotency guard: if already processed, return early
+	const existingTurn = await db
+		.select({ status: turns.status })
+		.from(turns)
+		.where(and(eq(turns.gameId, gameId), eq(turns.turnId, turnId)))
+		.limit(1);
+	if (existingTurn[0]?.status === 'PROCESSED') {
+		return { alignmentResponses: [] };
 	}
 
 	const allPlayers = await db
@@ -601,6 +640,7 @@ export const processTurn = async ({
 	}
 
 	let winnerId = await pickWinner({
+		gameId,
 		alignerPrompt: game.alignerPromptFull || randomAlignerPrompt(),
 		turnPrompt: game.turnPrompt || randomTurnPrompt(),
 		responsesByPlayer

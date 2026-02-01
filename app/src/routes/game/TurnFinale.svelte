@@ -1,11 +1,8 @@
 <script lang="ts">
 	import LoadingBars from './LoadingBars.svelte';
 	import { globalState } from '$lib/state/store.svelte';
-	import { addNotification } from '$lib/state/store.svelte';
-	import { isRecord, NotificationKind, type AlignmentResponse } from '$lib/types';
+	import type { AlignmentResponse } from '$lib/types';
 
-	let isJudgePending = $state(false);
-	let isCreator = $derived(Boolean(globalState.creator_id));
 	let results = $derived(globalState.last_turn_results);
 	let turnProcessed = $derived(results !== null && results.length > 0);
 
@@ -50,49 +47,6 @@
 		return () => clearInterval(intervalId);
 	});
 
-	async function judgeResponses() {
-		if (isJudgePending) return;
-		isJudgePending = true;
-
-		try {
-			const gameId = globalState.game_id;
-			const userId = globalState.user_id;
-			const turnId = globalState.last_turn_id;
-			if (!gameId || !userId || !turnId) {
-				throw new Error('Missing game/user/turn context');
-			}
-
-			const url = `/api/game/${gameId}/turn/${turnId}/process`;
-			const response = await fetch(url, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ playerId: userId })
-			});
-			if (response.ok) {
-				const payload = await response.json();
-				if (isRecord(payload) && Array.isArray(payload.alignmentResponses)) {
-					const responses = payload.alignmentResponses as AlignmentResponse[];
-					globalState.last_turn_results = responses;
-					if (responses.some((r) => r.isGlobalWinner === true)) {
-						globalState.is_game_over = true;
-					}
-				}
-			} else {
-				const data = await response.json();
-				addNotification({
-					source_url: 'turn finale',
-					title: 'Error processing turn',
-					body: data,
-					kind: NotificationKind.ERROR,
-					action_url: url,
-					action_text: 'process turn'
-				});
-			}
-		} finally {
-			isJudgePending = false;
-		}
-	}
-
 	function advanceTurn() {
 		globalState.last_turn_results = null;
 		globalState.have_all_users_submitted = false;
@@ -100,19 +54,10 @@
 </script>
 
 <div id="container">
-	{#if !turnProcessed && isCreator}
-		<h2>All bots submitted!</h2>
-		<p class="subtitle">Click below to have the Aligner judge the responses.</p>
-		<button onclick={judgeResponses}>
-			{#if isJudgePending}
-				<LoadingBars />
-			{:else}
-				Judge Responses
-			{/if}
-		</button>
-	{:else if !turnProcessed && !isCreator}
-		<h2>Waiting for host to judge...</h2>
-		<p class="subtitle">The game creator will judge this round.</p>
+	{#if !turnProcessed}
+		<h2>The Aligner is deliberating...</h2>
+		<p class="subtitle">Watch the chat for the Aligner's reasoning!</p>
+		<LoadingBars />
 	{:else if results}
 		<h2>Round Results</h2>
 		<div class="results-list">

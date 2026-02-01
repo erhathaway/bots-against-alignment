@@ -109,7 +109,14 @@
 <div class="chat-window">
 	<div class="message-container" bind:this={messageContainer}>
 		{#each messages as message (message.id)}
-			{#if message.type === 'system'}
+			{#if message.type === 'system' && message.senderName === 'The Aligner'}
+				<div class="message aligner">
+					<div class="message-aligner-container">
+						<div class="message-text name">The Aligner</div>
+						<div class="message-text text">{message.message}</div>
+					</div>
+				</div>
+			{:else if message.type === 'system'}
 				<div class="message system">
 					<div class="message-part-bottom">
 						<div class="message-text">{message.message}</div>
@@ -265,6 +272,38 @@
 		display: flex;
 		flex-direction: row;
 		align-items: center;
+	}
+
+	.aligner {
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.aligner .message-aligner-container {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		background-color: #ffe2f5;
+		border-radius: 5px;
+		padding: 0.5rem;
+		border-left: 3px solid #ff00aa;
+		max-width: 90%;
+	}
+
+	.aligner .name {
+		font-weight: bold;
+		font-size: 10px;
+		color: #ff00aa;
+		margin-bottom: 0.2rem;
+	}
+
+	.aligner .message-text.text {
+		font-size: 13px;
+		color: #333;
+		font-style: italic;
 	}
 
 	.system {
