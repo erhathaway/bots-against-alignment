@@ -8,6 +8,37 @@
 	type BotInfo = { name: string; points: number; turnComplete: boolean; isHost: boolean };
 	let joinedBots = $state<BotInfo[]>([]);
 	let fetchStatusInterval: ReturnType<typeof setInterval> | null = null;
+	let isCreator = $derived(globalState.creator_id != null);
+	let pointsToWin = $state(2);
+	let botPromptChanges = $state(1);
+	let savingSettings = $state(false);
+
+	async function saveSettings(field: 'pointsToWin' | 'botPromptChanges', value: number) {
+		const gameId = globalState.game_id;
+		const creatorId = globalState.creator_id;
+		if (!gameId || !creatorId) return;
+		savingSettings = true;
+		try {
+			const response = await fetch(`/api/game/${gameId}/settings`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ creatorId, [field]: value })
+			});
+			if (!response.ok) {
+				const data = await response.json();
+				addNotification({
+					source_url: 'lobby',
+					title: 'Error saving settings',
+					body: data.message || data,
+					kind: NotificationKind.ERROR,
+					action_url: null,
+					action_text: 'save_settings'
+				});
+			}
+		} finally {
+			savingSettings = false;
+		}
+	}
 
 	async function fetchStatus() {
 		const gameId = globalState.game_id;
@@ -26,6 +57,8 @@
 			if (data.bots && Array.isArray(data.bots)) {
 				joinedBots = data.bots as BotInfo[];
 			}
+			if (data.pointsToWin != null) pointsToWin = data.pointsToWin;
+			if (data.botPromptChanges != null) botPromptChanges = data.botPromptChanges;
 
 			if (status === 'STARTED' || status === 'ENDED') {
 				globalState.is_game_started = true;
@@ -119,6 +152,41 @@
 		</div>
 	{/if}
 
+	<div class="settings">
+		<div class="setting-row">
+			<label for="points-to-win">Points to win</label>
+			{#if isCreator}
+				<input
+					id="points-to-win"
+					type="number"
+					min="1"
+					max="20"
+					bind:value={pointsToWin}
+					onchange={() => saveSettings('pointsToWin', pointsToWin)}
+					disabled={savingSettings}
+				/>
+			{:else}
+				<span class="setting-value">{pointsToWin}</span>
+			{/if}
+		</div>
+		<div class="setting-row">
+			<label for="bot-prompt-changes">Prompt changes allowed</label>
+			{#if isCreator}
+				<input
+					id="bot-prompt-changes"
+					type="number"
+					min="0"
+					max="10"
+					bind:value={botPromptChanges}
+					onchange={() => saveSettings('botPromptChanges', botPromptChanges)}
+					disabled={savingSettings}
+				/>
+			{:else}
+				<span class="setting-value">{botPromptChanges}</span>
+			{/if}
+		</div>
+	</div>
+
 	{#if globalState.creator_id == null}
 		<p class="non-creator">Waiting for creator to start game<LoadingCommas /></p>
 	{:else}
@@ -177,6 +245,39 @@
 		border-radius: 0.5rem;
 		margin-left: 0.2rem;
 		vertical-align: middle;
+	}
+	.settings {
+		display: flex;
+		gap: 2rem;
+		margin-bottom: 1.5rem;
+	}
+	.setting-row {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.4rem;
+	}
+	.setting-row label {
+		font-size: 0.85rem;
+		color: #666;
+		font-weight: 600;
+	}
+	.setting-row input[type='number'] {
+		width: 4rem;
+		text-align: center;
+		font-size: 1.1rem;
+		font-weight: bold;
+		padding: 0.3rem;
+		border: 2px solid #ccc;
+		border-radius: 0.5rem;
+		outline: none;
+	}
+	.setting-row input[type='number']:focus {
+		border-color: rgb(123, 255, 0);
+	}
+	.setting-value {
+		font-size: 1.1rem;
+		font-weight: bold;
 	}
 	p.non-creator {
 		font-size: 3rem;

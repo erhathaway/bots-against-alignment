@@ -12,6 +12,8 @@ export const games = sqliteTable('games', {
 		.notNull()
 		.default('USER_ROUND_ROBIN'),
 	maxAutoPlayers: integer('max_auto_players').notNull().default(0),
+	maxTurns: integer('max_turns').notNull().default(2),
+	botPromptChanges: integer('bot_prompt_changes').notNull().default(1),
 	turnId: integer('turn_id').notNull().default(1),
 	turnStarted: integer('turn_started', { mode: 'boolean' }).notNull().default(false),
 	turnPrompt: text('turn_prompt'),

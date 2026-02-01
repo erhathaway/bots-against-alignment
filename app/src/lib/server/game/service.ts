@@ -13,8 +13,8 @@ import {
 import { badRequest, forbidden, notFound } from '$lib/server/errors';
 import { postChatMessage } from '$lib/server/chat/service';
 
-const DEFAULT_POINTS_TO_WIN = 10;
-const DEFAULT_PROMPTS_REMAINING = 2;
+const DEFAULT_POINTS_TO_WIN = 2;
+const DEFAULT_BOT_PROMPT_CHANGES = 1;
 const MAX_BOT_PROMPT_LENGTH = 281;
 
 const truncate = (value: string, max: number) => value.slice(0, max);
@@ -42,6 +42,7 @@ export const createGame = async () => {
 		pointsToWin: DEFAULT_POINTS_TO_WIN,
 		alignerType: 'USER_ROUND_ROBIN',
 		maxAutoPlayers: 3,
+		botPromptChanges: DEFAULT_BOT_PROMPT_CHANGES,
 		turnId: 1,
 		turnStarted: false,
 		turnPrompt: null,
@@ -64,6 +65,44 @@ export const requireGame = async (gameId: string) => {
 		throw notFound(`Game not found: ${gameId}`);
 	}
 	return game;
+};
+
+export const updateGameSettings = async ({
+	gameId,
+	creatorId,
+	pointsToWin,
+	botPromptChanges
+}: {
+	gameId: string;
+	creatorId: string;
+	pointsToWin?: number;
+	botPromptChanges?: number;
+}) => {
+	const game = await requireGame(gameId);
+	if (game.creatorId !== creatorId) {
+		throw forbidden('Forbidden');
+	}
+	if (game.status !== 'LOBBY') {
+		throw badRequest('Cannot change settings after game has started');
+	}
+
+	const updates: Partial<typeof games.$inferInsert> = { updatedAt: now() };
+	if (pointsToWin !== undefined) {
+		if (pointsToWin < 1 || pointsToWin > 20)
+			throw badRequest('pointsToWin must be between 1 and 20');
+		updates.pointsToWin = pointsToWin;
+	}
+	if (botPromptChanges !== undefined) {
+		if (botPromptChanges < 0 || botPromptChanges > 10)
+			throw badRequest('botPromptChanges must be between 0 and 10');
+		updates.botPromptChanges = botPromptChanges;
+	}
+
+	await db.update(games).set(updates).where(eq(games.id, gameId));
+	return {
+		pointsToWin: pointsToWin ?? game.pointsToWin,
+		botPromptChanges: botPromptChanges ?? game.botPromptChanges
+	};
 };
 
 export const joinGame = async ({
@@ -91,7 +130,7 @@ export const joinGame = async ({
 			botName,
 			botPrompt: trimmedPrompt,
 			submittedBotPrompt: trimmedPrompt,
-			promptsRemaining: DEFAULT_PROMPTS_REMAINING,
+			promptsRemaining: DEFAULT_BOT_PROMPT_CHANGES,
 			score: 0,
 			isAuto: false,
 			turnComplete: false,
@@ -141,7 +180,7 @@ const createAutoPlayer = async (gameId: string) => {
 			botName,
 			botPrompt: truncate(botPrompt, MAX_BOT_PROMPT_LENGTH),
 			submittedBotPrompt: truncate(botPrompt, MAX_BOT_PROMPT_LENGTH),
-			promptsRemaining: DEFAULT_PROMPTS_REMAINING,
+			promptsRemaining: DEFAULT_BOT_PROMPT_CHANGES,
 			score: 0,
 			isAuto: true,
 			turnComplete: false,
@@ -185,14 +224,21 @@ export const startGame = async ({ gameId, creatorId }: { gameId: string; creator
 		? shuffle(alignerRows.map((row) => row.prompt)).join(' ')
 		: randomAlignerPrompt();
 
+	const timestamp = now();
 	await db
 		.update(games)
 		.set({
 			status: 'STARTED',
 			alignerPromptFull: combinedPrompt,
-			updatedAt: now()
+			updatedAt: timestamp
 		})
 		.where(eq(games.id, gameId));
+
+	// Set all active players' promptsRemaining to the game's botPromptChanges setting
+	await db
+		.update(players)
+		.set({ promptsRemaining: game.botPromptChanges, updatedAt: timestamp })
+		.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
 
 	const allPlayers = await db
 		.select({ botName: players.botName, isAuto: players.isAuto })
@@ -203,7 +249,7 @@ export const startGame = async ({ gameId, creatorId }: { gameId: string; creator
 
 	await postChatMessage({
 		gameId,
-		message: `Game started with ${allPlayers.length} bots! Players: ${humanNames.join(', ')}${autoNames.length ? `. AI bots: ${autoNames.join(', ')}` : ''}`,
+		message: `Game started with ${allPlayers.length} bots! First to ${game.pointsToWin} point${game.pointsToWin === 1 ? '' : 's'}, ${game.botPromptChanges} prompt change${game.botPromptChanges === 1 ? '' : 's'}. Players: ${humanNames.join(', ')}${autoNames.length ? `. AI bots: ${autoNames.join(', ')}` : ''}`,
 		type: 'system'
 	});
 
@@ -229,7 +275,12 @@ export const getGameStatus = async (gameId: string) => {
 		isHost: p.id === game.creatorPlayerId
 	}));
 
-	return { status: game.status, bots };
+	return {
+		status: game.status,
+		bots,
+		pointsToWin: game.pointsToWin,
+		botPromptChanges: game.botPromptChanges
+	};
 };
 
 export const getUserStatus = async (gameId: string, playerId: string) => {
@@ -589,10 +640,12 @@ export const processTurn = async ({
 		.select()
 		.from(players)
 		.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
+
 	const isGameOver = updatedPlayers.some((player) => player.score >= game.pointsToWin);
 	if (isGameOver) {
 		await db.update(games).set({ status: 'ENDED', updatedAt: now() }).where(eq(games.id, gameId));
 	}
+
 	const alignmentResponses = updatedPlayers.map((player) => ({
 		playerId: player.id,
 		name: player.botName,
