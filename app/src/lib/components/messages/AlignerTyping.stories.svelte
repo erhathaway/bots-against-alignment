@@ -1,10 +1,10 @@
 <script module>
 	import { defineMeta } from '@storybook/addon-svelte-csf';
-	import LoadingSpinner from './LoadingSpinner.svelte';
+	import AlignerTyping from './AlignerTyping.svelte';
 
 	const { Story } = defineMeta({
-		title: 'Game/LoadingSpinner',
-		component: LoadingSpinner
+		title: 'Messages/AlignerTyping',
+		component: AlignerTyping
 	});
 </script>
 

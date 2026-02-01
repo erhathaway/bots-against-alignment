@@ -1,6 +1,16 @@
 <script lang="ts">
 	import { globalState } from '$lib/state/store.svelte';
 	import { tick, untrack } from 'svelte';
+	import GameStartMessage from '$lib/components/messages/GameStartMessage.svelte';
+	import TurnPromptMessage from '$lib/components/messages/TurnPromptMessage.svelte';
+	import RoundWinnerMessage from '$lib/components/messages/RoundWinnerMessage.svelte';
+	import StandingsMessage from '$lib/components/messages/StandingsMessage.svelte';
+	import AlignerMessage from '$lib/components/messages/AlignerMessage.svelte';
+	import AlignerTyping from '$lib/components/messages/AlignerTyping.svelte';
+	import SystemMessage from '$lib/components/messages/SystemMessage.svelte';
+	import BotResponseMessage from '$lib/components/messages/BotResponseMessage.svelte';
+	import StatusMessage from '$lib/components/messages/StatusMessage.svelte';
+	import ChatBubble from '$lib/components/messages/ChatBubble.svelte';
 
 	type ChatMessage = {
 		id: number;
@@ -94,31 +104,12 @@
 		}
 	}
 
-	function stringToColor(str: string) {
-		let hash = 0;
-		for (let index = 0; index < str.length; index++) {
-			hash = str.charCodeAt(index) + ((hash << 5) - hash);
+	function tryParseJSON(str: string) {
+		try {
+			return JSON.parse(str);
+		} catch {
+			return null;
 		}
-		return hash;
-	}
-
-	function intToRGB(value: number) {
-		const hexValue = (value & 0x00ffffff).toString(16).toUpperCase();
-		return '#' + '00000'.substring(0, 6 - hexValue.length) + hexValue;
-	}
-
-	function getNameColor(name: string) {
-		return intToRGB(stringToColor(name));
-	}
-
-	function displayName(senderName: string | null) {
-		if (!senderName) return 'Unknown';
-		if (senderName === globalState.bot_name) return 'You';
-		return senderName;
-	}
-
-	function isMe(senderName: string | null) {
-		return Boolean(senderName && senderName === globalState.bot_name);
 	}
 </script>
 
@@ -126,154 +117,56 @@
 	<div class="message-container" bind:this={messageContainer}>
 		{#each messages as message (message.id)}
 			{#if message.type === 'system' && message.senderName === 'Game Start'}
-				{@const info = (() => {
-					try {
-						return JSON.parse(message.message);
-					} catch {
-						return null;
-					}
-				})()}
+				{@const info = tryParseJSON(message.message)}
 				{#if info}
-					<div class="message game-start">
-						<div class="game-start-container">
-							<div class="game-start-title">Game On!</div>
-							<div class="game-start-rules">
-								First to {info.pointsToWin} point{info.pointsToWin === 1 ? '' : 's'} &middot; {info.botPromptChanges}
-								prompt change{info.botPromptChanges === 1 ? '' : 's'} per turn
-							</div>
-							<div class="game-start-players">
-								{#each info.humans as name (name)}
-									<span class="player-chip human">{name}</span>
-								{/each}
-								{#each info.ai as name (name)}
-									<span class="player-chip ai">{name}</span>
-								{/each}
-							</div>
-						</div>
-					</div>
+					<GameStartMessage
+						pointsToWin={info.pointsToWin}
+						botPromptChanges={info.botPromptChanges}
+						humans={info.humans}
+						ai={info.ai}
+					/>
 				{/if}
 			{:else if message.type === 'system' && message.senderName === 'Turn Prompt'}
-				<div class="message turn-prompt">
-					<div class="turn-prompt-container">
-						<div class="turn-prompt-label">Turn Prompt</div>
-						<div class="turn-prompt-text">{message.message}</div>
-					</div>
-				</div>
+				<TurnPromptMessage prompt={message.message} />
 			{:else if message.type === 'system' && message.senderName === 'Round Winner'}
-				{@const win = (() => {
-					try {
-						return JSON.parse(message.message);
-					} catch {
-						return null;
-					}
-				})()}
+				{@const win = tryParseJSON(message.message)}
 				{#if win}
-					<div class="message round-winner">
-						<div class="round-winner-container">
-							<div class="round-winner-label">Round Winner</div>
-							<div class="round-winner-name">{win.name}</div>
-							<div class="round-winner-score">{win.score} point{win.score === 1 ? '' : 's'}</div>
-						</div>
-					</div>
+					<RoundWinnerMessage name={win.name} score={win.score} />
 				{/if}
 			{:else if message.type === 'system' && message.senderName === 'Standings'}
-				{@const rows = (() => {
-					try {
-						return JSON.parse(message.message);
-					} catch {
-						return null;
-					}
-				})()}
+				{@const rows = tryParseJSON(message.message)}
 				{#if rows}
-					<div class="message standings">
-						<div class="standings-container">
-							{#each rows as row, i (row.name)}
-								<div class="standings-row" class:leader={i === 0}>
-									<span class="standings-rank">{i + 1}</span>
-									<span class="standings-name"
-										>{row.name}{#if row.isAuto}<span class="standings-ai">AI</span>{/if}</span
-									>
-									<span class="standings-score">{row.score}</span>
-								</div>
-							{/each}
-						</div>
-					</div>
+					<StandingsMessage {rows} />
 				{/if}
 			{:else if message.type === 'system' && message.senderName === 'The Aligner'}
-				<div class="message aligner">
-					<div class="message-aligner-container">
-						<div class="message-text name">The Aligner</div>
-						<div class="message-text text">{message.message}</div>
-					</div>
-				</div>
+				<AlignerMessage message={message.message} />
 			{:else if message.type === 'system'}
-				<div class="message system">
-					<div class="message-part-bottom">
-						<div class="message-text">{message.message}</div>
-					</div>
-				</div>
+				<SystemMessage message={message.message} />
 			{:else if message.type === 'status' && message.senderName === 'Bot Response'}
-				{@const bot = (() => {
-					try {
-						return JSON.parse(message.message);
-					} catch {
-						return null;
-					}
-				})()}
+				{@const bot = tryParseJSON(message.message)}
 				{#if bot}
-					{@const mine = bot.name === globalState.bot_name}
-					<div class="message bot-response" class:mine class:theirs={!mine}>
-						{#if mine}
-							<div class="bot-avatar" style="background-color: {getNameColor(bot.name)};">
-								<span class="bot-avatar-face">&#x1F916;</span>
-							</div>
-							<div class="bot-response-body">
-								<div class="bot-response-name">You</div>
-								<div class="bot-response-text">{bot.text}</div>
-							</div>
-						{:else}
-							<div class="bot-response-body">
-								<div class="bot-response-name">{bot.name}</div>
-								<div class="bot-response-text">{bot.text}</div>
-							</div>
-							<div class="bot-avatar" style="background-color: {getNameColor(bot.name)};">
-								<span class="bot-avatar-face">&#x1F916;</span>
-							</div>
-						{/if}
-					</div>
+					<BotResponseMessage
+						name={bot.name}
+						text={bot.text}
+						mine={bot.name === globalState.bot_name}
+					/>
 				{/if}
 			{:else if message.type === 'status'}
-				<div class="message status">
-					<div class="message-status-container">
-						<div class="message-text name" class:you={isMe(message.senderName)}>
-							{displayName(message.senderName)}
-						</div>
-						<div class="message-text text">{message.message}</div>
-					</div>
-				</div>
+				<StatusMessage
+					senderName={message.senderName ?? 'Unknown'}
+					message={message.message}
+					isMe={Boolean(message.senderName && message.senderName === globalState.bot_name)}
+				/>
 			{:else}
-				<div class="message {message.senderName === globalState.bot_name ? 'user' : 'other'}">
-					<div class="message-part-top">{displayName(message.senderName)}</div>
-					<div class="message-part-bottom">
-						<div
-							class="message-icon"
-							style="background-color: {getNameColor(message.senderName ?? 'Unknown')};"
-						></div>
-						<div class="message-text">{message.message}</div>
-					</div>
-				</div>
+				<ChatBubble
+					senderName={message.senderName ?? 'Unknown'}
+					message={message.message}
+					isUser={message.senderName === globalState.bot_name}
+				/>
 			{/if}
 		{/each}
 		{#if alignerTyping}
-			<div class="message aligner">
-				<div class="message-aligner-container">
-					<div class="typing-dots">
-						<span class="dot"></span>
-						<span class="dot"></span>
-						<span class="dot"></span>
-					</div>
-				</div>
-			</div>
+			<AlignerTyping />
 		{/if}
 	</div>
 	{#if hasJoined}
@@ -316,52 +209,6 @@
 		flex-direction: column;
 	}
 
-	.message {
-		display: flex;
-		margin-bottom: 1rem;
-		margin: 0.6rem;
-		flex-direction: column;
-	}
-
-	.message-icon {
-		width: 20px;
-		height: 20px;
-		border-radius: 50%;
-	}
-
-	.user .message-text {
-		padding: 10px;
-		background-color: #eee;
-		border-radius: 5px;
-		font-size: 13px;
-		margin-right: 0.4rem;
-		margin-left: 0.4rem;
-	}
-
-	.user {
-		justify-content: flex-start;
-	}
-
-	.other {
-		justify-content: flex-end;
-	}
-
-	.other .message-text {
-		padding: 10px;
-		background-color: #eee;
-		border-radius: 5px;
-		font-size: 13px;
-		margin-right: 0.4rem;
-		margin-left: 0.4rem;
-	}
-
-	.other .message-part-top {
-		text-align: right;
-	}
-	.other .message-part-bottom {
-		flex-direction: row-reverse;
-	}
-
 	.input-container {
 		display: flex;
 		padding: 10px;
@@ -394,396 +241,5 @@
 		background-color: rgb(123, 255, 0);
 		color: rgb(0, 0, 0);
 		border: 2px solid black;
-	}
-
-	.message-part-top {
-		margin-bottom: 5px;
-		font-size: 10px;
-	}
-
-	.message-part-bottom {
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-	}
-
-	.aligner {
-		display: flex;
-		flex-direction: row;
-		justify-content: flex-start;
-		align-items: flex-start;
-	}
-
-	.aligner .message-aligner-container {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		background-color: #ffe2f5;
-		border-radius: 5px;
-		padding: 0.5rem;
-		border-left: 3px solid #ff00aa;
-		max-width: 85%;
-	}
-
-	.aligner .name {
-		font-weight: bold;
-		font-size: 10px;
-		color: #ff00aa;
-		margin-bottom: 0.2rem;
-	}
-
-	.aligner .message-text.text {
-		font-size: 13px;
-		color: #333;
-		font-style: italic;
-		text-align: left;
-	}
-
-	.game-start {
-		display: flex;
-		flex-direction: row;
-		justify-content: center;
-		align-items: center;
-	}
-
-	.game-start .game-start-container {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		background: linear-gradient(135deg, #111 0%, #222 100%);
-		border: 2px solid rgb(123, 255, 0);
-		border-radius: 10px;
-		padding: 0.75rem 1rem;
-		width: 90%;
-		gap: 0.4rem;
-	}
-
-	.game-start .game-start-title {
-		font-size: 1rem;
-		font-weight: bold;
-		color: rgb(123, 255, 0);
-		letter-spacing: 0.05em;
-	}
-
-	.game-start .game-start-rules {
-		font-size: 11px;
-		color: #ccc;
-	}
-
-	.game-start .game-start-players {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.3rem;
-		justify-content: center;
-		margin-top: 0.2rem;
-	}
-
-	.game-start .player-chip {
-		font-size: 10px;
-		font-weight: bold;
-		padding: 0.15rem 0.5rem;
-		border-radius: 1rem;
-	}
-
-	.game-start .player-chip.human {
-		background: rgb(123, 255, 0);
-		color: #111;
-	}
-
-	.game-start .player-chip.ai {
-		background: rgb(100, 149, 237);
-		color: white;
-	}
-
-	.bot-response {
-		display: flex;
-		flex-direction: row;
-		align-items: flex-start;
-		gap: 0.4rem;
-	}
-
-	.bot-response.mine {
-		justify-content: flex-start;
-	}
-
-	.bot-response.theirs {
-		justify-content: flex-end;
-	}
-
-	.bot-avatar {
-		width: 32px;
-		height: 32px;
-		border-radius: 50%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex-shrink: 0;
-	}
-
-	.bot-avatar-face {
-		font-size: 16px;
-		line-height: 1;
-	}
-
-	.bot-response-body {
-		display: flex;
-		flex-direction: column;
-		max-width: 70%;
-	}
-
-	.bot-response-name {
-		font-size: 10px;
-		font-weight: bold;
-		margin-bottom: 2px;
-		color: #555;
-	}
-
-	.bot-response.mine .bot-response-name {
-		color: #0066cc;
-	}
-
-	.bot-response.theirs .bot-response-name {
-		text-align: right;
-	}
-
-	.bot-response-text {
-		padding: 0.5rem 0.75rem;
-		border-radius: 12px;
-		font-size: 13px;
-		line-height: 1.4;
-		background: #f0f0f0;
-		color: #222;
-	}
-
-	.bot-response.mine .bot-response-text {
-		border-top-left-radius: 4px;
-		background: #e8f5e9;
-	}
-
-	.bot-response.theirs .bot-response-text {
-		border-top-right-radius: 4px;
-		background: #f0f0f0;
-	}
-
-	.round-winner {
-		display: flex;
-		flex-direction: row;
-		justify-content: center;
-		align-items: center;
-	}
-
-	.round-winner .round-winner-container {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		background: linear-gradient(135deg, #fff8e1 0%, #fff3c4 100%);
-		border: 2px solid #ffb300;
-		border-radius: 10px;
-		padding: 0.6rem 1rem;
-		width: 90%;
-		gap: 0.15rem;
-	}
-
-	.round-winner .round-winner-label {
-		font-size: 9px;
-		font-weight: bold;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: #b77b00;
-	}
-
-	.round-winner .round-winner-name {
-		font-size: 1rem;
-		font-weight: bold;
-		color: #333;
-	}
-
-	.round-winner .round-winner-score {
-		font-size: 11px;
-		color: #777;
-	}
-
-	.standings {
-		display: flex;
-		flex-direction: row;
-		justify-content: center;
-		align-items: center;
-	}
-
-	.standings .standings-container {
-		display: flex;
-		flex-direction: column;
-		width: 90%;
-		border: 1px solid #ddd;
-		border-radius: 8px;
-		overflow: hidden;
-	}
-
-	.standings .standings-row {
-		display: flex;
-		align-items: center;
-		padding: 0.3rem 0.6rem;
-		font-size: 12px;
-		border-bottom: 1px solid #eee;
-		gap: 0.4rem;
-	}
-
-	.standings .standings-row:last-child {
-		border-bottom: none;
-	}
-
-	.standings .standings-row.leader {
-		background: #fff8e1;
-		font-weight: bold;
-	}
-
-	.standings .standings-rank {
-		width: 1.2rem;
-		color: #999;
-		font-weight: bold;
-		text-align: center;
-	}
-
-	.standings .standings-name {
-		flex: 1;
-		display: flex;
-		align-items: center;
-		gap: 0.3rem;
-	}
-
-	.standings .standings-ai {
-		font-size: 8px;
-		font-weight: bold;
-		background: rgb(100, 149, 237);
-		color: white;
-		padding: 0.05rem 0.3rem;
-		border-radius: 0.5rem;
-	}
-
-	.standings .standings-score {
-		font-weight: bold;
-		color: #333;
-	}
-
-	.turn-prompt {
-		display: flex;
-		flex-direction: row;
-		justify-content: center;
-		align-items: center;
-	}
-
-	.turn-prompt .turn-prompt-container {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		background-color: rgb(123, 255, 0);
-		border: 2px solid rgb(80, 180, 0);
-		border-radius: 10px;
-		padding: 0.75rem 1.25rem;
-		width: 90%;
-	}
-
-	.turn-prompt .turn-prompt-label {
-		font-size: 10px;
-		font-weight: bold;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: rgb(50, 100, 0);
-		margin-bottom: 0.3rem;
-	}
-
-	.turn-prompt .turn-prompt-text {
-		font-size: 1rem;
-		font-weight: bold;
-		color: #000;
-		text-align: center;
-	}
-
-	.system {
-		justify-content: center;
-		align-items: center;
-	}
-
-	.system .message-text {
-		border-radius: 5px;
-		font-size: 13px;
-		margin-right: 0.4rem;
-		margin-left: 0.4rem;
-		padding: 0.3rem;
-		background-color: #ecffe2;
-		color: rgb(98, 98, 98);
-	}
-
-	.status {
-		display: flex;
-		flex-direction: row;
-		justify-content: center;
-		align-items: center;
-	}
-
-	.status .message-status-container {
-		display: flex;
-		flex-direction: row;
-		justify-content: center;
-		align-items: center;
-		background-color: #e2f1ff;
-		border-radius: 5px;
-		padding: 0.3rem;
-	}
-
-	.status .name {
-		font-weight: bold;
-		font-size: 10px;
-		margin-right: 0.4rem;
-		margin-left: 0.4rem;
-	}
-
-	.status .name.you {
-		color: #0066cc;
-	}
-
-	.status .message-text {
-		font-size: 13px;
-		margin-right: 0.4rem;
-		margin-left: 0.4rem;
-		color: rgb(98, 98, 98);
-	}
-
-	.typing-dots {
-		display: flex;
-		gap: 4px;
-		padding: 6px 10px;
-		align-items: center;
-	}
-
-	.dot {
-		width: 8px;
-		height: 8px;
-		border-radius: 50%;
-		background-color: #ff00aa;
-		animation: bounce 1.4s infinite ease-in-out both;
-	}
-
-	.dot:nth-child(1) {
-		animation-delay: 0s;
-	}
-	.dot:nth-child(2) {
-		animation-delay: 0.2s;
-	}
-	.dot:nth-child(3) {
-		animation-delay: 0.4s;
-	}
-
-	@keyframes bounce {
-		0%,
-		80%,
-		100% {
-			transform: scale(0.4);
-			opacity: 0.3;
-		}
-		40% {
-			transform: scale(1);
-			opacity: 1;
-		}
 	}
 </style>
