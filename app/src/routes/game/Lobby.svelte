@@ -1,17 +1,29 @@
 <script lang="ts">
 	import { addNotification, globalState } from '$lib/state/store.svelte';
 	import { NotificationKind } from '$lib/types';
+	import { untrack } from 'svelte';
 	import LoadingBars from './LoadingBars.svelte';
 	import LoadingCommas from './LoadingCommas.svelte';
 	import GameLink from './GameLink.svelte';
 
-	type BotInfo = { name: string; points: number; turnComplete: boolean; isHost: boolean };
+	type BotInfo = {
+		id: string;
+		name: string;
+		points: number;
+		turnComplete: boolean;
+		isHost: boolean;
+		isAuto: boolean;
+	};
+
 	let joinedBots = $state<BotInfo[]>([]);
 	let fetchStatusInterval: ReturnType<typeof setInterval> | null = null;
 	let isCreator = $derived(globalState.creator_id != null);
 	let pointsToWin = $state(2);
 	let botPromptChanges = $state(1);
 	let savingSettings = $state(false);
+	let addingAi = $state(false);
+	let countdownStartedAt = $state<number | null>(null);
+	let countdownRemaining = $state<number | null>(null);
 
 	async function saveSettings(field: 'pointsToWin' | 'botPromptChanges', value: number) {
 		const gameId = globalState.game_id;
@@ -59,6 +71,7 @@
 			}
 			if (data.pointsToWin != null) pointsToWin = data.pointsToWin;
 			if (data.botPromptChanges != null) botPromptChanges = data.botPromptChanges;
+			if (data.countdownStartedAt !== undefined) countdownStartedAt = data.countdownStartedAt;
 
 			if (status === 'STARTED' || status === 'ENDED') {
 				globalState.is_game_started = true;
@@ -91,21 +104,12 @@
 
 	let isStartGamePending = $state(false);
 	async function startGame() {
-		if (isStartGamePending) {
-			return;
-		}
-
+		if (isStartGamePending) return;
 		isStartGamePending = true;
 		try {
-			if (globalState.creator_id == null) {
-				throw new Error('Only the creator can start the game');
-			}
-			if (globalState.is_game_started) {
-				throw new Error('Game already started');
-			}
-			if (globalState.game_id == null) {
-				throw new Error('Game ID is null');
-			}
+			if (globalState.creator_id == null) throw new Error('Only the creator can start the game');
+			if (globalState.is_game_started) throw new Error('Game already started');
+			if (globalState.game_id == null) throw new Error('Game ID is null');
 			const url = `/api/game/${globalState.game_id}/start`;
 			const response = await fetch(url, {
 				method: 'POST',
@@ -131,24 +135,126 @@
 		}
 	}
 
+	async function addAiPlayer() {
+		if (addingAi) return;
+		const gameId = globalState.game_id;
+		const creatorId = globalState.creator_id;
+		if (!gameId || !creatorId) return;
+		addingAi = true;
+		try {
+			const response = await fetch(`/api/game/${gameId}/auto-player`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ creatorId })
+			});
+			if (!response.ok) {
+				const data = await response.json();
+				addNotification({
+					source_url: 'lobby',
+					title: 'Error adding AI player',
+					body: data.error || data.message || JSON.stringify(data),
+					kind: NotificationKind.ERROR,
+					action_url: null,
+					action_text: 'add_ai'
+				});
+			}
+			await fetchStatus();
+		} finally {
+			addingAi = false;
+		}
+	}
+
+	async function removeAiPlayer(playerId: string) {
+		const gameId = globalState.game_id;
+		const creatorId = globalState.creator_id;
+		if (!gameId || !creatorId) return;
+		try {
+			const response = await fetch(`/api/game/${gameId}/auto-player`, {
+				method: 'DELETE',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ creatorId, playerId })
+			});
+			if (!response.ok) {
+				const data = await response.json();
+				addNotification({
+					source_url: 'lobby',
+					title: 'Error removing AI player',
+					body: data.error || data.message || JSON.stringify(data),
+					kind: NotificationKind.ERROR,
+					action_url: null,
+					action_text: 'remove_ai'
+				});
+			}
+			await fetchStatus();
+		} catch {
+			// ignore
+		}
+	}
+
+	function formatCountdown(ms: number) {
+		const totalSeconds = Math.ceil(ms / 1000);
+		const minutes = Math.floor(totalSeconds / 60);
+		const seconds = totalSeconds % 60;
+		return `${minutes}:${String(seconds).padStart(2, '0')}`;
+	}
+
 	$effect(() => {
-		fetchStatus();
+		untrack(() => fetchStatus());
 		fetchStatusInterval = setInterval(fetchStatus, 3000);
 		return () => {
 			if (fetchStatusInterval) clearInterval(fetchStatusInterval);
 		};
+	});
+
+	// Countdown timer — ticks every second when active
+	$effect(() => {
+		if (!countdownStartedAt) {
+			countdownRemaining = null;
+			return;
+		}
+		const update = () => {
+			const elapsed = Date.now() - countdownStartedAt!;
+			const remaining = Math.max(0, 3 * 60 * 1000 - elapsed);
+			countdownRemaining = remaining;
+		};
+		update();
+		const id = setInterval(update, 1000);
+		return () => clearInterval(id);
 	});
 </script>
 
 <div id="lobby">
 	{#if joinedBots.length > 0}
 		<div class="player-list">
-			<h3>{joinedBots.length} player{joinedBots.length === 1 ? '' : 's'} joined</h3>
+			<h3>{joinedBots.length} player{joinedBots.length === 1 ? '' : 's'} in the waiting room</h3>
 			<div class="players">
 				{#each joinedBots as bot}
-					<span class="player-chip" class:host={bot.isHost}>{bot.name}{#if bot.isHost} <span class="host-badge">Host</span>{/if}</span>
+					<span class="player-chip" class:host={bot.isHost} class:ai={bot.isAuto}>
+						{bot.name}
+						{#if bot.isHost}<span class="host-badge">Host</span>{/if}
+						{#if bot.isAuto}<span class="ai-badge">AI</span>{/if}
+						{#if isCreator && bot.isAuto}
+							<button class="remove-ai" onclick={() => removeAiPlayer(bot.id)}>&#x2715;</button>
+						{/if}
+					</span>
 				{/each}
 			</div>
+		</div>
+	{/if}
+
+	{#if isCreator}
+		<div class="ai-controls">
+			<button
+				class="ai-btn"
+				onclick={addAiPlayer}
+				disabled={addingAi || joinedBots.length >= 8}
+			>
+				{#if addingAi}
+					Adding<LoadingCommas />
+				{:else}
+					+ Add AI Player
+				{/if}
+			</button>
 		</div>
 	{/if}
 
@@ -187,16 +293,28 @@
 		</div>
 	</div>
 
+	{#if countdownRemaining != null && countdownRemaining > 0}
+		<div class="countdown">
+			<p class="countdown-timer">{formatCountdown(countdownRemaining)}</p>
+			<p class="countdown-warning">Make sure your prompts are ready!</p>
+		</div>
+	{:else if countdownRemaining === 0}
+		<div class="countdown">
+			<p class="countdown-timer">Starting game<LoadingCommas /></p>
+		</div>
+	{/if}
+
 	{#if globalState.creator_id == null}
-		<p class="non-creator">Waiting for creator to start game<LoadingCommas /></p>
+		<p class="non-creator">Waiting for the host to start the game<LoadingCommas /></p>
 	{:else}
 		<GameLink />
 		<p class="creator">Invite others to join</p>
-		<p class="creator highlight">and then</p>
 		{#if isStartGamePending}
 			<LoadingBars />
 		{:else}
-			<button onclick={startGame} disabled={globalState.is_game_started}> Start Game </button>
+			<button onclick={startGame} disabled={globalState.is_game_started}>
+				{countdownRemaining != null ? 'Start Now' : 'Start Game'}
+			</button>
 		{/if}
 	{/if}
 </div>
@@ -211,7 +329,7 @@
 	}
 	.player-list {
 		text-align: center;
-		margin-bottom: 2rem;
+		margin-bottom: 1.5rem;
 	}
 	.player-list h3 {
 		font-size: 1.2rem;
@@ -231,10 +349,17 @@
 		padding: 0.3rem 0.8rem;
 		font-size: 0.9rem;
 		font-weight: bold;
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
 	}
 	.player-chip.host {
 		background: rgb(255, 245, 200);
 		border: 2px solid rgb(255, 180, 0);
+	}
+	.player-chip.ai {
+		background: rgb(220, 235, 255);
+		border-color: rgb(100, 149, 237);
 	}
 	.host-badge {
 		background: rgb(255, 180, 0);
@@ -243,8 +368,52 @@
 		font-weight: bold;
 		padding: 0.1rem 0.4rem;
 		border-radius: 0.5rem;
-		margin-left: 0.2rem;
 		vertical-align: middle;
+	}
+	.ai-badge {
+		background: rgb(100, 149, 237);
+		color: white;
+		font-size: 0.65rem;
+		font-weight: bold;
+		padding: 0.1rem 0.4rem;
+		border-radius: 0.5rem;
+		vertical-align: middle;
+	}
+	.remove-ai {
+		background: none;
+		border: none;
+		color: #999;
+		cursor: pointer;
+		font-size: 0.8rem;
+		padding: 0 0.2rem;
+		margin: 0;
+		line-height: 1;
+	}
+	.remove-ai:hover {
+		color: red;
+		background: none;
+	}
+	.ai-controls {
+		margin-bottom: 1rem;
+	}
+	.ai-btn {
+		font-size: 0.9rem;
+		padding: 0.4rem 1rem;
+		cursor: pointer;
+		border: 2px dashed #999;
+		background: white;
+		border-radius: 1rem;
+		color: #666;
+		font-weight: bold;
+	}
+	.ai-btn:hover {
+		border-color: rgb(100, 149, 237);
+		color: black;
+		background: rgb(220, 235, 255);
+	}
+	.ai-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 	.settings {
 		display: flex;
@@ -279,8 +448,24 @@
 		font-size: 1.1rem;
 		font-weight: bold;
 	}
+	.countdown {
+		text-align: center;
+		margin: 1rem 0;
+	}
+	.countdown-timer {
+		font-size: 2rem;
+		font-weight: bold;
+		color: #333;
+		font-variant-numeric: tabular-nums;
+	}
+	.countdown-warning {
+		font-size: 1rem;
+		color: #e67e00;
+		font-weight: 600;
+		margin-top: 0.3rem;
+	}
 	p.non-creator {
-		font-size: 3rem;
+		font-size: 2rem;
 		width: 20rem;
 		text-align: center;
 		color: gray;
@@ -292,19 +477,13 @@
 		color: black;
 		font-weight: bold;
 	}
-
-	p.highlight {
-		font-size: 1.5rem;
-		font-weight: bold;
-		color: gray;
-	}
 	button {
 		font-size: 1.5rem;
 		font-weight: bold;
 		padding: 0.75rem 1.5rem;
 		margin: 0.5rem 0.5rem;
-		margin-top: 2rem;
-		margin-bottom: 3rem;
+		margin-top: 1rem;
+		margin-bottom: 2rem;
 		cursor: pointer;
 		border: 1px solid rgb(0, 0, 0);
 		background-color: rgb(0, 0, 0);
@@ -315,5 +494,9 @@
 	button:hover {
 		background-color: rgb(123, 255, 0);
 		color: rgb(0, 0, 0);
+	}
+	button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 </style>

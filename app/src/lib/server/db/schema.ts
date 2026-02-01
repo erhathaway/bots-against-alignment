@@ -18,6 +18,7 @@ export const games = sqliteTable('games', {
 	turnStarted: integer('turn_started', { mode: 'boolean' }).notNull().default(false),
 	turnPrompt: text('turn_prompt'),
 	alignerPromptFull: text('aligner_prompt_full').notNull().default(''),
+	countdownStartedAt: integer('countdown_started_at'),
 	createdAt: integer('created_at').notNull(),
 	updatedAt: integer('updated_at').notNull()
 });

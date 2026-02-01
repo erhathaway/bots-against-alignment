@@ -17,6 +17,8 @@ import { checkLLMAvailability } from '$lib/server/llm/health';
 const DEFAULT_POINTS_TO_WIN = 2;
 const DEFAULT_BOT_PROMPT_CHANGES = 1;
 const MAX_BOT_PROMPT_LENGTH = 281;
+const MAX_TOTAL_PLAYERS = 8;
+const COUNTDOWN_DURATION_MS = 3 * 60 * 1000;
 
 const truncate = (value: string, max: number) => value.slice(0, max);
 
@@ -161,10 +163,32 @@ export const joinGame = async ({
 		type: 'status'
 	});
 
+	// Start countdown if 2+ players and not already started
+	if (!isCreator) {
+		const countResult = await db
+			.select({ count: sql<number>`count(*)` })
+			.from(players)
+			.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
+		const totalCount = countResult[0]?.count ?? 0;
+		const freshGame = await requireGame(gameId);
+		if (totalCount >= 2 && !freshGame.countdownStartedAt) {
+			await db
+				.update(games)
+				.set({ countdownStartedAt: now(), updatedAt: now() })
+				.where(eq(games.id, gameId));
+
+			await postChatMessage({
+				gameId,
+				message: 'Reminder: make sure your bot prompt and aligner prompt are set before the game starts!',
+				type: 'system'
+			});
+		}
+	}
+
 	return { playerId };
 };
 
-const createAutoPlayer = async (gameId: string) => {
+const createAutoPlayer = async (gameId: string): Promise<{ playerId: string; botName: string }> => {
 	const playerId = crypto.randomUUID();
 	const timestamp = now();
 
@@ -195,6 +219,8 @@ const createAutoPlayer = async (gameId: string) => {
 			prompt: alignerPrompt
 		});
 	});
+
+	return { playerId, botName };
 };
 
 export const startGame = async ({ gameId, creatorId }: { gameId: string; creatorId: string }) => {
@@ -203,24 +229,16 @@ export const startGame = async ({ gameId, creatorId }: { gameId: string; creator
 		throw forbidden('Forbidden');
 	}
 
+	// Idempotent: if already started, return silently
+	if (game.status !== 'LOBBY') {
+		return { status: game.status };
+	}
+
 	try {
 		await checkLLMAvailability();
 	} catch (error) {
 		const reason = error instanceof Error ? error.message : 'Unknown error';
 		throw badRequest(`LLM is not available: ${reason}`);
-	}
-
-	const playersCount = await db
-		.select({ count: sql<number>`count(*)` })
-		.from(players)
-		.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
-	const count = playersCount[0]?.count ?? 0;
-
-	if (count < 4 && game.maxAutoPlayers > 0) {
-		const autoPlayersToAdd = Math.min(game.maxAutoPlayers, 4 - count);
-		for (let index = 0; index < autoPlayersToAdd; index += 1) {
-			await createAutoPlayer(gameId);
-		}
 	}
 
 	const alignerRows = await db
@@ -238,6 +256,7 @@ export const startGame = async ({ gameId, creatorId }: { gameId: string; creator
 		.set({
 			status: 'STARTED',
 			alignerPromptFull: combinedPrompt,
+			countdownStartedAt: null,
 			updatedAt: timestamp
 		})
 		.where(eq(games.id, gameId));
@@ -271,23 +290,27 @@ export const getGameStatus = async (gameId: string) => {
 			id: players.id,
 			name: players.botName,
 			points: players.score,
-			turnComplete: players.turnComplete
+			turnComplete: players.turnComplete,
+			isAuto: players.isAuto
 		})
 		.from(players)
 		.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
 
 	const bots = allPlayers.map((p) => ({
+		id: p.id,
 		name: p.name,
 		points: p.points,
 		turnComplete: p.turnComplete,
-		isHost: p.id === game.creatorPlayerId
+		isHost: p.id === game.creatorPlayerId,
+		isAuto: p.isAuto
 	}));
 
 	return {
 		status: game.status,
 		bots,
 		pointsToWin: game.pointsToWin,
-		botPromptChanges: game.botPromptChanges
+		botPromptChanges: game.botPromptChanges,
+		countdownStartedAt: game.countdownStartedAt
 	};
 };
 
@@ -826,5 +849,147 @@ export const leaveGame = async ({
 		});
 	}
 
+	// Clear countdown if fewer than 2 players remain in lobby
+	if (gameStatus === 'LOBBY' && !gameEnded) {
+		const countResult = await db
+			.select({ count: sql<number>`count(*)` })
+			.from(players)
+			.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
+		const remainingCount = countResult[0]?.count ?? 0;
+		if (remainingCount < 2) {
+			await db
+				.update(games)
+				.set({ countdownStartedAt: null, updatedAt: now() })
+				.where(eq(games.id, gameId));
+		}
+	}
+
 	return { left: true, hostTransferred, gameEnded };
+};
+
+export const addAutoPlayer = async ({
+	gameId,
+	creatorId
+}: {
+	gameId: string;
+	creatorId: string;
+}) => {
+	const game = await requireGame(gameId);
+	if (game.creatorId !== creatorId) throw forbidden('Forbidden');
+	if (game.status !== 'LOBBY') throw badRequest('Game is not in lobby');
+
+	const countResult = await db
+		.select({ count: sql<number>`count(*)` })
+		.from(players)
+		.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
+	const currentCount = countResult[0]?.count ?? 0;
+
+	if (currentCount >= MAX_TOTAL_PLAYERS) {
+		throw badRequest('Maximum of 8 players reached');
+	}
+
+	const { playerId, botName } = await createAutoPlayer(gameId);
+
+	await postChatMessage({
+		gameId,
+		message: 'joined the waiting room',
+		senderName: botName,
+		type: 'status'
+	});
+
+	// Start countdown if we now have 2+ players
+	const newCount = currentCount + 1;
+	if (newCount >= 2 && !game.countdownStartedAt) {
+		await db
+			.update(games)
+			.set({ countdownStartedAt: now(), updatedAt: now() })
+			.where(eq(games.id, gameId));
+
+		await postChatMessage({
+			gameId,
+			message: 'Reminder: make sure your bot prompt and aligner prompt are set before the game starts!',
+			type: 'system'
+		});
+	}
+
+	return { playerId, botName };
+};
+
+export const removeAutoPlayer = async ({
+	gameId,
+	creatorId,
+	playerId
+}: {
+	gameId: string;
+	creatorId: string;
+	playerId: string;
+}) => {
+	const game = await requireGame(gameId);
+	if (game.creatorId !== creatorId) throw forbidden('Forbidden');
+	if (game.status !== 'LOBBY') throw badRequest('Game is not in lobby');
+
+	const playerRows = await db
+		.select()
+		.from(players)
+		.where(
+			and(
+				eq(players.gameId, gameId),
+				eq(players.id, playerId),
+				eq(players.isAuto, true),
+				isNull(players.leftAt)
+			)
+		)
+		.limit(1);
+	const player = playerRows[0];
+	if (!player) throw notFound('AI player not found');
+
+	const timestamp = now();
+	await db.transaction(async (tx) => {
+		await tx
+			.update(players)
+			.set({ leftAt: timestamp, updatedAt: timestamp })
+			.where(eq(players.id, playerId));
+
+		await tx
+			.delete(alignerPrompts)
+			.where(and(eq(alignerPrompts.gameId, gameId), eq(alignerPrompts.playerId, playerId)));
+	});
+
+	await postChatMessage({
+		gameId,
+		message: 'left the waiting room',
+		senderName: player.botName,
+		type: 'status'
+	});
+
+	// Clear countdown if fewer than 2 players remain
+	const countResult = await db
+		.select({ count: sql<number>`count(*)` })
+		.from(players)
+		.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
+	const remainingCount = countResult[0]?.count ?? 0;
+	if (remainingCount < 2 && game.countdownStartedAt) {
+		await db
+			.update(games)
+			.set({ countdownStartedAt: null, updatedAt: now() })
+			.where(eq(games.id, gameId));
+	}
+
+	return { removed: true };
+};
+
+export const checkCountdownExpiry = async (gameId: string) => {
+	const game = await getGame(gameId);
+	if (!game || game.status !== 'LOBBY' || !game.countdownStartedAt) return false;
+
+	const elapsed = now() - game.countdownStartedAt;
+	if (elapsed < COUNTDOWN_DURATION_MS) return false;
+
+	try {
+		await startGame({ gameId, creatorId: game.creatorId });
+		return true;
+	} catch (error) {
+		console.error(`[checkCountdownExpiry] Failed to auto-start game ${gameId}:`, error);
+		return false;
+	}
 };
