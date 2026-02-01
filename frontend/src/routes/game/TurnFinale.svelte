@@ -3,6 +3,7 @@
 	import { globalStore } from '$lib/store';
 	import robot_comedy from '$lib/images/robot_comedy.png';
 	import LoadingAudioWave from './LoadingAudioWave.svelte';
+	import { NotificationKind, addNotification } from '$lib/store';
 
 	let isForceNextTurnPending = false;
 
@@ -11,20 +12,43 @@
 		isForceNextTurnPending = true;
 
 		try {
+			const gameId = $globalStore.game_id;
+			const userId = $globalStore.user_id;
+			const turnId = $globalStore.last_turn_id;
+			if (!gameId || !userId || !turnId) {
+				throw new Error('Missing game/user/turn context');
+			}
+
+			let isGameOver = false;
+			if ($globalStore.creator_id) {
+				const url = `${import.meta.env.VITE_BACKEND_API}/process/turn?game_id=${gameId}&user_id=${userId}&turn_id=${turnId}`;
+				const response = await fetch(url, { method: 'POST' });
+				if (response.ok) {
+					const data = await response.json();
+					if (Array.isArray(data.alignment_responses)) {
+						isGameOver = data.alignment_responses.some((r) => r.is_global_winner);
+					}
+				} else {
+					const data = await response.json();
+					addNotification({
+						source_url: 'turn finale',
+						title: 'Error processing turn',
+						body: data,
+						kind: NotificationKind.ERROR,
+						action_url: url,
+						action_text: 'process turn'
+					});
+				}
+			}
+
 			globalStore.update((_s) => ({
 				..._s,
 				have_all_users_submitted: false,
-				is_game_over: true
+				is_game_over: isGameOver
 			}));
 		} finally {
 			isForceNextTurnPending = false;
 		}
-
-		// Set have_all_users_submitted to false
-		globalStore.update((_s) => ({
-			..._s,
-			have_all_users_submitted: false
-		}));
 	}
 </script>
 
@@ -38,7 +62,7 @@
 		{#if isForceNextTurnPending}
 			<LoadingBars />
 		{:else}
-			Force Next Turn
+			Next Turn
 		{/if}
 	</button>
 </div>

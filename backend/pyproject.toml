@@ -3,6 +3,7 @@ name = "bots-against-alignment"
 version = "0.1.0"
 description = ""
 authors = ["Ethan Hathaway <erhathaway@gmail.com>","Conor Cox <cdcox1gmail.com>"]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.10.0"

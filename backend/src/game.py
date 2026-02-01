@@ -88,8 +88,16 @@ class Game:
     def add_to_bot_names(self, bot_name: str, user_id: str, current_prompt: str, is_auto=False):
         if is_auto:
             self.auto_players += 1
-        self.user_bots[user_id] = {"name": bot_name, "score": 0, "current_prompt": current_prompt,
-                                   "prompts_remaining": self.prompts_remaining, "submitted_prompts": current_prompt, "turn_complete": False, "is_bot": is_auto}
+        self.user_bots[user_id] = {
+            "name": bot_name,
+            "score": 0,
+            "current_prompt": current_prompt,
+            "prompts_remaining": self.prompts_remaining,
+            "submitted_prompts": current_prompt,
+            "turn_complete": False,
+            "is_auto": is_auto,
+            "is_bot": is_auto,
+        }
 
     def bots_to_list(self):
         bots = []
@@ -109,18 +117,13 @@ class Game:
     def build_alignment_reponse(self, winner: str | None = None):
         alignment_responses = []
         for user_id in self.user_aligner_prompts.keys():
-            alignment_response = {}
-            alignment_response[user_id] = {}
-            alignment_response[user_id]['name'] = self.user_bots[user_id]["name"]
-            alignment_response[user_id]["user_id"] = user_id
-            alignment_response["text"] = self.turn_responses[user_id]
-            alignment_response['is_round_winner'] = False
-            if winner and user_id == winner:
-                alignment_response["is_round_winner"] = True
-            if self.user_bots[user_id]["score"] >= 10:
-                alignment_response["is_global_winner"] = True
-            else:
-                alignment_response["is_global_winner"] = False
+            alignment_response = {
+                "user_id": user_id,
+                "name": self.user_bots[user_id]["name"],
+                "text": self.turn_responses.get(user_id, ""),
+                "score": self.user_bots[user_id]["score"],
+                "is_round_winner": bool(winner and user_id == winner),
+                "is_global_winner": self.user_bots[user_id]["score"] >= 10,
+            }
             alignment_responses.append(alignment_response)
         return alignment_responses
-

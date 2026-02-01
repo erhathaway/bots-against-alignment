@@ -4,6 +4,10 @@
 
 `poetry install`
 
+# Optional: mock LLM responses (no API key needed)
+
+`export MOCK_LLM=1`
+
 # Run
 
 `uvicorn src:app --reload`

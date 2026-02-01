@@ -16,7 +16,10 @@
 	import PageTransition from '$lib/PageTransition.svelte';
 	export let url: string;
 
-	inject({ mode: dev ? 'development' : 'production' });
+	const enableAnalytics = import.meta.env.VITE_ENABLE_VERCEL_ANALYTICS === 'true';
+	if (enableAnalytics) {
+		inject({ mode: dev ? 'development' : 'production' });
+	}
 
 </script>
 

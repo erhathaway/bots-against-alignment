@@ -1,5 +1,9 @@
 import sys
 import os
+import pytest
+
+if os.getenv("RUN_MANUAL_TESTS") != "1":
+    pytest.skip("Manual integration test; set RUN_MANUAL_TESTS=1 to run.", allow_module_level=True)
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/..')
 

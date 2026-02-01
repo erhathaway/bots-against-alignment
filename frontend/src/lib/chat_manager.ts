@@ -7,10 +7,13 @@ class ChatManager {
 	gameChats: Map<string, ChatGame>;
 	retryInterval: NodeJS.Timer | null;
 	sideEffectQueue: Array<() => void>;
+	peerUrl: string;
 
 	constructor() {
 		this.retryInterval = null;
 		this.gun = null;
+		this.peerUrl =
+			import.meta.env.VITE_GUN_PEER?.trim() || 'https://bots-against-alignment.herokuapp.com/gun';
 		this.initGun();
 		this.gameChats = new Map();
 		this.sideEffectQueue = [];
@@ -21,7 +24,7 @@ class ChatManager {
 		const tryConnect = () => {
 			try {
 				this.gun = GUN({
-					peers: ['https://bots-against-alignment.herokuapp.com/gun'],
+					peers: [this.peerUrl],
 					localStorage: false
 				});
 
@@ -32,7 +35,7 @@ class ChatManager {
 					if (
 						this.gun &&
 						msg &&
-						this.gun.back('opt.peers')['https://bots-against-alignment.herokuapp.com/gun']
+						this.gun.back('opt.peers')[this.peerUrl]
 					) {
 						if (this.retryInterval) {
 							clearInterval(this.retryInterval);

@@ -17,23 +17,40 @@
 | FastAPI API | Render | [onrender.com](https://bots-against-alignment-backend2.onrender.com/) |
 | GunJS Peer | Heroku | [herokuapp.com](https://bots-against-alignment.herokuapp.com/) |
 
-## Deploying
+## Running locally
 
-### Run Frontend
+Ports are hardcoded:
 
-```bash
-cd frontend
-npm install
-npm run start
-```
+- Gun relay: `http://127.0.0.1:8765/gun`
+- Backend API: `http://127.0.0.1:8000`
+- Frontend: `http://127.0.0.1:5173`
 
-### Run Backend
+Before starting, the dev scripts will attempt to free the ports (SIGTERM with a short timeout, then SIGKILL if needed).
+
+### Install deps (first time)
 
 ```bash
 cd backend
-poetry shell
 poetry install
-uvicorn src:app --reload
+
+cd frontend
+npm install
+```
+
+### Run everything (Gun + backend + frontend)
+
+```bash
+npm run dev
+```
+
+Then open `http://127.0.0.1:5173/`.
+
+### Run separately
+
+```bash
+npm run dev:gun
+npm run dev:backend
+npm run dev:frontend
 ```
 
 ##  How to play
@@ -63,6 +80,3 @@ uvicorn src:app --reload
 | | |
 |-|-|
 |10.| Users will go home and reflect on the game. They will think about how they could have done better and how they can improve their bot for the next game.|
-
-
-

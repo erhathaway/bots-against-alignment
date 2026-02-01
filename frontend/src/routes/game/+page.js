@@ -40,10 +40,9 @@ export async function load({ params, fetch, url }) {
 			globalStore.update((data) => {
 				const oldGameID = data.game_id;
 				if (oldGameID !== gameID) {
-					return { game_id: gameID };
-				} else {
-					return data;
+					return { ...data, game_id: gameID };
 				}
+				return data;
 			});
 		}
 	} else {
@@ -62,7 +61,18 @@ export async function load({ params, fetch, url }) {
 			const { game_id: newGameID, creator_id } = _response;
 			gameID = newGameID;
 			creatorID = creator_id;
-			globalStore.set({ game_id: gameID, creator_id: creator_id, user_id: null });
+			globalStore.update((data) => ({
+				...data,
+				game_id: gameID,
+				creator_id,
+				user_id: null,
+				has_player_joined: false,
+				is_game_started: false,
+				have_all_users_submitted: false,
+				is_game_over: false,
+				last_turn_id: null,
+				last_alignment_request: null
+			}));
 		} else {
 			errorMessage = 'Failed to create a new game.';
 			addNotification({

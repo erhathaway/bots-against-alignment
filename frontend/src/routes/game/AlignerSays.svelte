@@ -156,9 +156,41 @@
 
 		isCompleteTurnPending = true;
 		try {
+			const gameId = $globalStore.game_id;
+			const userId = $globalStore.user_id;
+			const turnId = $globalStore.last_turn_id;
+			if (!gameId || !userId || !turnId) {
+				throw new Error('Missing game/user/turn context');
+			}
+			const suggestion = botPrompt ?? '';
+
+			const alignmentParams = new URLSearchParams({
+				game_id: gameId,
+				suggestion,
+				turn_id: String(turnId),
+				user_id: userId
+			});
+			const alignmentUrl = `${BACKEND_API}/alignment?${alignmentParams}`;
+			const alignmentResponse = await fetch(alignmentUrl, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+			});
+			if (!alignmentResponse.ok) {
+				const data = await alignmentResponse.json();
+				addNotification({
+					source_url: 'aligner says',
+					title: 'Error generating bot response',
+					body: data,
+					kind: NotificationKind.ERROR,
+					action_url: alignmentUrl,
+					action_text: 'alignment'
+				});
+				return;
+			}
+
 			const queryParams = new URLSearchParams({
-				game_id: $globalStore.game_id,
-				user_id: $globalStore.user_id
+				game_id: gameId,
+				user_id: userId
 			});
 
 			const url = `${BACKEND_API}/completeturn?${queryParams}`;
@@ -171,6 +203,10 @@
 			if (response.ok) {
 				const chat = chat_manager.findOrCreateChatGame($globalStore.game_id);
 				chat.sendStatusMessage('Submitted response', $globalStore.game_id, $globalStore.bot_name);
+				globalStore.update((state) => ({
+					...state,
+					current_bot_prompt: botPrompt ?? state.current_bot_prompt
+				}));
 			} else {
 				const data = await response.json();
 				addNotification({

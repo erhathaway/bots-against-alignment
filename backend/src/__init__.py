@@ -5,7 +5,8 @@ from pathlib import Path
 import csv
 from dotenv import load_dotenv
 import openai
-import random 
+import random
+import hashlib
 from fastapi import FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -16,6 +17,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from .game import Game, AlignerType
+from .data import grab_random_bot_prompt, grab_aligner_response, grab_bot_name_respons
 
 app = FastAPI()
 
@@ -37,12 +39,14 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 src_dir = Path(Path.cwd().anchor) / "backend" / "src"
 load_dotenv()  # take environment variables from .env.
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 openai.api_key = OPENAI_API_KEY
+MOCK_LLM = os.getenv("MOCK_LLM", "").lower() in {"1", "true", "yes", "on"}
 
 
 
 def build_player_prompt(bot_prompt: str, turn_prompt: str, extra_context) -> list[dict[str, str]]:
+    extra_context = extra_context or {}
     messages = [
         {"role": "system", "content": "You are playing CardGPT you are playing an alignment game. You will answer under 5 words to a prompt. Use no racist, sexist, or homophobic language."},
         {"role": "user", "content": "You will answer with the funniest possible answer to the following prompt: What Killed our food delivery startup."},
@@ -55,11 +59,13 @@ def build_player_prompt(bot_prompt: str, turn_prompt: str, extra_context) -> lis
     ]
 
     for role, response in extra_context.items():
-        messages.update({"role": role, "content": response})
+        messages.append({"role": role, "content": response})
     return messages
 
 
-def build_aligner_prompt(aligner_prompt: str | None, turn_prompt: str | None, user_prompts) -> tuple[list[dict[str, str]], dict[int, str]]:
+def build_aligner_prompt(
+    aligner_prompt: str | None, turn_prompt: str | None, user_prompts
+) -> tuple[list[dict[str, str]], dict[int, str]]:
     if aligner_prompt is None:
         aligner_prompt = ''
     if turn_prompt is None:
@@ -74,131 +80,174 @@ def build_aligner_prompt(aligner_prompt: str | None, turn_prompt: str | None, us
         {"role": "assistant",
             "content": '''(1. "people who can't multitask.")'''},
         {"role": "user", "content": '''You will answer with the best response out of (response) value for this alignment goal:''' + aligner_prompt+':'+turn_prompt}]
-    user_id_to_num = {}
-    for unn, [user_id, response] in enumerate(user_prompts.items()):
-        messages[-1]['content'] = messages[-1]['content'] + \
-            str(unn) + '. '+response+''')/n '''
-        user_id_to_num[unn] = user_id
+    user_id_to_num: dict[int, str] = {}
+    for index, (user_id, response) in enumerate(user_prompts.items(), start=1):
+        messages[-1]["content"] += f"\n{index}. {response}"
+        user_id_to_num[index] = user_id
     return messages, user_id_to_num
 
 
+def _mock_text(seed: str) -> str:
+    digest = hashlib.sha256(seed.encode("utf-8")).hexdigest()[:8]
+    return f"mock-{digest}"
+
+
+def _use_mock_llm() -> bool:
+    return MOCK_LLM or not OPENAI_API_KEY
+
+
 def run_chatGPT_call(messages: list[dict[str, str]]) -> str:
+    if _use_mock_llm():
+        # Always pick the first option in mock mode.
+        return "1."
     completion = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=messages,
     )
-    response = completion['choices'][0]['message']['content']
-    finish_reason = completion['choices'][0]['finish_reason']
+    response = completion["choices"][0]["message"]["content"]
+    finish_reason = completion["choices"][0]["finish_reason"]
     assert finish_reason == "length" or finish_reason == "stop", finish_reason
     return response
 
 
 def run_chatGPT_call_suggestion(bot_prompt: str, turn_prompt: str) -> str:
+    if _use_mock_llm():
+        return _mock_text(f"{bot_prompt}:{turn_prompt}")
     completion = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
-        messages=[{"role": "system", "content": "You are playing CardGPT you are playing an alignment game. You will answer under 5 words to a prompt. Use no racist, sexist, or homophobic language."},
-                  {"role": "user", "content": "You will answer with the funniest possible answer to the following prompt: What Killed our food delivery startup."},
-                  {"role": "assistant", "content": "Passive agressive tweetstorms"},
-                  {"role": "user", "content": "Reply in a blaise way: Burn rate? What burn rate we're spending on neccessities like ______."},
-                  {"role": "assistant", "content": "An office ping pong table"},
-                  {"role": "user", "content": "Reply in a cheeky way Never fear, Captain ___ is here!"},
-                  {"role": "assistant", "content": "Going to the emergency room."},
-                  {"role": "user", "content": bot_prompt + ' ' + turn_prompt}]
+        messages=[
+            {
+                "role": "system",
+                "content": "You are playing CardGPT you are playing an alignment game. You will answer under 5 words to a prompt. Use no racist, sexist, or homophobic language.",
+            },
+            {
+                "role": "user",
+                "content": "You will answer with the funniest possible answer to the following prompt: What Killed our food delivery startup.",
+            },
+            {"role": "assistant", "content": "Passive agressive tweetstorms"},
+            {
+                "role": "user",
+                "content": "Reply in a blaise way: Burn rate? What burn rate we're spending on neccessities like ______.",
+            },
+            {"role": "assistant", "content": "An office ping pong table"},
+            {"role": "user", "content": "Reply in a cheeky way Never fear, Captain ___ is here!"},
+            {"role": "assistant", "content": "Going to the emergency room."},
+            {"role": "user", "content": bot_prompt + " " + turn_prompt},
+        ],
     )
-    response = completion['choices'][0]['message']['content']
-    
-    finish_reason = completion['choices'][0]['finish_reason']
+    response = completion["choices"][0]["message"]["content"]
+
+    finish_reason = completion["choices"][0]["finish_reason"]
     assert finish_reason == "length" or finish_reason == "stop", finish_reason
-    if 'sorry' in response:
-        response = 'bad bot'
+    if "sorry" in response:
+        response = "bad bot"
     return response
 
 
-def run_random_bot_name_prompt() -> str:
+def _get_word_list() -> list[str]:
+    fallback = ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf"]
+    if _use_mock_llm():
+        return fallback
     word_site = "https://www.mit.edu/~ecprice/wordlist.10000"
-    response = requests.get(word_site)
-    if response.status_code != 200:
-        raise Exception('Failed to get random words', response.status_code, response.content)
-    WORDS = response.content.splitlines()
-    bot_name = random.choice(WORDS).decode("utf-8") + ' ' + random.choice(
-        WORDS).decode("utf-8") + ' ' + random.choice(WORDS).decode("utf-8")
+    try:
+        response = requests.get(word_site, timeout=5)
+        if response.status_code != 200:
+            return fallback
+        return [word.decode("utf-8") for word in response.content.splitlines() if word]
+    except Exception:
+        return fallback
+
+
+def run_random_bot_name_prompt() -> str:
+    if _use_mock_llm():
+        return grab_bot_name_respons()
+    words = _get_word_list()
+    bot_name = f"{random.choice(words)} {random.choice(words)} {random.choice(words)}"
 
     completion = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
-        messages=[{"role": "system", "content": "You are NameGPT, you will come up with funny names based on three words  make it like the name of a terrible startup with vaguely non real words. Use no racist, sexist, or homophobic language."},
-                  {"role": "user", "content": "Your three words are dog, fish, truth."},
-                  {"role": "assistant", "content": "[CaninAquEataly]"},
-                  {"role": "user", "content": "You three words are:" + bot_name}]
+        messages=[
+            {
+                "role": "system",
+                "content": "You are NameGPT, you will come up with funny names based on three words  make it like the name of a terrible startup with vaguely non real words. Use no racist, sexist, or homophobic language.",
+            },
+            {"role": "user", "content": "Your three words are dog, fish, truth."},
+            {"role": "assistant", "content": "[CaninAquEataly]"},
+            {"role": "user", "content": "You three words are:" + bot_name},
+        ],
     )
 
-    response = completion['choices'][0]['message']['content'][1:-1]
-    finish_reason = completion['choices'][0]['finish_reason']
+    response = completion["choices"][0]["message"]["content"][1:-1]
+    finish_reason = completion["choices"][0]["finish_reason"]
     assert finish_reason == "length" or finish_reason == "stop", finish_reason
     return response
 
 
 def run_random_aligner_prompt() -> str:
-    '''Generate a random prompt for the aligner from chatGPT'''
-    word_site = "https://www.mit.edu/~ecprice/wordlist.10000"
-    response = requests.get(word_site)
-    if response.status_code != 200:
-        raise Exception('Failed to get words', response.status_code, response.content)
-
-    WORDS = response.content.splitlines()
-    bot_name = random.choice(WORDS).decode(
-        "utf-8") + ' , ' + random.choice(WORDS).decode("utf-8")
+    """Generate a random prompt for the aligner."""
+    if _use_mock_llm():
+        return grab_aligner_response()
+    words = _get_word_list()
+    bot_name = f"{random.choice(words)}, {random.choice(words)}"
 
     completion = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
-        messages=[{"role": "system", "content": "You will be the judge of a game of cards against humanity  come up with a consistent rule you will use to judge related to concepts related to a single word make it under 10 words. If the word is offenisve replace it with 'funny'. Use no racist, sexist, or homophobic language. "},
-                  {"role": "user", "content": "Your words are theoretical , posters."},
-                  {"role": "assistant",
-                      "content": "The most \"philosophical\" and abstract answer will win in this game."},
-                  {"role": "user", "content": "You words are"+bot_name}]
+        messages=[
+            {
+                "role": "system",
+                "content": "You will be the judge of a game of cards against humanity  come up with a consistent rule you will use to judge related to concepts related to a single word make it under 10 words. If the word is offenisve replace it with 'funny'. Use no racist, sexist, or homophobic language. ",
+            },
+            {"role": "user", "content": "Your words are theoretical , posters."},
+            {
+                "role": "assistant",
+                "content": 'The most "philosophical" and abstract answer will win in this game.',
+            },
+            {"role": "user", "content": "You words are" + bot_name},
+        ],
     )
-    response = completion['choices'][0]['message']['content']
-    finish_reason = completion['choices'][0]['finish_reason']
+    response = completion["choices"][0]["message"]["content"]
+    finish_reason = completion["choices"][0]["finish_reason"]
     assert finish_reason == "length" or finish_reason == "stop", finish_reason
     return response
 
 
 def run_random_bot_prompt() -> str:
-    ''' This function generates random prompts for Cards Against Humanity-style games using a specified set of rules.
-     The bot creates responses based on a random word and a predetermined set of conditions.'''
+    """Generate random prompts for bots."""
+    if _use_mock_llm():
+        return grab_random_bot_prompt()
 
-    word_site = "https://www.mit.edu/~ecprice/wordlist.10000"
-    response = requests.get(word_site)
-    if response.status_code != 200:
-        raise Exception("Could not get word list", response.status_code, response.content)
-    
-    WORDS = response.content.splitlines()
-    # + ' , ' + random.choice(WORDS).decode("utf-8")
-    bot_name = random.choice(WORDS).decode("utf-8")
+    words = _get_word_list()
+    bot_name = random.choice(words)
 
     completion = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
-        messages=[{"role": "system", "content": "You will be playing of a game of cards against humanity come up with a consistent rule you will use to pick a few words to reply to Prompt Cards (as if you were making Response Cards). Make it under 20 words. Don't use the words 'quote', 'pun', or 'pick up line'. MAKE IT WEIRD. I'm going to give you a random word. I want you to use ever letter of that word in your prompt. Use no racist, sexist, or homophobic language. "},
-                  {"role": "user", "content": "Give me a prompt hornet"},
-                  {"role": "assistant", "content": "I will respond with super honest responses in language from the old west."},
-                  {"role": "user", "content": "Give me a prompt milk."},
-                  {"role": "assistant",
-                      "content": "I will respond in the third person like a muscle bro."},
-                  {"role": "user", "content": "Give me a prompt "+bot_name}]
+        messages=[
+            {
+                "role": "system",
+                "content": "You will be playing of a game of cards against humanity come up with a consistent rule you will use to pick a few words to reply to Prompt Cards (as if you were making Response Cards). Make it under 20 words. Don't use the words 'quote', 'pun', or 'pick up line'. MAKE IT WEIRD. I'm going to give you a random word. I want you to use ever letter of that word in your prompt. Use no racist, sexist, or homophobic language. ",
+            },
+            {"role": "user", "content": "Give me a prompt hornet"},
+            {
+                "role": "assistant",
+                "content": "I will respond with super honest responses in language from the old west.",
+            },
+            {"role": "user", "content": "Give me a prompt milk."},
+            {"role": "assistant", "content": "I will respond in the third person like a muscle bro."},
+            {"role": "user", "content": "Give me a prompt " + bot_name},
+        ],
     )
-    response = completion['choices'][0]['message']['content']
-    finish_reason = completion['choices'][0]['finish_reason']
+    response = completion["choices"][0]["message"]["content"]
+    finish_reason = completion["choices"][0]["finish_reason"]
     assert finish_reason == "length" or finish_reason == "stop", finish_reason
     return response
 
 
 def parse_response_for_winner(response, user_id_to_num: dict[int, str]):
-    '''Returns the user_id of the winner, or a random user_id if no winner is found'''
+    """Returns the user_id of the winner, or a random user_id if no winner is found."""
     for num, user_id in user_id_to_num.items():
-        if str(num)+'.' in response:
+        if f"{num}." in response:
             return user_id
-        else:
-            # This is hilarious and dirty haha
-            return (random.choice(list(user_id_to_num.values())))
+    return random.choice(list(user_id_to_num.values()))
 
 
 def make_auto_player_single_thread(game: Game):
@@ -225,7 +274,7 @@ def make_bot_responses_single_thread(game: Game):
     '''This function makes a single auto player for a game of cards against humanity'''
     for user_id in game.user_bots.keys():
         # TODO check if this is kosher
-        if game.user_bots[user_id].get('is_auto', True):
+        if game.user_bots[user_id].get("is_auto", game.user_bots[user_id].get("is_bot", False)):
             game.user_bots[user_id]['turn_complete'] = True
             bot_response = run_chatGPT_call_suggestion(
                 game.user_bots[user_id]["current_prompt"], game.turn_prompt)
@@ -236,7 +285,7 @@ def make_bot_reponses_multi_thread(game: Game):
     threads = []
     for user_id in game.user_bots.keys():
         # TODO check if this is kosher
-        if game.user_bots[user_id].get('is_auto', True):
+        if game.user_bots[user_id].get("is_auto", game.user_bots[user_id].get("is_bot", False)):
             game.user_bots[user_id]['turn_complete'] = True
 
             def threaded_run_chatGPT_call_suggestion(user_id):
@@ -257,6 +306,14 @@ def make_bot_reponses_multi_thread(game: Game):
 @app.get("/state")
 def state():
     return {"game_ids": list(game_state.state.keys())}
+
+
+@app.get("/api/image_and_text")
+def image_and_text():
+    return {
+        "imageUrl": "",
+        "imageText": "Thanks for playing!"
+    }
 
 
 @app.get("/game_object/{game_id}")
@@ -382,11 +439,9 @@ def start_game(game_id: str, creator_id: str):
             pass
         elif auto_players_to_add > 2:
             for i in range(auto_players_to_add):
-                game.auto_players += 1
                 make_auto_player_random_vars(game)
         else:
             for i in range(4-len(game.user_ids)):
-                game.auto_players += 1
                 make_auto_player_single_thread(game)
     game.make_full_aligner_prompt()
 
@@ -426,9 +481,15 @@ def complete_turn(game_id: str, user_id: str):
 
 
 @app.post("/alignment")
-def take_suggestion_and_generate_answer(game_id: str, suggestion: str, turn_id: str, user_id: str):
+def take_suggestion_and_generate_answer(game_id: str, suggestion: str, turn_id: int, user_id: str):
     '''takes the suggestion and generates a response and adds it to the turn_responses'''
     game = game_state.state.get(game_id)
+    if game is None:
+        raise HTTPException(status_code=404, detail="Game not found")
+    if user_id not in game.user_ids:
+        raise HTTPException(status_code=404, detail="User not found")
+    if game.turn_id != turn_id:
+        raise HTTPException(status_code=404, detail="Turn not found")
     bot = game.user_bots[user_id]
     if suggestion == "":
         pass
@@ -454,10 +515,14 @@ def turn_finale(request: Request, game_id: str):
             raise HTTPException(
                 status_code=404, detail="Not all players have completed their turn")
 
-    return Response(status_code=200)
+    bots_submitted = sum(
+        1 for user_id in game.user_bots.keys() if game.user_bots[user_id]["turn_complete"]
+    )
+    total_bots = len(game.user_bots.keys())
+    return {"bots_submitted": bots_submitted, "total_bots": total_bots}
 
 @app.post("/process/turn")
-def process_turn(game_id: str, user_id: str, turn_id: str):
+def process_turn(game_id: str, user_id: str, turn_id: int):
     """Processes the turn and returns the alignment responses"""
     game = game_state.state.get(game_id)
     if game is None:
@@ -481,7 +546,9 @@ def process_turn(game_id: str, user_id: str, turn_id: str):
     # print('2.'+winner)
     game.user_bots[winner]["score"] = game.user_bots[winner]["score"]+1
     alignment_responses = game.build_alignment_reponse(winner)
+    game.turn_responses = {}
     game.turn_started = False
+    game.turn_id += 1
     return {"alignment_responses": alignment_responses}
 
 
@@ -537,4 +604,3 @@ async def custom_rate_limit_exceeded_handler(request: Request, exc):
             "error_code": "RATE_LIMIT_EXCEEDED",
         },
     )
-

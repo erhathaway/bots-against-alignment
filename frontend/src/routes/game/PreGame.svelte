@@ -209,11 +209,16 @@
 				return;
 			}
 
-			let url = `${BACKEND_API}/join_game?game_id=${data.gameID}&aligner_prompt=${alignerPrompt}&bot_name=${botName}&bot_prompt=${botPrompt}`;
-
+			const queryParams = new URLSearchParams({
+				game_id: data.gameID,
+				aligner_prompt: alignerPrompt,
+				bot_name: botName,
+				bot_prompt: botPrompt
+			});
 			if ($globalStore.creator_id) {
-				url += `&creator_id=${$globalStore.creator_id}`;
+				queryParams.set('creator_id', $globalStore.creator_id);
 			}
+			const url = `${BACKEND_API}/join_game?${queryParams.toString()}`;
 
 			const response = await fetch(url, {
 				method: 'POST',
@@ -255,9 +260,11 @@
 	}
 
 	onMount(() => {
-		randomize_bot_name();
-		randomize_bot_prompt();
-		randomize_aligner_prompt();
+		if (!import.meta.env.VITE_E2E) {
+			randomize_bot_name();
+			randomize_bot_prompt();
+			randomize_aligner_prompt();
+		}
 	});
 </script>
 
