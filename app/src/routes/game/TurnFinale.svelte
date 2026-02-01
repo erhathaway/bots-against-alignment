@@ -47,10 +47,12 @@
 		return () => clearInterval(intervalId);
 	});
 
-	function advanceTurn() {
-		globalState.last_turn_results = null;
-		globalState.have_all_users_submitted = false;
-	}
+	$effect(() => {
+		if (turnProcessed && !globalState.is_game_over) {
+			globalState.last_turn_results = null;
+			globalState.have_all_users_submitted = false;
+		}
+	});
 </script>
 
 <div id="container">
@@ -60,11 +62,6 @@
 		<LoadingBars />
 	{:else if globalState.is_game_over}
 		<p class="game-over-text">Game Over!</p>
-	{:else}
-		<p class="subtitle">See the results in the chat!</p>
-		<button onclick={advanceTurn}>
-			Next Turn
-		</button>
 	{/if}
 </div>
 
@@ -92,23 +89,5 @@
 		font-weight: bold;
 		color: rgb(0, 150, 0);
 		margin-top: 1.5rem;
-	}
-	button {
-		font-size: 1.5rem;
-		font-weight: bold;
-		padding: 0.75rem 1.5rem;
-		margin: 0.5rem 0.5rem;
-		margin-top: 2rem;
-		margin-bottom: 3rem;
-		cursor: pointer;
-		border: 1px solid rgb(0, 0, 0);
-		background-color: rgb(0, 0, 0);
-		border-radius: 2rem;
-		color: white;
-		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
-	}
-	button:hover {
-		background-color: rgb(123, 255, 0);
-		color: rgb(0, 0, 0);
 	}
 </style>
