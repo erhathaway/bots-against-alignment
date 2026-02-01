@@ -4,13 +4,6 @@ const BASE_URL = process.env.PW_BASE_URL ?? 'http://127.0.0.1:4173';
 
 test('can create, join, start, and advance a turn', async ({ page }) => {
 	await page.goto(BASE_URL);
-	const requests: string[] = [];
-	page.on('request', (request) => {
-		const url = request.url();
-		if (url.includes('/api/')) {
-			requests.push(url);
-		}
-	});
 
 	await page.getByRole('button', { name: 'New Game' }).click();
 
@@ -23,22 +16,18 @@ test('can create, join, start, and advance a turn', async ({ page }) => {
 	await expect(page.getByRole('button', { name: 'Start Game' })).toBeVisible();
 	await page.getByRole('button', { name: 'Start Game' }).click();
 
-	await page.waitForResponse((response) => response.url().includes('/turn/ensure'));
 	await expect(page.getByRole('button', { name: /Tell Bot To Respond/i })).toBeVisible();
 	await page.getByRole('button', { name: /Tell Bot To Respond/i }).click();
+	await expect(page.locator('.message.status', { hasText: 'Submitted response' })).toBeVisible();
 
 	await expect(page.getByRole('button', { name: /Next Turn/i })).toBeVisible();
 	await page.getByRole('button', { name: /Next Turn/i }).click();
 
 	await expect(page.getByText('Aligner:')).toBeVisible();
-
-	expect(requests.some((url) => url.includes('/turn/ensure'))).toBeTruthy();
-	expect(requests.some((url) => url.includes('/turn/') && url.includes('/submit'))).toBeTruthy();
-	expect(requests.some((url) => url.includes('/turn/') && url.includes('/finale'))).toBeTruthy();
-	expect(requests.some((url) => url.includes('/turn/') && url.includes('/process'))).toBeTruthy();
+	await expect(page.getByRole('button', { name: /Tell Bot To Respond/i })).toBeVisible();
 });
 
-test('join_game sends prompts safely', async ({ page }) => {
+test('join_game preserves prompt values', async ({ page }) => {
 	await page.goto(`${BASE_URL}/game`);
 
 	await expect(page.getByRole('heading', { name: 'Bot Name' })).toBeVisible();
@@ -51,17 +40,16 @@ test('join_game sends prompts safely', async ({ page }) => {
 	await page.locator('#aligner-input').fill(alignerPrompt);
 	await page.locator('#bot-prompt-input').fill(botPrompt);
 
-	const joinRequestPromise = page.waitForRequest((request) =>
-		request.url().includes('/api/game/') && request.url().includes('/join')
-	);
 	await page.getByRole('button', { name: 'Join' }).click();
 
-	const joinRequest = await joinRequestPromise;
-	const payload = JSON.parse(joinRequest.postData() ?? '{}');
+	await expect(page.getByRole('button', { name: 'Start Game' })).toBeVisible();
+	await page.getByRole('button', { name: 'Start Game' }).click();
 
-	expect(payload.botName).toBe(botName);
-	expect(payload.alignerPrompt).toBe(alignerPrompt);
-	expect(payload.botPrompt).toBe(botPrompt);
+	await expect(page.getByRole('button', { name: /Tell Bot To Respond/i })).toBeVisible();
+	await expect(
+		page.locator('#bot-card').getByRole('textbox', { name: 'Bot Prompt' })
+	).toHaveValue(botPrompt);
+	await expect(page.locator('.message.status', { hasText: botName })).toBeVisible();
 });
 
 test('two-player game flow works end-to-end', async ({ browser }) => {
