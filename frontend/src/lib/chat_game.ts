@@ -1,35 +1,42 @@
-import type { Message, Subscriber } from './chat_types';
+import { isRecord, type ChatManagerLike, type GunChain, type JsonValue, type Message, type Subscriber } from './types';
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null;
-}
+function parseMessage(value: JsonValue): Message | null {
+	if (!isRecord(value)) return null;
 
-function isMessage(value: unknown): value is Message {
-	if (!isRecord(value)) return false;
-	return (
-		typeof value.message === 'string' &&
-		typeof value.timestamp === 'number' &&
-		(typeof value.botName === 'string' || value.botName === null) &&
-		typeof value.isStatusMessage === 'boolean' &&
-		typeof value.isSystemMessage === 'boolean' &&
-		typeof value.uuid === 'string'
-	);
+	const message = value.message;
+	const timestamp = value.timestamp;
+	const uuid = value.uuid;
+
+	if (typeof message !== 'string' || typeof timestamp !== 'number' || typeof uuid !== 'string') return null;
+
+	const botNameRaw = value.botName;
+	const botName = typeof botNameRaw === 'string' ? botNameRaw : null;
+
+	// Gun sometimes omits `false` values when serializing nodes; default to `false` if missing.
+	const isStatusMessage = typeof value.isStatusMessage === 'boolean' ? value.isStatusMessage : false;
+	const isSystemMessage = typeof value.isSystemMessage === 'boolean' ? value.isSystemMessage : false;
+
+	return {
+		message,
+		timestamp,
+		botName,
+		isStatusMessage,
+		isSystemMessage,
+		uuid
+	};
 }
 
 class ChatGame {
-	manager: any;
+	manager: ChatManagerLike;
 	messages: Array<Message>;
 	gameId: string;
 	botName: string | null;
 	subscribers: Array<Subscriber>;
 	lastMessageKey: string | null;
-	gameWatcher: any;
+	gameWatcher: GunChain | null;
 	seenMessages: Set<string>;
 
-	constructor(manager: any, gameId: string) {
-		if (!manager) {
-			throw new Error('gun is null');
-		}
+	constructor(manager: ChatManagerLike, gameId: string) {
 		this.manager = manager;
 
 		this.gameId = gameId;
@@ -47,13 +54,19 @@ class ChatGame {
 			throw new Error('gameID is null');
 		}
 
-		this.gameWatcher = 'SET';
 		if (this.manager.gun == null) {
 			throw new Error('**gun is null');
 		}
-		this.manager.gun.get(this.gameId).on((data: unknown) => {
-			if (!isMessage(data)) return;
-			const newMessage = { ...data };
+
+		// Store chat messages as individual nodes to avoid field-level merge conflicts.
+		// (Gun merges updates per-field; putting whole message objects on a single node can
+		// produce mixed/partial states across concurrent writes.)
+		const messageMap = this.manager.gun.get(this.gameId).get('messages').map();
+		this.gameWatcher = messageMap;
+
+		messageMap.on((data: JsonValue) => {
+			const newMessage = parseMessage(data);
+			if (!newMessage) return;
 
 			if (this.seenMessages.has(newMessage.uuid)) {
 				return;
@@ -98,7 +111,11 @@ class ChatGame {
 			if (this.manager.gun == null) {
 				throw new Error('gun is null');
 			}
-			this.manager.gun.get(this.gameId).off();
+			if (this.gameWatcher && typeof this.gameWatcher.off === 'function') {
+				this.gameWatcher.off();
+			} else {
+				this.manager.gun.get(this.gameId).get('messages').off();
+			}
 			this.gameWatcher = null;
 		};
 		this.manager.enqueue(_run);
@@ -122,7 +139,7 @@ class ChatGame {
 				throw new Error('2gun is null');
 			}
 
-			this.manager.gun.get(gameId).put({
+			this.manager.gun.get(gameId).get('messages').get(uuid).put({
 				message,
 				timestamp: Date.now(),
 				botName: botName,
@@ -137,7 +154,10 @@ class ChatGame {
 	sendStatusMessage = (message: string, gameId: string, botName: string) => {
 		const uuid = this.createUUID();
 		const _run = () => {
-			this.manager.gun.get(gameId).put({
+			if (this.manager.gun == null) {
+				throw new Error('gun is null');
+			}
+			this.manager.gun.get(gameId).get('messages').get(uuid).put({
 				message,
 				timestamp: Date.now(),
 				botName: botName,
@@ -152,7 +172,10 @@ class ChatGame {
 	sendSystemMessage = (message: string, gameId: string) => {
 		const uuid = this.createUUID();
 		const _run = () => {
-			this.manager.gun.get(gameId).put({
+			if (this.manager.gun == null) {
+				throw new Error('gun is null');
+			}
+			this.manager.gun.get(gameId).get('messages').get(uuid).put({
 				message,
 				timestamp: Date.now(),
 				botName: null,

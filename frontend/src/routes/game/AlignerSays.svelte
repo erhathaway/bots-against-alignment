@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { NotificationKind, addNotification, globalStore } from '$lib/store';
+	import { addNotification, globalStore } from '$lib/store';
+	import { NotificationKind } from '$lib/types';
 	import { onMount } from 'svelte';
 	import LoadingBars from './LoadingBars.svelte';
 	import chat_manager from '$lib/chat_manager';

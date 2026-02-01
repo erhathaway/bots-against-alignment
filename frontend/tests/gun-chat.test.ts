@@ -18,6 +18,11 @@ test('gun chat syncs across players through the core game flow', async ({ browse
 	const opponent = await opponentContext.newPage();
 
 	try {
+		if (process.env.DEBUG_GUN_CHAT === '1') {
+			creator.on('console', (msg) => console.log('[creator console]', msg.type(), msg.text()));
+			opponent.on('console', (msg) => console.log('[opponent console]', msg.type(), msg.text()));
+		}
+
 		await creator.goto(BASE_URL);
 		await creator.getByRole('button', { name: 'New Game' }).click();
 		await joinGame(creator, 'Alice');
@@ -29,6 +34,21 @@ test('gun chat syncs across players through the core game flow', async ({ browse
 
 		await opponent.goto(`${BASE_URL}/game?game_id=${gameId}`);
 		await joinGame(opponent, 'Bob');
+
+		if (process.env.DEBUG_GUN_CHAT === '1') {
+			console.log('[debug] creator .message count', await creator.locator('.message').count());
+			console.log('[debug] creator .message.status count', await creator.locator('.message.status').count());
+			console.log(
+				'[debug] creator messages',
+				await creator.locator('.message').allTextContents()
+			);
+			console.log('[debug] opponent .message count', await opponent.locator('.message').count());
+			console.log('[debug] opponent .message.status count', await opponent.locator('.message.status').count());
+			console.log(
+				'[debug] opponent messages',
+				await opponent.locator('.message').allTextContents()
+			);
+		}
 
 		await expect(
 			creator.locator('.message.status', { hasText: 'Bob' }).last()

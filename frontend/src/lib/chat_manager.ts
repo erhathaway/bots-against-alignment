@@ -1,26 +1,14 @@
 import GUN from 'gun';
 
 import ChatGame from './chat_game';
+import { isRecord, type GunInstance } from './types';
 
-type GunChain = {
-	on: (cb: (data: unknown) => void) => unknown;
-	off: () => unknown;
-	put: (data: unknown) => unknown;
-};
-
-type GunInstance = {
-	on: (event: string, data: unknown) => unknown;
-	get: (key: string) => GunChain;
-	back: (path: string) => unknown;
-};
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null;
-}
-
-function isGunInstance(value: unknown): value is GunInstance {
+function isGunInstance(
+	value: { on?: Function; get?: Function; back?: Function } | null
+): value is GunInstance {
 	return (
-		isRecord(value) &&
+		(typeof value === 'object' || typeof value === 'function') &&
+		value !== null &&
 		typeof value.on === 'function' &&
 		typeof value.get === 'function' &&
 		typeof value.back === 'function'
@@ -53,16 +41,27 @@ class ChatManager {
 					localStorage: false
 				});
 
+				if (import.meta.env.VITE_E2E) {
+					// eslint-disable-next-line no-console
+					console.log('[chat] gun instance candidate', typeof gun);
+				}
 				if (!isGunInstance(gun)) {
 					throw new Error('Failed to initialize Gun client');
 				}
 				this.gun = gun;
+				if (import.meta.env.VITE_E2E) {
+					// eslint-disable-next-line no-console
+					console.log('[chat] gun initialized', this.peerUrl);
+				}
 
 				this.gun.on('out', { get: { '#': { '*': '' } } }); // Requesting root graph data
 
 				// Listen to 'in' event to check for successful connection
-				this.gun.on('in', (msg: unknown) => {
-					const peers = this.gun?.back('opt.peers');
+				this.gun.on('in', (msg) => {
+					const gun = this.gun;
+					if (!gun) return;
+
+					const peers = gun.back('opt.peers');
 					const isConnected =
 						Boolean(msg) && isRecord(peers) && Boolean(peers[this.peerUrl]);
 
@@ -103,6 +102,12 @@ class ChatManager {
 	};
 
 	enqueue = (fn: () => void): void => {
+		// Most side effects can run immediately once the Gun instance exists; keep the
+		// queue as a fallback for the very early initialization window.
+		if (this.gun) {
+			fn();
+			return;
+		}
 		this.sideEffectQueue.push(fn);
 	};
 

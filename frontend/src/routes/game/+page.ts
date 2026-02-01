@@ -1,18 +1,13 @@
 import { redirect } from '@sveltejs/kit';
 
-import { addNotification, globalStore, NotificationKind } from '$lib/store';
+import { addNotification, globalStore } from '$lib/store';
+import { isRecord, type JsonValue, NotificationKind } from '$lib/types';
 
 import type { PageLoad } from './$types';
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_API;
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null;
-}
-
-function parseCreateGameResponse(
-	body: unknown
-): { gameID: string; creatorID: string } | null {
+function parseCreateGameResponse(body: JsonValue): { gameID: string; creatorID: string } | null {
 	if (!isRecord(body)) return null;
 	const gameID = body.game_id;
 	const creatorID = body.creator_id;
@@ -35,7 +30,7 @@ export const load: PageLoad = async ({ fetch, url }) => {
 			}
 		});
 
-		const body = (await response.json()) as unknown;
+		const body = await response.json();
 		if (!response.ok) {
 			errorMessage = 'No game exists.';
 			addNotification({
@@ -67,7 +62,7 @@ export const load: PageLoad = async ({ fetch, url }) => {
 			}
 		});
 
-		const body = (await response.json()) as unknown;
+		const body = await response.json();
 		if (response.ok) {
 			const parsed = parseCreateGameResponse(body);
 			if (parsed) {

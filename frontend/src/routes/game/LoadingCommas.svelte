@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-	let animationInterval: any;
+	let animationInterval: ReturnType<typeof setInterval> | null = null;
 	let commas = ['', '', '', '', '', '', ''];
 	let state = 'appear';
 	let step = 0;
@@ -26,7 +26,7 @@
 
 		animationInterval = setInterval(animateWave, speed);
 
-		return () => clearInterval(animationInterval);
+		return () => animationInterval && clearInterval(animationInterval);
 	});
 </script>
 

@@ -1,21 +1,6 @@
 import { persisted } from 'svelte-local-storage-store';
 
-type GlobalState = {
-	game_id: string | null;
-	user_id: string | null;
-	creator_id: string | null;
-	openai_api_key: string | null;
-	current_bot_prompt: string | null;
-	aligner_prompt: string | null;
-	bot_name: string | null;
-	last_turn_id: number | null;
-	has_player_joined: boolean;
-	is_game_started: boolean;
-	is_config_open: boolean;
-	last_alignment_request: string | null;
-	have_all_users_submitted: boolean;
-	is_game_over: boolean;
-};
+import { type AddNotificationInput, type GlobalState, type Notification } from './types';
 
 const defaultData = {
 	game_id: null,
@@ -36,32 +21,11 @@ const defaultData = {
 
 export const globalStore = persisted<GlobalState>('settings', defaultData);
 
-export enum NotificationKind {
-	INFO = 'INFO',
-	WARN = 'WARN',
-	ERROR = 'ERROR',
-	SUGGESTION = 'SUGGESTION'
-}
-
-export type Notification = {
-	source_url: string;
-	title: string;
-	body: string;
-	kind: NotificationKind;
-	action_url?: string | null;
-	action_text?: string | null;
-	unix_time_sec: number;
-	uuid: string;
-};
 export const notificationStore = persisted<Notification[]>('notifications', []);
 
 notificationStore.set([]);
 
 const MAX_NOTIFICATION_HISTORY = 1000;
-
-type AddNotificationInput = Omit<Notification, 'uuid' | 'unix_time_sec' | 'body'> & {
-	body: unknown;
-};
 
 export const addNotification = (notification: AddNotificationInput) => {
 	const uuid =
@@ -86,4 +50,3 @@ export const addNotification = (notification: AddNotificationInput) => {
 		return [..._notifications, newNotification];
 	});
 };
-

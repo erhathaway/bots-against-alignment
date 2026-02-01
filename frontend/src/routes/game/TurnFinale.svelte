@@ -3,11 +3,8 @@
 	import { globalStore } from '$lib/store';
 	import robot_comedy from '$lib/images/robot_comedy.png';
 	import LoadingAudioWave from './LoadingAudioWave.svelte';
-	import { NotificationKind, addNotification } from '$lib/store';
-
-	function isRecord(value: unknown): value is Record<string, unknown> {
-		return typeof value === 'object' && value !== null;
-	}
+	import { addNotification } from '$lib/store';
+	import { isRecord, NotificationKind } from '$lib/types';
 
 	let isForceNextTurnPending = false;
 
@@ -28,10 +25,10 @@
 				const url = `${import.meta.env.VITE_BACKEND_API}/process/turn?game_id=${gameId}&user_id=${userId}&turn_id=${turnId}`;
 				const response = await fetch(url, { method: 'POST' });
 				if (response.ok) {
-					const payload = (await response.json()) as unknown;
-					if (isRecord(payload) && Array.isArray(payload['alignment_responses'])) {
-						isGameOver = payload['alignment_responses'].some(
-							(r: unknown) => isRecord(r) && r['is_global_winner'] === true
+					const payload = await response.json();
+					if (isRecord(payload) && Array.isArray(payload.alignment_responses)) {
+						isGameOver = payload.alignment_responses.some(
+							(r) => isRecord(r) && r.is_global_winner === true
 						);
 					}
 				} else {

@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { NotificationKind, addNotification, globalStore } from '$lib/store';
+	import { addNotification, globalStore } from '$lib/store';
+	import { NotificationKind } from '$lib/types';
 	import LoadingSpinner from './LoadingSpinner.svelte';
 	import LoadingBars from './LoadingBars.svelte';
 	import { browser } from '$app/environment'; // Import browser from $app/env

@@ -4,7 +4,7 @@
 	import { writable } from 'svelte/store';
 	import chat_manager from '$lib/chat_manager';
 	import type ChatGame from '$lib/chat_game';
-	import type { Message } from '$lib/chat_types';
+	import type { Message } from '$lib/types';
 
 	let chat: ChatGame | null = null;
 	let messages = writable<Message[]>([]);

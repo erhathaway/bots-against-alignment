@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { notificationStore } from '$lib/store';
-	import type { Notification } from '$lib/store';
+	import type { Notification } from '$lib/types';
 	import { slide } from 'svelte/transition';
 	import BarAnimator from './BarAnimator.svelte';
 
