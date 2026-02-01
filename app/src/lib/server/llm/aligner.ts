@@ -78,17 +78,24 @@ export const pickWinner = async ({
 	});
 
 	let reasoningBuffer = '';
+	let textBuffer = '';
 	let fullText = '';
 
-	const flushReasoning = async (force: boolean) => {
-		if (reasoningBuffer.length === 0) return;
-		if (!force && reasoningBuffer.length < REASONING_BATCH_SIZE) return;
+	const flushBuffer = async (buffer: 'reasoning' | 'text', force: boolean) => {
+		const content = buffer === 'reasoning' ? reasoningBuffer : textBuffer;
+		if (content.length === 0) return;
+		if (!force && content.length < REASONING_BATCH_SIZE) return;
 
-		const chunk = reasoningBuffer;
-		reasoningBuffer = '';
+		if (buffer === 'reasoning') {
+			reasoningBuffer = '';
+		} else {
+			textBuffer = '';
+		}
+
+		const prefix = buffer === 'reasoning' ? '💭 ' : '';
 		await postChatMessage({
 			gameId,
-			message: chunk,
+			message: `${prefix}${content}`,
 			senderName: ALIGNER_SENDER,
 			type: 'system'
 		});
@@ -97,22 +104,16 @@ export const pickWinner = async ({
 	for await (const part of result.fullStream) {
 		if (part.type === 'reasoning-delta') {
 			reasoningBuffer += part.text;
-			await flushReasoning(false);
+			await flushBuffer('reasoning', false);
 		} else if (part.type === 'text-delta') {
 			fullText += part.text;
+			textBuffer += part.text;
+			await flushBuffer('text', false);
 		}
 	}
 
-	await flushReasoning(true);
-
-	if (fullText.trim().length > 0) {
-		await postChatMessage({
-			gameId,
-			message: fullText.trim(),
-			senderName: ALIGNER_SENDER,
-			type: 'system'
-		});
-	}
+	await flushBuffer('reasoning', true);
+	await flushBuffer('text', true);
 
 	return parseWinner(fullText, mapping);
 };
