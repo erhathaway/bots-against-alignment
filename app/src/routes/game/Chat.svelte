@@ -141,13 +141,13 @@
 			{:else if message.type === 'status'}
 				<div class="message status">
 					<div class="message-status-container">
-						<div class="message-text name">{message.senderName ?? ''}</div>
+						<div class="message-text name" class:you={isMe(message.senderName)}>{displayName(message.senderName)}</div>
 						<div class="message-text text">{message.message}</div>
 					</div>
 				</div>
 			{:else}
 				<div class="message {message.senderName === globalState.bot_name ? 'user' : 'other'}">
-					<div class="message-part-top">{message.senderName ?? 'Unknown'}</div>
+					<div class="message-part-top">{displayName(message.senderName)}</div>
 					<div class="message-part-bottom">
 						<div
 							class="message-icon"
@@ -370,6 +370,10 @@
 		font-size: 10px;
 		margin-right: 0.4rem;
 		margin-left: 0.4rem;
+	}
+
+	.status .name.you {
+		color: #0066cc;
 	}
 
 	.status .message-text {
