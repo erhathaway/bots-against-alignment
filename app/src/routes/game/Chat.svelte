@@ -1,36 +1,75 @@
 <script lang="ts">
 	import { globalState } from '$lib/state/store.svelte';
 	import { tick } from 'svelte';
-	import { SvelteSet } from 'svelte/reactivity';
-	import chat_manager from '$lib/chat_manager';
-	import type ChatGame from '$lib/chat_game';
-	import type { Message } from '$lib/types';
 
-	let chat = $state<ChatGame | null>(null);
-	let messages = $state<Message[]>([]);
-	const seenMessages = new SvelteSet<string>();
+	type ChatMessage = {
+		id: number;
+		gameId: string;
+		senderName: string | null;
+		message: string;
+		type: 'chat' | 'status' | 'system';
+		createdAt: number;
+	};
+
+	let messages = $state<ChatMessage[]>([]);
 	let inputText = $state('');
 	let messageContainer: HTMLElement | null = null;
-	let joinedChatGameId = $state<string | null>(null);
-	let watchingChatGameId = $state<string | null>(null);
-	let subscribedChatGameId = $state<string | null>(null);
+	let lastMessageId = $state(0);
+	let hasJoined = $derived(Boolean(globalState.bot_name && globalState.has_player_joined));
 
-	function sendMessage() {
-		if (inputText.trim() === '') return;
-		if (chat == null) {
-			throw new Error('Chat is null');
+	async function fetchMessages() {
+		const gameId = globalState.game_id;
+		if (!gameId) return;
+
+		try {
+			const url = `/api/game/${gameId}/chat?after=${lastMessageId}`;
+			const response = await fetch(url);
+			if (!response.ok) return;
+			const data = await response.json();
+			if (data.messages && data.messages.length > 0) {
+				const newMessages = data.messages as ChatMessage[];
+				messages = [...messages, ...newMessages];
+				lastMessageId = newMessages[newMessages.length - 1].id;
+				scrollToBottom();
+			}
+		} catch {
+			// silently ignore polling errors
 		}
+	}
 
+	$effect(() => {
+		const gameId = globalState.game_id;
+		if (!gameId) return;
+
+		// Reset on game change
+		messages = [];
+		lastMessageId = 0;
+
+		fetchMessages();
+		const intervalId = setInterval(fetchMessages, 1500);
+		return () => clearInterval(intervalId);
+	});
+
+	async function sendMessage() {
+		if (inputText.trim() === '') return;
 		const gameId = globalState.game_id;
 		const botName = globalState.bot_name;
-		if (gameId == null) {
-			throw new Error('Game ID is null');
-		}
-		if (botName == null) {
-			throw new Error('Bot name is null');
-		}
-		chat.sendMessage(inputText, gameId, botName);
+		if (!gameId || !botName) return;
+
+		const text = inputText;
 		inputText = '';
+
+		try {
+			await fetch(`/api/game/${gameId}/chat`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ message: text, senderName: botName })
+			});
+			await fetchMessages();
+		} catch {
+			// restore text on failure
+			inputText = text;
+		}
 	}
 
 	function handleKeyPress(event: KeyboardEvent) {
@@ -38,26 +77,13 @@
 			sendMessage();
 		}
 	}
+
 	async function scrollToBottom() {
 		if (messageContainer) {
 			await tick();
-
 			messageContainer.scrollTop = messageContainer.scrollHeight;
 		}
 	}
-
-	$effect(() => {
-		const gameId = globalState.game_id;
-		const botName = globalState.bot_name;
-		if (!gameId) return;
-
-		const hasJoinedChat = joinedChatGameId === gameId;
-		const hasWatchedChat = watchingChatGameId === gameId;
-		const hasSubscribedChat = subscribedChatGameId === gameId;
-
-		if (hasJoinedChat && hasWatchedChat && hasSubscribedChat) return;
-		initChat(gameId, botName);
-	});
 
 	function stringToColor(str: string) {
 		let hash = 0;
@@ -73,81 +99,33 @@
 	}
 
 	function getNameColor(name: string) {
-		const hash = stringToColor(name);
-		return intToRGB(hash);
+		return intToRGB(stringToColor(name));
 	}
-
-	const initChat = (gameId: string, botName: string | null) => {
-		chat = chat_manager.findOrCreateChatGame(gameId);
-		subscribeToChat();
-
-		if (botName) {
-			if (joinedChatGameId !== gameId) {
-				chat.joinGame(botName);
-				joinedChatGameId = gameId;
-			}
-		} else if (watchingChatGameId !== gameId) {
-			chat.watchGame();
-			watchingChatGameId = gameId;
-		}
-	};
-
-	const subscribeToChat = () => {
-		if (!chat) {
-			throw new Error('Chat not initialized. Cant subscribe to chat.');
-		}
-		if (subscribedChatGameId === chat.gameId) {
-			return;
-		}
-		chat.subscribe((newMessage) => {
-			const _newMessage = { ...newMessage, isUser: newMessage.botName === globalState.bot_name };
-			if (seenMessages.has(_newMessage.uuid)) {
-				return;
-			}
-			messages.push(_newMessage);
-			seenMessages.add(_newMessage.uuid);
-			scrollToBottom();
-		});
-		subscribedChatGameId = chat.gameId;
-	};
-
-	$effect(() => {
-		const gameId = globalState.game_id;
-		if (gameId) {
-			initChat(gameId, globalState.bot_name);
-		}
-
-		return () => {
-			if (chat) {
-				chat.leaveGame();
-			}
-		};
-	});
 </script>
 
 <div class="chat-window">
 	<div class="message-container" bind:this={messageContainer}>
-		{#each messages as message, index (index)}
-			{#if message.isSystemMessage}
+		{#each messages as message (message.id)}
+			{#if message.type === 'system'}
 				<div class="message system">
 					<div class="message-part-bottom">
 						<div class="message-text">{message.message}</div>
 					</div>
 				</div>
-			{:else if message.isStatusMessage}
+			{:else if message.type === 'status'}
 				<div class="message status">
-					<div class="message-status-contianer">
-						<div class="message-text name">{message.botName ?? ''}</div>
+					<div class="message-status-container">
+						<div class="message-text name">{message.senderName ?? ''}</div>
 						<div class="message-text text">{message.message}</div>
 					</div>
 				</div>
 			{:else}
-				<div class="message {message.isUser ? 'user' : 'other'}">
-					<div class="message-part-top">{message.botName ?? 'Unknown'}</div>
+				<div class="message {message.senderName === globalState.bot_name ? 'user' : 'other'}">
+					<div class="message-part-top">{message.senderName ?? 'Unknown'}</div>
 					<div class="message-part-bottom">
 						<div
 							class="message-icon"
-							style="background-color: {getNameColor(message.botName ?? 'Unknown')};"
+							style="background-color: {getNameColor(message.senderName ?? 'Unknown')};"
 						></div>
 						<div class="message-text">{message.message}</div>
 					</div>
@@ -155,7 +133,7 @@
 			{/if}
 		{/each}
 	</div>
-	{#if joinedChatGameId && joinedChatGameId === globalState.game_id}
+	{#if hasJoined}
 		<div class="input-container">
 			<input
 				class="message-input"
@@ -168,7 +146,7 @@
 		</div>
 	{:else}
 		<div class="input-container">
-			<p>Give your bot a name to join the chat!</p>
+			<p>Join the game to chat!</p>
 		</div>
 	{/if}
 </div>
@@ -308,7 +286,7 @@
 		align-items: center;
 	}
 
-	.status .message-status-contianer {
+	.status .message-status-container {
 		display: flex;
 		flex-direction: row;
 		justify-content: center;

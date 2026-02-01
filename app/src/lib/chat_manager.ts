@@ -19,69 +19,47 @@ function isGunInstance(
 class ChatManager {
 	gun: GunInstance | null;
 	gameChats: Map<string, ChatGame>;
-	retryInterval: ReturnType<typeof setInterval> | null;
 	sideEffectQueue: Array<() => void>;
 	peerUrl: string;
 	isConnected: boolean;
 
 	constructor() {
-		this.retryInterval = null;
 		this.gun = null;
 		this.peerUrl = env.PUBLIC_GUN_PEER?.trim() || 'https://bots-against-alignment.herokuapp.com/gun';
 		this.isConnected = false;
-		this.initGun();
 		this.gameChats = new Map();
 		this.sideEffectQueue = [];
+		this.initGun();
 		this.runSideEffects();
 	}
 
 	initGun() {
-		const tryConnect = () => {
-			try {
-				const gun = GUN({
-					peers: [this.peerUrl],
-					localStorage: false
-				});
+		try {
+			const gun = GUN({
+				peers: [this.peerUrl],
+				localStorage: false
+			});
 
-				if (!isGunInstance(gun)) {
-					throw new Error('Failed to initialize Gun client');
-				}
-				this.gun = gun;
-
-				this.gun.on('out', { get: { '#': { '*': '' } } }); // Requesting root graph data
-
-				// Listen to 'in' event to check for successful connection
-				this.gun.on('in', (msg) => {
-					const gun = this.gun;
-					if (!gun) return;
-
-					const peers = gun.back('opt.peers');
-					const isConnected =
-						Boolean(msg) && isRecord(peers) && Boolean(peers[this.peerUrl]);
-
-				if (this.gun && isConnected) {
-					this.isConnected = true;
-					if (this.retryInterval) {
-						clearInterval(this.retryInterval);
-						this.retryInterval = null;
-					}
-				} else {
-					this.isConnected = false;
-					if (!this.retryInterval) {
-						this.retryInterval = setInterval(() => {
-							console.log('Retrying WebSocket connection...');
-							tryConnect();
-							}, 10000); // Retry every 10 seconds
-						}
-					}
-				});
-			} catch (e) {
-				console.log('GUN ERROR', e);
+			if (!isGunInstance(gun)) {
+				throw new Error('Failed to initialize Gun client');
 			}
-		};
+			this.gun = gun;
 
-		// Initiate the first connection attempt
-		tryConnect();
+			// Gun handles WebSocket reconnection internally.
+			// We just track connection status via the 'in' event.
+			this.gun.on('in', (msg) => {
+				const gun = this.gun;
+				if (!gun) return;
+
+				const peers = gun.back('opt.peers');
+				const connected =
+					Boolean(msg) && isRecord(peers) && Boolean(peers[this.peerUrl]);
+
+				this.isConnected = connected;
+			});
+		} catch (e) {
+			console.error('GUN initialization error:', e);
+		}
 	}
 
 	runSideEffects = () => {

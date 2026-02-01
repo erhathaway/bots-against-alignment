@@ -2,7 +2,6 @@
 	import { addNotification, globalState } from '$lib/state/store.svelte';
 	import { NotificationKind } from '$lib/types';
 	import LoadingBars from './LoadingBars.svelte';
-	import chat_manager from '$lib/chat_manager';
 	let botsSubmitted = $state(0);
 	let totalBots = $state(0);
 	let points = $state(0);
@@ -10,6 +9,7 @@
 	let hasSubmittedThisTurn = $state(false);
 	let trackedTurnId = $state<number | null>(null);
 	let botPrompt = $state(globalState.current_bot_prompt ?? '');
+	let promptLocked = $derived(promptsRemaining <= 0);
 
 	$effect(() => {
 		const gameId = globalState.game_id;
@@ -62,6 +62,11 @@
 		const data = await response.json();
 
 		if (response.ok) {
+			if (data.status === 'ENDED') {
+				globalState.is_game_over = true;
+				return;
+			}
+
 			let allBotsTurnComplete = true;
 			let completedBots = 0;
 
@@ -178,12 +183,6 @@
 			});
 
 			if (response.ok) {
-				const botName = globalState.bot_name;
-				if (!botName) {
-					throw new Error('Bot name is missing');
-				}
-				const chat = chat_manager.findOrCreateChatGame(gameId);
-				chat.sendStatusMessage('Submitted response', gameId, botName);
 				globalState.current_bot_prompt = botPrompt ?? globalState.current_bot_prompt;
 				hasSubmittedThisTurn = true;
 			} else {
@@ -205,13 +204,19 @@
 
 <div class="status-bar">
 	<span class="score">Score: {points}</span>
-	<span class="prompts-left">{promptsRemaining} prompt change{promptsRemaining === 1 ? '' : 's'} remaining</span>
+	<span class="prompts-left">
+		{#if promptLocked}
+			Prompt locked
+		{:else}
+			{promptsRemaining} prompt change{promptsRemaining === 1 ? '' : 's'} remaining
+		{/if}
+	</span>
 	<span class="progress">{botsSubmitted} / {totalBots} bots submitted</span>
 </div>
 <section id="aligner">
 	<div id="aligner-card" class="card">
 		<div class="config-top">
-			<h2>Aligner:</h2>
+			<h2>Turn Prompt</h2>
 		</div>
 		<div class="config-bottom">
 			<p>
@@ -224,9 +229,12 @@
 	<div id="bot-card" class="card">
 		<div class="config-top">
 			<h2>Bot Prompt</h2>
+			{#if promptLocked}
+				<span class="locked-badge">LOCKED</span>
+			{/if}
 		</div>
 		<div class="config-bottom">
-			<textarea id="bot-prompt-input" bind:value={botPrompt} aria-label="Bot Prompt" disabled={hasSubmittedThisTurn}></textarea>
+			<textarea id="bot-prompt-input" bind:value={botPrompt} aria-label="Bot Prompt" disabled={hasSubmittedThisTurn || promptLocked}></textarea>
 		</div>
 	</div>
 </section>
@@ -358,6 +366,20 @@
 		padding: 1rem;
 
 		width: 100%;
+	}
+
+	#bot-prompt-input:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+
+	.locked-badge {
+		background: #666;
+		color: white;
+		font-size: 0.7rem;
+		font-weight: bold;
+		padding: 0.15rem 0.5rem;
+		border-radius: 1rem;
 	}
 
 	.config-bottom {

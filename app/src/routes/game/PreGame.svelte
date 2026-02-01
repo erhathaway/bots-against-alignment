@@ -345,7 +345,7 @@
 	<div class="config-left">
 		<h2>Bot Prompt</h2>
 		<p>
-			This guides your bot's response. You have 2 additonal chances to change this prompt over the
+			This guides your bot's response. You have 2 chances to change this prompt over the
 			course of the game.
 		</p>
 	</div>

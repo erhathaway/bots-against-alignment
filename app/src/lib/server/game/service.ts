@@ -11,6 +11,7 @@ import {
 	generateRandomBotPrompt
 } from '$lib/server/llm/random';
 import { badRequest, forbidden, notFound } from '$lib/server/errors';
+import { postChatMessage } from '$lib/server/chat/service';
 
 const DEFAULT_POINTS_TO_WIN = 10;
 const DEFAULT_PROMPTS_REMAINING = 2;
@@ -112,6 +113,13 @@ export const joinGame = async ({
 		}
 	});
 
+	await postChatMessage({
+		gameId,
+		message: 'joined the game',
+		senderName: botName,
+		type: 'status'
+	});
+
 	return { playerId };
 };
 
@@ -185,6 +193,19 @@ export const startGame = async ({ gameId, creatorId }: { gameId: string; creator
 		})
 		.where(eq(games.id, gameId));
 
+	const allPlayers = await db
+		.select({ botName: players.botName, isAuto: players.isAuto })
+		.from(players)
+		.where(eq(players.gameId, gameId));
+	const humanNames = allPlayers.filter((p) => !p.isAuto).map((p) => p.botName);
+	const autoNames = allPlayers.filter((p) => p.isAuto).map((p) => p.botName);
+
+	await postChatMessage({
+		gameId,
+		message: `Game started with ${allPlayers.length} bots! Players: ${humanNames.join(', ')}${autoNames.length ? `. AI bots: ${autoNames.join(', ')}` : ''}`,
+		type: 'system'
+	});
+
 	return { status: 'STARTED' };
 };
 
@@ -224,7 +245,7 @@ export const getUserStatus = async (gameId: string, playerId: string) => {
 export const ensureTurn = async (gameId: string) => {
 	const timestamp = now();
 
-	return await db.transaction(async (tx) => {
+	const result = await db.transaction(async (tx) => {
 		const gameRows = await tx.select().from(games).where(eq(games.id, gameId)).limit(1);
 		const game = gameRows[0];
 		if (!game) {
@@ -253,7 +274,7 @@ export const ensureTurn = async (gameId: string) => {
 				})
 				.onConflictDoNothing();
 
-			return { alignmentPrompt: prompt, turnId: game.turnId };
+			return { alignmentPrompt: prompt, turnId: game.turnId, isNew: true };
 		}
 
 		let prompt = game.turnPrompt;
@@ -270,14 +291,25 @@ export const ensureTurn = async (gameId: string) => {
 				.where(eq(games.id, gameId));
 		}
 
-		return { alignmentPrompt: prompt, turnId: game.turnId };
+		return { alignmentPrompt: prompt, turnId: game.turnId, isNew: false };
 	});
+
+	if (result.isNew) {
+		await postChatMessage({
+			gameId,
+			message: `Turn ${result.turnId}: "${result.alignmentPrompt}"`,
+			type: 'system'
+		});
+	}
+
+	return { alignmentPrompt: result.alignmentPrompt, turnId: result.turnId };
 };
 
 const completeAutoPlayers = async (gameId: string, turnId: number, turnPrompt: string) => {
 	const bots = await db
 		.select({
 			id: players.id,
+			botName: players.botName,
 			botPrompt: players.botPrompt,
 			isAuto: players.isAuto,
 			turnComplete: players.turnComplete
@@ -304,6 +336,13 @@ const completeAutoPlayers = async (gameId: string, turnId: number, turnPrompt: s
 					target: [turnResponses.gameId, turnResponses.turnId, turnResponses.playerId],
 					set: { responseText }
 				});
+		});
+
+		await postChatMessage({
+			gameId,
+			message: `responded: "${responseText}"`,
+			senderName: bot.botName,
+			type: 'status'
 		});
 	}
 };
@@ -338,7 +377,11 @@ export const submitTurn = async ({
 	let updatedPrompt = currentPrompt;
 	let promptsRemaining = player.promptsRemaining;
 
-	if (suggestion.trim() !== '' && promptsRemaining > 0) {
+	if (
+		suggestion.trim() !== '' &&
+		suggestion.trim() !== currentPrompt.trim() &&
+		promptsRemaining > 0
+	) {
 		updatedPrompt = truncate(suggestion, MAX_BOT_PROMPT_LENGTH);
 		promptsRemaining -= 1;
 	}
@@ -373,6 +416,13 @@ export const submitTurn = async ({
 			});
 	});
 
+	await postChatMessage({
+		gameId,
+		message: `responded: "${responseText}"`,
+		senderName: player.botName,
+		type: 'status'
+	});
+
 	if (game.creatorPlayerId && playerId === game.creatorPlayerId) {
 		await completeAutoPlayers(gameId, turnId, turnPrompt);
 	}
@@ -381,19 +431,54 @@ export const submitTurn = async ({
 };
 
 export const turnFinale = async (gameId: string, turnId: number) => {
-	await requireGame(gameId);
-	const botsSubmittedRows = await db
-		.select({ count: sql<number>`count(*)` })
-		.from(players)
-		.where(and(eq(players.gameId, gameId), eq(players.turnComplete, true)));
-	const totalBotsRows = await db
-		.select({ count: sql<number>`count(*)` })
-		.from(players)
-		.where(eq(players.gameId, gameId));
+	const game = await requireGame(gameId);
+
+	const allPlayers = await db.select().from(players).where(eq(players.gameId, gameId));
+	const botsSubmitted = allPlayers.filter((p) => p.turnComplete).length;
+	const totalBots = allPlayers.length;
+
+	const turnRows = await db
+		.select()
+		.from(turns)
+		.where(and(eq(turns.gameId, gameId), eq(turns.turnId, turnId)))
+		.limit(1);
+	const turn = turnRows[0];
+
+	if (turn && turn.status === 'PROCESSED') {
+		const responseRows = await db
+			.select()
+			.from(turnResponses)
+			.where(and(eq(turnResponses.gameId, gameId), eq(turnResponses.turnId, turnId)));
+
+		const responseMap: Record<string, string> = {};
+		for (const row of responseRows) {
+			responseMap[row.playerId] = row.responseText;
+		}
+
+		const alignmentResponses = allPlayers.map((player) => ({
+			playerId: player.id,
+			name: player.botName,
+			text: responseMap[player.id] ?? '',
+			score: player.score,
+			isRoundWinner: player.id === turn.winnerPlayerId,
+			isGlobalWinner: player.score >= game.pointsToWin
+		}));
+
+		return {
+			botsSubmitted,
+			totalBots,
+			processed: true,
+			alignmentResponses,
+			isGameOver: game.status === 'ENDED'
+		};
+	}
 
 	return {
-		botsSubmitted: botsSubmittedRows[0]?.count ?? 0,
-		totalBots: totalBotsRows[0]?.count ?? 0
+		botsSubmitted,
+		totalBots,
+		processed: false,
+		alignmentResponses: null,
+		isGameOver: false
 	};
 };
 
@@ -483,6 +568,33 @@ export const processTurn = async ({
 		isRoundWinner: winnerId ? player.id === winnerId : false,
 		isGlobalWinner: player.score >= game.pointsToWin
 	}));
+
+	const winner = updatedPlayers.find((p) => p.id === winnerId);
+	if (winner) {
+		await postChatMessage({
+			gameId,
+			message: `The Aligner chose ${winner.botName} as the winner! (${winner.score} pts)`,
+			type: 'system'
+		});
+	}
+
+	const standings = updatedPlayers
+		.sort((a, b) => b.score - a.score)
+		.map((p) => `${p.botName}: ${p.score}`)
+		.join(' | ');
+	await postChatMessage({
+		gameId,
+		message: `Standings: ${standings}`,
+		type: 'system'
+	});
+
+	if (isGameOver && winner) {
+		await postChatMessage({
+			gameId,
+			message: `Game over! ${winner.botName} wins with ${winner.score} points!`,
+			type: 'system'
+		});
+	}
 
 	return { alignmentResponses };
 };

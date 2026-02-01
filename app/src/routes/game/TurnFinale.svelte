@@ -4,32 +4,24 @@
 	import { addNotification } from '$lib/state/store.svelte';
 	import { isRecord, NotificationKind, type AlignmentResponse } from '$lib/types';
 
-	let isForceNextTurnPending = $state(false);
+	let isJudgePending = $state(false);
 	let isCreator = $derived(Boolean(globalState.creator_id));
 	let results = $derived(globalState.last_turn_results);
 	let turnProcessed = $derived(results !== null && results.length > 0);
 
 	async function pollForResults() {
 		const gameId = globalState.game_id;
-		if (!gameId) return;
+		const turnId = globalState.last_turn_id;
+		if (!gameId || !turnId) return;
 
-		const url = `/api/game/${gameId}/status`;
+		const url = `/api/game/${gameId}/turn/${turnId}/finale`;
 		try {
 			const response = await fetch(url);
 			const data = await response.json();
-			if (response.ok && data.bots) {
-				const bots = data.bots as Array<{ name: string; points: number; turnComplete: boolean }>;
-				const allReset = bots.every((bot) => !bot.turnComplete);
-				if (allReset && bots.length > 0) {
-					const mapped: AlignmentResponse[] = bots.map((bot) => ({
-						playerId: '',
-						name: bot.name,
-						text: '',
-						score: bot.points,
-						isRoundWinner: false,
-						isGlobalWinner: false
-					}));
-					globalState.last_turn_results = mapped;
+			if (response.ok && data.processed && Array.isArray(data.alignmentResponses)) {
+				globalState.last_turn_results = data.alignmentResponses as AlignmentResponse[];
+				if (data.isGameOver) {
+					globalState.is_game_over = true;
 				}
 			}
 		} catch (error) {
@@ -38,15 +30,15 @@
 	}
 
 	$effect(() => {
-		if (isCreator || turnProcessed) return;
+		if (turnProcessed) return;
 		pollForResults();
 		const intervalId = setInterval(pollForResults, 2000);
 		return () => clearInterval(intervalId);
 	});
 
-	async function forceNextTurn() {
-		if (isForceNextTurnPending) return;
-		isForceNextTurnPending = true;
+	async function judgeResponses() {
+		if (isJudgePending) return;
+		isJudgePending = true;
 
 		try {
 			const gameId = globalState.game_id;
@@ -56,39 +48,34 @@
 				throw new Error('Missing game/user/turn context');
 			}
 
-			let isGameOver = false;
-			if (isCreator) {
-				const url = `/api/game/${gameId}/turn/${turnId}/process`;
-				const response = await fetch(url, {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ playerId: userId })
-				});
-				if (response.ok) {
-					const payload = await response.json();
-					if (isRecord(payload) && Array.isArray(payload.alignmentResponses)) {
-						const responses = payload.alignmentResponses as AlignmentResponse[];
-						globalState.last_turn_results = responses;
-						isGameOver = responses.some((r) => r.isGlobalWinner === true);
+			const url = `/api/game/${gameId}/turn/${turnId}/process`;
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ playerId: userId })
+			});
+			if (response.ok) {
+				const payload = await response.json();
+				if (isRecord(payload) && Array.isArray(payload.alignmentResponses)) {
+					const responses = payload.alignmentResponses as AlignmentResponse[];
+					globalState.last_turn_results = responses;
+					if (responses.some((r) => r.isGlobalWinner === true)) {
+						globalState.is_game_over = true;
 					}
-				} else {
-					const data = await response.json();
-					addNotification({
-						source_url: 'turn finale',
-						title: 'Error processing turn',
-						body: data,
-						kind: NotificationKind.ERROR,
-						action_url: url,
-						action_text: 'process turn'
-					});
-					return;
 				}
+			} else {
+				const data = await response.json();
+				addNotification({
+					source_url: 'turn finale',
+					title: 'Error processing turn',
+					body: data,
+					kind: NotificationKind.ERROR,
+					action_url: url,
+					action_text: 'process turn'
+				});
 			}
-
-			globalState.have_all_users_submitted = false;
-			globalState.is_game_over = isGameOver;
 		} finally {
-			isForceNextTurnPending = false;
+			isJudgePending = false;
 		}
 	}
 
@@ -102,8 +89,8 @@
 	{#if !turnProcessed && isCreator}
 		<h2>All bots submitted!</h2>
 		<p class="subtitle">Click below to have the Aligner judge the responses.</p>
-		<button onclick={forceNextTurn}>
-			{#if isForceNextTurnPending}
+		<button onclick={judgeResponses}>
+			{#if isJudgePending}
 				<LoadingBars />
 			{:else}
 				Judge Responses
@@ -130,9 +117,13 @@
 				</div>
 			{/each}
 		</div>
-		<button onclick={advanceTurn}>
-			Next Turn
-		</button>
+		{#if globalState.is_game_over}
+			<p class="game-over-text">Game Over!</p>
+		{:else}
+			<button onclick={advanceTurn}>
+				Next Turn
+			</button>
+		{/if}
 	{/if}
 </div>
 
@@ -154,6 +145,12 @@
 		color: #666;
 		margin-bottom: 1.5rem;
 		font-size: 1rem;
+	}
+	.game-over-text {
+		font-size: 1.5rem;
+		font-weight: bold;
+		color: rgb(0, 150, 0);
+		margin-top: 1.5rem;
 	}
 	.results-list {
 		width: 100%;

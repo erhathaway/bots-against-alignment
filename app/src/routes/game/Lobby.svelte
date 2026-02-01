@@ -4,8 +4,9 @@
 	import LoadingBars from './LoadingBars.svelte';
 	import LoadingCommas from './LoadingCommas.svelte';
 	import GameLink from './GameLink.svelte';
-	import chat_manager from '$lib/chat_manager';
 
+	type BotInfo = { name: string; points: number; turnComplete: boolean };
+	let joinedBots = $state<BotInfo[]>([]);
 	let fetchStatusInterval: ReturnType<typeof setInterval> | null = null;
 
 	async function fetchStatus() {
@@ -15,16 +16,17 @@
 
 		const response = await fetch(url, {
 			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-				'Access-Control-Allow-Origin': '*'
-			}
+			headers: { 'Content-Type': 'application/json' }
 		});
 		const data = await response.json();
 		if (response.ok) {
 			const status = data.status;
 
-			if (status === 'STARTED' || status === 'ENDED' || status === 'WAITING_ON_ALIGNMENT_RATING') {
+			if (data.bots && Array.isArray(data.bots)) {
+				joinedBots = data.bots as BotInfo[];
+			}
+
+			if (status === 'STARTED' || status === 'ENDED') {
 				globalState.is_game_started = true;
 				fetchStatusInterval && clearInterval(fetchStatusInterval);
 			}
@@ -65,11 +67,8 @@
 			});
 
 			if (response.ok) {
-				const chat = chat_manager.findOrCreateChatGame(globalState.game_id);
-				chat.sendSystemMessage('Game started', globalState.game_id);
 				globalState.is_game_started = true;
 			} else {
-				// Show an error message or handle the error accordingly
 				const data = await response.json();
 				addNotification({
 					source_url: 'lobby',
@@ -95,6 +94,17 @@
 </script>
 
 <div id="lobby">
+	{#if joinedBots.length > 0}
+		<div class="player-list">
+			<h3>{joinedBots.length} player{joinedBots.length === 1 ? '' : 's'} joined</h3>
+			<div class="players">
+				{#each joinedBots as bot}
+					<span class="player-chip">{bot.name}</span>
+				{/each}
+			</div>
+		</div>
+	{/if}
+
 	{#if globalState.creator_id == null}
 		<p class="non-creator">Waiting for creator to start game<LoadingCommas /></p>
 	{:else}
@@ -116,6 +126,29 @@
 		align-items: center;
 		justify-content: center;
 		height: 100%;
+	}
+	.player-list {
+		text-align: center;
+		margin-bottom: 2rem;
+	}
+	.player-list h3 {
+		font-size: 1.2rem;
+		color: #666;
+		margin-bottom: 0.75rem;
+	}
+	.players {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		justify-content: center;
+	}
+	.player-chip {
+		background: rgb(240, 255, 220);
+		border: 1px solid rgb(123, 255, 0);
+		border-radius: 1rem;
+		padding: 0.3rem 0.8rem;
+		font-size: 0.9rem;
+		font-weight: bold;
 	}
 	p.non-creator {
 		font-size: 3rem;

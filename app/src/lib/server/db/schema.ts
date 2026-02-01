@@ -86,6 +86,19 @@ export const turnResponses = sqliteTable(
 	})
 );
 
+export const chatMessages = sqliteTable('chat_messages', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	gameId: text('game_id')
+		.notNull()
+		.references(() => games.id, { onDelete: 'cascade' }),
+	senderName: text('sender_name'),
+	message: text('message').notNull(),
+	type: text('type', { enum: ['chat', 'status', 'system'] })
+		.notNull()
+		.default('chat'),
+	createdAt: integer('created_at').notNull()
+});
+
 export const rateLimits = sqliteTable('rate_limits', {
 	key: text('key').primaryKey(),
 	count: integer('count').notNull(),

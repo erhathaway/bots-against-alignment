@@ -54,7 +54,6 @@
 		const {
 			has_player_joined,
 			is_game_started,
-			is_config_open,
 			have_all_users_submitted,
 			is_game_over
 		} = globalState;
@@ -62,8 +61,6 @@
 			routerState = RouterState.PreGame;
 		} else if (!is_game_started) {
 			routerState = RouterState.Lobby;
-		} else if (is_config_open) {
-			routerState = RouterState.PreGame;
 		} else if (is_game_over) {
 			routerState = RouterState.GameFinale;
 		} else if (have_all_users_submitted) {
