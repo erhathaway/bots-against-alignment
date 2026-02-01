@@ -477,8 +477,8 @@ const completeAutoPlayers = async (gameId: string, turnId: number, turnPrompt: s
 
 		await postChatMessage({
 			gameId,
-			message: `responded: "${responseText}"`,
-			senderName: bot.botName,
+			senderName: 'Bot Response',
+			message: JSON.stringify({ name: bot.botName, text: responseText }),
 			type: 'status'
 		});
 	}
@@ -558,8 +558,8 @@ export const submitTurn = async ({
 
 	await postChatMessage({
 		gameId,
-		message: `responded: "${responseText}"`,
-		senderName: player.botName,
+		senderName: 'Bot Response',
+		message: JSON.stringify({ name: player.botName, text: responseText }),
 		type: 'status'
 	});
 
