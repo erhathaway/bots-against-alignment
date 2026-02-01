@@ -1,6 +1,11 @@
 
 > **CRITICAL: After making ANY changes to this file (AGENTS.md), you MUST immediately copy it and replace CLAUDE.md with the updated content. CLAUDE.md is the source file for Claude Code and must stay in sync with AGENTS.md at all times.**
 
+> **CRITICAL: When designing new components or updating UI make sure the style matches:**
+"""
+Minimalist ritual-console UI design system with selective yellow highlights, stark black and white interface dominated by white negative space, thick black rounded outlines, precise geometric UI components, muted warm yellow used sparingly for focus states, active indicators, selection rings, and system status accents, calm ceremonial mood, software that feels like an instrument or protocol terminal, deliberate modern sans-serif typography, buttons and inputs framed like physical modules, alignment and initiation metaphors, empty states emphasizing silence and readiness, high-contrast ethical console aesthetic, subtle shadows and depth, modern web UI screens for configuration, onboarding, and system control, authoritative but minimal visual language
+"""
+
 # Bots Against Alignment — Agent Guide (AGENTS.md)
 
 This repo is a turn-based multiplayer web game where players create "bots" and a shared "aligner" prompt. Each turn, an LLM (or a mock) judges which bot response best matches the aligner's instruction.
