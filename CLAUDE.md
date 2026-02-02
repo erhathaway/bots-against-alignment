@@ -196,5 +196,5 @@ Then open `http://127.0.0.1:5173/`.
 
 ## Quality gates (when touching code)
 
-- Minimum: `cd app && bun run test`
-- Best: `cd app && bun run check && bun run test`
+- Required: `cd app && bun run lint && bunx tsc --noEmit && bun run test:unit && bun run test:e2e`
+- Shortcut: `cd app && bun run lint && bunx tsc --noEmit && bun run test` (runs unit tests then E2E)
