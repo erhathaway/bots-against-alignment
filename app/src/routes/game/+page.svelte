@@ -8,6 +8,7 @@
 	import AlignerSays from '$lib/components/game/AlignerSays.svelte';
 	import TurnFinale from '$lib/components/game/TurnFinale.svelte';
 	import GameFinale from '$lib/components/game/GameFinale.svelte';
+	import PlayerScoreboard from '$lib/components/game/PlayerScoreboard.svelte';
 	import { fly } from 'svelte/transition';
 	import type { PageData } from './$types';
 
@@ -122,15 +123,33 @@
 	}
 </script>
 
+{#if globalState.has_player_joined && globalState.is_game_started}
+	<PlayerScoreboard />
+{/if}
+
+<!-- Top left home button -->
+<a href="/" class="nav-btn home-btn">
+	<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+		<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+		<polyline points="9 22 9 12 15 12 15 22"></polyline>
+	</svg>
+	<span>Home</span>
+</a>
+
+<!-- Bottom left leave button -->
+{#if globalState.has_player_joined}
+	<button class="nav-btn leave-btn" onclick={handleLeave} disabled={isLeavePending}>
+		<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+			<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+			<polyline points="16 17 21 12 16 7"></polyline>
+			<line x1="21" y1="12" x2="9" y2="12"></line>
+		</svg>
+		<span>{isLeavePending ? 'Leaving...' : 'Leave Game'}</span>
+	</button>
+{/if}
+
 <div id="screen" role="region" aria-label="Game" in:fly={screenTransition('in')}>
 	<section id="game-details" out:fly={gameDetailsTransition('out')}>
-		{#if globalState.has_player_joined}
-			<div class="leave-bar">
-				<button class="leave-btn" onclick={handleLeave} disabled={isLeavePending}>
-					{isLeavePending ? 'Leaving...' : 'Leave Game'}
-				</button>
-			</div>
-		{/if}
 		{#if routerState === RouterState.Lobby}
 			<div in:fly={customFly('in')} out:fly={customFly('out')}>
 				<Lobby />
@@ -197,33 +216,62 @@
 		flex-grow: 1;
 	}
 
-	.leave-bar {
+	.nav-btn {
+		position: fixed;
 		display: flex;
-		justify-content: flex-end;
-		width: 100%;
-		padding: 0.5rem 1rem;
-		flex-grow: 0;
+		align-items: center;
+		gap: 0.625rem;
+		padding: 0.75rem 1.25rem;
+		font-size: 0.875rem;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+		background: #ffffff;
+		border: 2px solid #000000;
+		border-radius: var(--radius-lg);
+		color: var(--color-text);
+		cursor: pointer;
+		transition: all 220ms var(--ease);
+		box-shadow: var(--shadow-md);
+		text-decoration: none;
+		z-index: 99;
+	}
+
+	.nav-btn svg {
+		flex-shrink: 0;
+	}
+
+	.nav-btn:hover {
+		background: #000000;
+		color: #ffffff;
+		border-color: var(--color-accent);
+		box-shadow: var(--glow-accent-md);
+	}
+
+	.nav-btn:active {
+		transform: scale(0.97);
+	}
+
+	.home-btn {
+		top: 1.5rem;
+		left: 1.5rem;
 	}
 
 	.leave-btn {
-		font-size: 0.7rem;
-		font-weight: 500;
-		padding: 0.3rem 0.75rem;
-		border: 1px solid var(--color-border-light);
-		background: white;
-		border-radius: var(--radius-pill);
-		color: var(--color-text-muted);
-		cursor: pointer;
-		transition: all 150ms var(--ease);
-	}
-
-	.leave-btn:hover {
-		border-color: var(--color-text);
-		color: var(--color-text);
+		bottom: 1.5rem;
+		left: 1.5rem;
 	}
 
 	.leave-btn:disabled {
-		opacity: 0.4;
+		opacity: 0.5;
 		cursor: not-allowed;
+		background: #ffffff;
+		color: var(--color-text);
+	}
+
+	.leave-btn:disabled:hover {
+		background: #ffffff;
+		color: var(--color-text);
+		border-color: #000000;
+		box-shadow: var(--shadow-md);
 	}
 </style>

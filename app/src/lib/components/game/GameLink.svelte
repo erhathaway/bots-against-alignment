@@ -19,10 +19,16 @@
 	function copyToClipboard(text: string) {
 		navigator.clipboard.writeText(text);
 	}
+
+	function truncateGameId(id: string | null): string {
+		if (!id) return '';
+		if (id.length <= 12) return id;
+		return `${id.slice(0, 6)}...${id.slice(-4)}`;
+	}
 </script>
 
 <button type="button" class="game-link" onclick={() => copyToClipboard(gameLink)}>
-	<h2>Game # {globalState.game_id}</h2>
+	<h2>Game # {truncateGameId(globalState.game_id)}</h2>
 	<div id="link-icon">
 		<div id="link-vertical-rule"></div>
 		<svg
@@ -54,42 +60,59 @@
 	.game-link {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.5rem;
-		border: 1.5px solid var(--color-border-light);
-		border-radius: var(--radius-pill);
-		padding: 0.35rem 0.875rem;
+		gap: 0.75rem;
+		border: 2px solid #000000;
+		border-radius: var(--radius-lg);
+		padding: 0.75rem 1.25rem;
 		background: white;
 		color: var(--color-text);
 		font: inherit;
 		cursor: pointer;
-		box-shadow: var(--shadow-sm);
-		transition: all 150ms var(--ease);
+		box-shadow: var(--shadow-md);
+		transition: all 220ms var(--ease);
 		text-align: left;
 	}
 
 	.game-link:hover {
-		border-color: var(--color-border);
-		box-shadow: var(--shadow-md);
+		background: #000000;
+		border-color: var(--color-accent);
+		box-shadow: var(--glow-accent-md);
+	}
+
+	.game-link:hover h2 {
+		color: #ffffff;
+	}
+
+	.game-link:hover svg path {
+		stroke: var(--color-accent);
+	}
+
+	.game-link:active {
+		transform: scale(0.97);
 	}
 
 	h2 {
-		font-size: 0.7rem;
-		font-weight: 500;
+		font-size: 0.875rem;
+		font-weight: 600;
 		font-family: var(--font-mono);
-		color: var(--color-text-secondary);
-		letter-spacing: 0;
+		color: var(--color-text);
+		letter-spacing: 0.02em;
+		transition: color 220ms var(--ease);
 	}
 
 	#link-icon {
 		display: flex;
 		align-items: center;
-		margin-left: 0.25rem;
 	}
 
 	#link-vertical-rule {
-		width: 1px;
-		height: 16px;
-		background: var(--color-border-light);
-		margin-right: 0.5rem;
+		width: 1.5px;
+		height: 20px;
+		background: var(--color-border);
+		margin-right: 0.75rem;
+	}
+
+	svg path {
+		transition: stroke 220ms var(--ease);
 	}
 </style>

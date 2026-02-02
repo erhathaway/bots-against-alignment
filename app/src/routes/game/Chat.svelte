@@ -82,5 +82,6 @@
 		flex: 1;
 		overflow: hidden;
 		background: white;
+		padding-bottom: 140px; /* Space for floating chat input */
 	}
 </style>
