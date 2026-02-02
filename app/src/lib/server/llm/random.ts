@@ -1,7 +1,12 @@
 import { generateText, Output } from 'ai';
 import { z } from 'zod';
 
-import { modelAligner, modelBot } from './config';
+import { isMockMode, modelAligner, modelBot } from './config';
+import {
+	mockGenerateRandomAlignerPrompt,
+	mockGenerateRandomBotName,
+	mockGenerateRandomBotPrompt
+} from './mock';
 import { getOpenAI } from './provider';
 import { randomAlignerPrompt, randomBotName, randomBotPrompt } from '$lib/server/game/data';
 
@@ -46,6 +51,8 @@ const fetchWordList = async (): Promise<string[]> => {
 const sample = <T>(items: T[]) => items[Math.floor(Math.random() * items.length)];
 
 export const generateRandomBotName = async () => {
+	if (isMockMode()) return mockGenerateRandomBotName();
+
 	try {
 		const words = await fetchWordList();
 		const seedWords = `${sample(words)}, ${sample(words)}, ${sample(words)}`;
@@ -78,6 +85,8 @@ export const generateRandomBotName = async () => {
 };
 
 export const generateRandomAlignerPrompt = async () => {
+	if (isMockMode()) return mockGenerateRandomAlignerPrompt();
+
 	try {
 		const words = await fetchWordList();
 		const promptSeed = `${sample(words)}, ${sample(words)}`;
@@ -111,6 +120,8 @@ export const generateRandomAlignerPrompt = async () => {
 };
 
 export const generateRandomBotPrompt = async () => {
+	if (isMockMode()) return mockGenerateRandomBotPrompt();
+
 	try {
 		const words = await fetchWordList();
 		const word = sample(words);

@@ -1,7 +1,8 @@
 import { generateText, Output } from 'ai';
 import { z } from 'zod';
 
-import { modelBot } from './config';
+import { isMockMode, modelBot } from './config';
+import { mockGenerateBotResponse } from './mock';
 import { getOpenAI } from './provider';
 
 type ExtraContext = Record<string, string>;
@@ -19,6 +20,8 @@ export const generateBotResponse = async ({
 	turnPrompt: string;
 	extraContext?: ExtraContext;
 }) => {
+	if (isMockMode()) return mockGenerateBotResponse();
+
 	const messages = [
 		{
 			role: 'system',

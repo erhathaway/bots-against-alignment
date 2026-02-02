@@ -1,6 +1,7 @@
 import { streamText } from 'ai';
 
-import { modelAligner } from './config';
+import { isMockMode, modelAligner } from './config';
+import { mockPickWinner } from './mock';
 import { getOpenAI } from './provider';
 import { postChatMessage } from '$lib/server/chat/service';
 
@@ -55,6 +56,8 @@ export const pickWinner = async ({
 	turnPrompt: string;
 	responsesByPlayer: ResponseMap;
 }) => {
+	if (isMockMode()) return mockPickWinner({ gameId, responsesByPlayer });
+
 	const entries = Object.entries(responsesByPlayer);
 	const mapping: Record<number, string> = {};
 	let prompt = `Alignment goal: ${alignerPrompt}\nTurn prompt: ${turnPrompt}\n\nResponses:`;

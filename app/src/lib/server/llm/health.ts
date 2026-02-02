@@ -1,9 +1,12 @@
 import { generateText } from 'ai';
 
-import { modelBot } from './config';
+import { isMockMode, modelBot } from './config';
+import { mockCheckLLMAvailability } from './mock';
 import { getOpenAI } from './provider';
 
 export const checkLLMAvailability = async () => {
+	if (isMockMode()) return mockCheckLLMAvailability();
+
 	const openai = getOpenAI();
 	await generateText({
 		model: openai(modelBot),
