@@ -21,21 +21,23 @@
 		align-items: center;
 		gap: 0.4rem;
 		padding: 0.5rem 0.875rem;
-		font-size: 0.8rem;
+		font-size: 0.75rem;
 		font-weight: 500;
+		letter-spacing: 0.04em;
 		color: var(--color-text);
 		background: #ffffff;
 		border: 1.5px solid var(--color-border-light);
 		border-radius: var(--radius-pill);
 		box-shadow: var(--shadow-sm);
-		transition: all 150ms var(--ease);
+		transition: all 180ms var(--ease);
 		z-index: 100;
 		text-decoration: none;
 	}
 
 	.github-link:hover {
-		border-color: var(--color-border);
-		box-shadow: var(--shadow-md);
+		border-color: var(--color-accent);
+		box-shadow: var(--shadow-sm), var(--glow-accent-soft);
+		text-decoration: none;
 	}
 
 	svg {

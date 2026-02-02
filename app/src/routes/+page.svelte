@@ -49,14 +49,62 @@
 		justify-content: center;
 		min-height: 100vh;
 		gap: 0;
+		position: relative;
+		overflow: hidden;
+	}
+
+	/* Horizontal signal trace */
+	main::before {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: 0;
+		right: 0;
+		height: 1px;
+		background: linear-gradient(
+			90deg,
+			transparent 0%,
+			transparent 10%,
+			rgba(230, 200, 50, 0.15) 20%,
+			rgba(230, 200, 50, 0.3) 35%,
+			rgba(230, 200, 50, 0.08) 50%,
+			rgba(230, 200, 50, 0.3) 65%,
+			rgba(230, 200, 50, 0.15) 80%,
+			transparent 90%,
+			transparent 100%
+		);
+		pointer-events: none;
+		z-index: 0;
+	}
+
+	/* Vertical signal trace */
+	main::after {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 50%;
+		width: 1px;
+		height: 100%;
+		background: linear-gradient(
+			180deg,
+			transparent 0%,
+			rgba(230, 200, 50, 0.12) 15%,
+			rgba(230, 200, 50, 0.06) 40%,
+			transparent 50%,
+			rgba(230, 200, 50, 0.06) 60%,
+			rgba(230, 200, 50, 0.12) 85%,
+			transparent 100%
+		);
+		pointer-events: none;
+		z-index: 0;
 	}
 
 	.bottom-links {
 		position: fixed;
-		bottom: 1.5rem;
-		right: 1.5rem;
+		bottom: 2rem;
+		right: 2rem;
 		display: flex;
-		gap: 0.5rem;
+		gap: 0.625rem;
 		z-index: 100;
 	}
 </style>
