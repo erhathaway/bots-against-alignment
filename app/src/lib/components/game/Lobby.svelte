@@ -5,8 +5,9 @@
 	import LoadingBars from './LoadingBars.svelte';
 	import LoadingCommas from './LoadingCommas.svelte';
 	import GameLink from './GameLink.svelte';
+	import CreatorNav from './CreatorNav.svelte';
 
-	type BotInfo = {
+	export type BotInfo = {
 		id: string;
 		name: string;
 		points: number;
@@ -15,42 +16,18 @@
 		isAuto: boolean;
 	};
 
+	type Props = {
+		onOpenSettings?: () => void;
+	};
+
+	let { onOpenSettings }: Props = $props();
+
 	let joinedBots = $state<BotInfo[]>([]);
 	let fetchStatusInterval: ReturnType<typeof setInterval> | null = null;
 	let isCreator = $derived(globalState.creator_id != null);
-	let pointsToWin = $state(2);
-	let botPromptChanges = $state(1);
-	let savingSettings = $state(false);
 	let addingAi = $state(false);
 	let countdownStartedAt = $state<number | null>(null);
 	let countdownRemaining = $state<number | null>(null);
-
-	async function saveSettings(field: 'pointsToWin' | 'botPromptChanges', value: number) {
-		const gameId = globalState.game_id;
-		const creatorId = globalState.creator_id;
-		if (!gameId || !creatorId) return;
-		savingSettings = true;
-		try {
-			const response = await fetch(`/api/game/${gameId}/settings`, {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ creatorId, [field]: value })
-			});
-			if (!response.ok) {
-				const data = await response.json();
-				addNotification({
-					source_url: 'lobby',
-					title: 'Error saving settings',
-					body: data.message || data,
-					kind: NotificationKind.ERROR,
-					action_url: null,
-					action_text: 'save_settings'
-				});
-			}
-		} finally {
-			savingSettings = false;
-		}
-	}
 
 	async function fetchStatus() {
 		const gameId = globalState.game_id;
@@ -69,8 +46,6 @@
 			if (data.bots && Array.isArray(data.bots)) {
 				joinedBots = data.bots as BotInfo[];
 			}
-			if (data.pointsToWin != null) pointsToWin = data.pointsToWin;
-			if (data.botPromptChanges != null) botPromptChanges = data.botPromptChanges;
 			if (data.countdownStartedAt !== undefined) countdownStartedAt = data.countdownStartedAt;
 
 			if (status === 'ALIGNER_SETUP') {
@@ -266,7 +241,20 @@
 	});
 </script>
 
-<div id="lobby">
+{#if isCreator}
+	<CreatorNav
+		onAddAi={addAiPlayer}
+		onRemoveAi={removeAiPlayer}
+		onOpenSettings={() => onOpenSettings?.()}
+		onStartGame={beginCountdown}
+		{joinedBots}
+		{addingAi}
+		startingGame={isCountdownPending}
+		canStart={!globalState.is_game_started && joinedBots.length >= 1}
+	/>
+{/if}
+
+<div id="lobby" class:with-nav={isCreator}>
 	{#if joinedBots.length > 0}
 		<div class="player-list">
 			<h3>{joinedBots.length} player{joinedBots.length === 1 ? '' : 's'} in the waiting room</h3>
@@ -276,61 +264,11 @@
 						{bot.name}
 						{#if bot.isHost}<span class="host-badge">Host</span>{/if}
 						{#if bot.isAuto}<span class="ai-badge">AI</span>{/if}
-						{#if isCreator && bot.isAuto}
-							<button class="remove-ai" onclick={() => removeAiPlayer(bot.id)}>&#x2715;</button>
-						{/if}
 					</span>
 				{/each}
 			</div>
 		</div>
 	{/if}
-
-	{#if isCreator}
-		<div class="ai-controls">
-			<button class="ai-btn" onclick={addAiPlayer} disabled={addingAi || joinedBots.length >= 8}>
-				{#if addingAi}
-					Adding<LoadingCommas />
-				{:else}
-					+ Add AI Player
-				{/if}
-			</button>
-		</div>
-	{/if}
-
-	<div class="settings">
-		<div class="setting-row">
-			<label for="points-to-win">Points to win</label>
-			{#if isCreator}
-				<input
-					id="points-to-win"
-					type="number"
-					min="1"
-					max="20"
-					bind:value={pointsToWin}
-					onchange={() => saveSettings('pointsToWin', pointsToWin)}
-					disabled={savingSettings}
-				/>
-			{:else}
-				<span class="setting-value">{pointsToWin}</span>
-			{/if}
-		</div>
-		<div class="setting-row">
-			<label for="bot-prompt-changes">Prompt changes allowed</label>
-			{#if isCreator}
-				<input
-					id="bot-prompt-changes"
-					type="number"
-					min="0"
-					max="10"
-					bind:value={botPromptChanges}
-					onchange={() => saveSettings('botPromptChanges', botPromptChanges)}
-					disabled={savingSettings}
-				/>
-			{:else}
-				<span class="setting-value">{botPromptChanges}</span>
-			{/if}
-		</div>
-	</div>
 
 	{#if countdownRemaining != null && countdownRemaining > 0}
 		<div class="countdown">
@@ -343,26 +281,17 @@
 		</div>
 	{/if}
 
-	{#if globalState.creator_id == null}
+	{#if !isCreator}
 		{#if countdownRemaining != null}
 			<p class="non-creator">Game starting soon<LoadingCommas /></p>
 		{:else}
 			<p class="non-creator">Waiting for the host to start the game<LoadingCommas /></p>
 		{/if}
-	{:else if countdownRemaining != null}
-		{#if isForceStartPending}
-			<LoadingBars />
-		{:else}
-			<button onclick={forceStart} disabled={globalState.is_game_started}> Start Now </button>
-		{/if}
+	{:else if countdownRemaining != null && isForceStartPending}
+		<LoadingBars />
 	{:else}
 		<GameLink />
 		<p class="creator">Invite others to join</p>
-		{#if isCountdownPending}
-			<LoadingBars />
-		{:else}
-			<button onclick={beginCountdown} disabled={globalState.is_game_started}> Start Game </button>
-		{/if}
 	{/if}
 </div>
 
@@ -375,6 +304,10 @@
 		height: 100%;
 		padding: 2rem;
 		gap: 1.5rem;
+	}
+
+	#lobby.with-nav {
+		padding-top: 6rem;
 	}
 
 	.player-list {
@@ -439,96 +372,6 @@
 		letter-spacing: 0.05em;
 	}
 
-	.remove-ai {
-		background: none;
-		border: none;
-		color: var(--color-text-muted);
-		cursor: pointer;
-		font-size: 0.75rem;
-		padding: 0;
-		margin: 0;
-		line-height: 1;
-		transition: color 150ms;
-	}
-
-	.remove-ai:hover {
-		color: var(--color-text);
-		background: none;
-	}
-
-	.ai-controls {
-		/* spacing handled by #lobby gap */
-		display: contents;
-	}
-
-	.ai-btn {
-		font-size: 0.8rem;
-		padding: 0.4rem 1rem;
-		border: 1.5px dashed var(--color-border-light);
-		background: white;
-		border-radius: var(--radius-pill);
-		color: var(--color-text-secondary);
-		font-weight: 500;
-		cursor: pointer;
-		transition: all 150ms var(--ease);
-	}
-
-	.ai-btn:hover {
-		border-color: var(--color-border);
-		color: var(--color-text);
-	}
-
-	.ai-btn:disabled {
-		opacity: 0.4;
-		cursor: not-allowed;
-	}
-
-	.settings {
-		display: flex;
-		flex-direction: row;
-		gap: 2.5rem;
-		padding: 1rem 1.5rem;
-		border: 1.5px solid var(--color-border-light);
-		border-radius: var(--radius-md);
-		background: white;
-	}
-
-	.setting-row {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.3rem;
-	}
-
-	.setting-row label {
-		font-size: 0.7rem;
-		font-weight: 500;
-		color: var(--color-text-muted);
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-	}
-
-	.setting-row input[type='number'] {
-		width: 3.5rem;
-		text-align: center;
-		font-size: 1rem;
-		font-weight: 600;
-		padding: 0.3rem;
-		border: 1.5px solid var(--color-border-light);
-		border-radius: var(--radius-sm);
-		outline: none;
-		transition: border-color 150ms;
-	}
-
-	.setting-row input[type='number']:focus {
-		border-color: var(--color-accent);
-	}
-
-	.setting-value {
-		font-size: 1rem;
-		font-weight: 600;
-	}
-
 	.countdown {
 		text-align: center;
 	}
@@ -561,35 +404,5 @@
 		text-align: center;
 		color: var(--color-text);
 		font-weight: 500;
-	}
-
-	button {
-		font-weight: 600;
-		font-size: 1rem;
-		padding: 0.75rem 2rem;
-		border: 2px solid var(--color-border);
-		background: var(--color-text);
-		color: white;
-		border-radius: var(--radius-pill);
-		box-shadow: var(--shadow-md);
-		transition: all 180ms var(--ease);
-		letter-spacing: 0.02em;
-		cursor: pointer;
-	}
-
-	button:hover {
-		background: white;
-		color: var(--color-text);
-		border-color: var(--color-border);
-	}
-
-	button:active {
-		transform: scale(0.97);
-	}
-
-	button:disabled {
-		opacity: 0.4;
-		cursor: not-allowed;
-		pointer-events: none;
 	}
 </style>

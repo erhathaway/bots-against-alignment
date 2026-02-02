@@ -9,6 +9,7 @@
 	import TurnFinale from '$lib/components/game/TurnFinale.svelte';
 	import GameFinale from '$lib/components/game/GameFinale.svelte';
 	import PlayerScoreboard from '$lib/components/game/PlayerScoreboard.svelte';
+	import GameSettingsModal from '$lib/components/game/GameSettingsModal.svelte';
 	import { fly } from 'svelte/transition';
 	import type { PageData } from './$types';
 
@@ -121,10 +122,17 @@
 			isLeavePending = false;
 		}
 	}
+
+	let showSettingsModal = $state(false);
+	let isCreator = $derived(globalState.creator_id != null);
 </script>
 
 {#if globalState.has_player_joined && globalState.is_game_started}
 	<PlayerScoreboard />
+{/if}
+
+{#if showSettingsModal}
+	<GameSettingsModal onClose={() => (showSettingsModal = false)} {isCreator} />
 {/if}
 
 <!-- Top left home button -->
@@ -148,11 +156,24 @@
 	</button>
 {/if}
 
+<!-- Top right settings button -->
+{#if globalState.has_player_joined}
+	<button class="nav-btn settings-btn" onclick={() => (showSettingsModal = true)}>
+		<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+			<circle cx="12" cy="12" r="3"></circle>
+			<path
+				d="M12 1v6m0 6v6m6-12h-6m-6 0H1m17.66 3.66l-4.24 4.24M9.88 14.12l-4.24 4.24m12.72 0l-4.24-4.24M9.88 9.88L5.64 5.64"
+			></path>
+		</svg>
+		<span>Settings</span>
+	</button>
+{/if}
+
 <div id="screen" role="region" aria-label="Game" in:fly={screenTransition('in')}>
 	<section id="game-details" out:fly={gameDetailsTransition('out')}>
 		{#if routerState === RouterState.Lobby}
 			<div in:fly={customFly('in')} out:fly={customFly('out')}>
-				<Lobby />
+				<Lobby onOpenSettings={() => (showSettingsModal = true)} />
 			</div>
 		{/if}
 		{#if routerState === RouterState.AlignerSetup}
@@ -259,6 +280,11 @@
 	.leave-btn {
 		bottom: 1.5rem;
 		left: 1.5rem;
+	}
+
+	.settings-btn {
+		top: 1.5rem;
+		right: 1.5rem;
 	}
 
 	.leave-btn:disabled {

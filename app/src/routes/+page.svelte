@@ -37,6 +37,14 @@
 				botSetupCreatorId = data.creatorId;
 				globalState.game_id = data.gameId;
 				globalState.creator_id = data.creatorId;
+				// Reset game state flags for new game
+				globalState.is_game_started = false;
+				globalState.is_collecting_aligner_prompts = false;
+				globalState.have_all_users_submitted = false;
+				globalState.is_game_over = false;
+				globalState.last_turn_id = null;
+				globalState.last_alignment_request = null;
+				globalState.last_turn_results = null;
 				showWithTransition(() => {
 					showBotSetup = true;
 				});
@@ -52,6 +60,14 @@
 		botSetupCreatorId = null;
 		globalState.game_id = gameId;
 		globalState.creator_id = null;
+		// Reset game state flags when joining
+		globalState.is_game_started = false;
+		globalState.is_collecting_aligner_prompts = false;
+		globalState.have_all_users_submitted = false;
+		globalState.is_game_over = false;
+		globalState.last_turn_id = null;
+		globalState.last_alignment_request = null;
+		globalState.last_turn_results = null;
 		showWithTransition(() => {
 			showBotSetup = true;
 		});
@@ -70,6 +86,14 @@
 			botSetupCreatorId = null;
 			globalState.game_id = joinParam;
 			globalState.creator_id = null;
+			// Reset game state flags when joining via URL
+			globalState.is_game_started = false;
+			globalState.is_collecting_aligner_prompts = false;
+			globalState.have_all_users_submitted = false;
+			globalState.is_game_over = false;
+			globalState.last_turn_id = null;
+			globalState.last_alignment_request = null;
+			globalState.last_turn_results = null;
 			showBotSetup = true;
 			// Clean up URL
 			const url = new URL(window.location.href);
