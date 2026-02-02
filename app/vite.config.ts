@@ -39,11 +39,22 @@ function storybookStaticServe(): Plugin {
 	};
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
 	plugins: [storybookStaticServe(), sveltekit(), devtoolsJson()],
 	ssr: {
 		// estree-walker v3 is ESM-only (no CJS export); bundle it to avoid
 		// require() failures in Vercel's Node File Tracing.
 		noExternal: ['estree-walker']
+	},
+	resolve: {
+		alias:
+			mode === 'production'
+				? {
+						// drizzle-orm/libsql unconditionally imports @libsql/client which
+						// pulls in native SQLite bindings (unavailable on Vercel).
+						// Redirect to the web-only (HTTP/WS) client for production builds.
+						'@libsql/client': '@libsql/client/web'
+					}
+				: undefined
 	}
-});
+}));
