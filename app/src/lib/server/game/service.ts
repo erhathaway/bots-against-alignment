@@ -446,6 +446,7 @@ export const getGameStatus = async (gameId: string) => {
 			name: players.botName,
 			points: players.score,
 			turnComplete: players.turnComplete,
+			promptsRemaining: players.promptsRemaining,
 			isAuto: players.isAuto
 		})
 		.from(players)
@@ -456,6 +457,7 @@ export const getGameStatus = async (gameId: string) => {
 		name: p.name,
 		points: p.points,
 		turnComplete: p.turnComplete,
+		promptsRemaining: p.promptsRemaining,
 		isHost: p.id === game.creatorPlayerId,
 		isAuto: p.isAuto
 	}));

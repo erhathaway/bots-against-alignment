@@ -205,17 +205,6 @@
 	}
 </script>
 
-<div class="status-bar">
-	<span class="score">Score: {points}</span>
-	<span class="prompts-left">
-		{#if promptLocked}
-			Prompt locked
-		{:else}
-			{promptsRemaining} prompt change{promptsRemaining === 1 ? '' : 's'} remaining
-		{/if}
-	</span>
-	<span class="progress">{botsSubmitted} / {totalBots} bots submitted</span>
-</div>
 <section id="bot">
 	<div id="bot-card" class="card">
 		<div class="config-top">
@@ -245,29 +234,6 @@
 </div>
 
 <style>
-	.status-bar {
-		display: flex;
-		justify-content: space-between;
-		padding: 0.875rem 1.5rem;
-		font-size: 0.75rem;
-		font-weight: 500;
-		border-bottom: 1.5px solid var(--color-border-light);
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-	}
-
-	.score {
-		color: var(--color-accent-text);
-	}
-
-	.prompts-left {
-		color: var(--color-text-muted);
-	}
-
-	.progress {
-		color: var(--color-text-secondary);
-	}
-
 	.submitted-text {
 		font-size: 0.9rem;
 		color: var(--color-text-muted);

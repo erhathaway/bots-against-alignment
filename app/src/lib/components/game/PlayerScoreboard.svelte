@@ -7,6 +7,7 @@
 		name: string;
 		points: number;
 		turnComplete: boolean;
+		promptsRemaining: number;
 		isHost: boolean;
 		isAuto: boolean;
 	};
@@ -77,7 +78,13 @@
 		<div class="players">
 			{#each players as player (player.id)}
 				{@const isCurrentPlayer = player.name === globalState.bot_name}
-				<div class="player" class:current={isCurrentPlayer}>
+				<div class="player" class:current={isCurrentPlayer} class:submitted={player.turnComplete}>
+					{#if !player.turnComplete}
+						<div class="pointer">
+							<span class="finger">👆</span>
+							<span class="waiting-text">Waiting...</span>
+						</div>
+					{/if}
 					<div class="avatar" style="background-color: {getPlayerColor(player.name)}">
 						{getInitials(player.name)}
 					</div>
@@ -93,8 +100,14 @@
 						</div>
 						<div class="points">
 							{player.points}/{pointsToWin}
+							{#if player.promptsRemaining > 0}
+								<span class="prompts">· {player.promptsRemaining} change{player.promptsRemaining === 1 ? '' : 's'}</span>
+							{/if}
 						</div>
 					</div>
+					{#if player.turnComplete}
+						<div class="check">✓</div>
+					{/if}
 				</div>
 			{/each}
 		</div>
@@ -181,6 +194,72 @@
 		);
 	}
 
+	.player.submitted {
+		opacity: 0.8;
+		background: #fafafa;
+	}
+
+	.player.submitted .avatar {
+		opacity: 0.9;
+	}
+
+	.pointer {
+		position: absolute;
+		bottom: -3.5rem;
+		left: 50%;
+		transform: translateX(-50%);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	.finger {
+		font-size: 1.75rem;
+		animation: bounce 1s ease-in-out infinite;
+		display: inline-block;
+	}
+
+	@keyframes bounce {
+		0%,
+		100% {
+			transform: translateY(0);
+		}
+		50% {
+			transform: translateY(-0.5rem);
+		}
+	}
+
+	.waiting-text {
+		font-size: 0.7rem;
+		font-weight: 600;
+		color: var(--color-text-secondary);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		white-space: nowrap;
+		overflow: hidden;
+		width: 4.5rem;
+		animation: typing 2s steps(10, end) infinite;
+	}
+
+	@keyframes typing {
+		0%,
+		100% {
+			width: 0;
+		}
+		50%,
+		90% {
+			width: 4.5rem;
+		}
+	}
+
+	.check {
+		font-size: 1.25rem;
+		color: #10b981;
+		font-weight: 700;
+		margin-left: 0.25rem;
+	}
+
 	.avatar {
 		width: 2.5rem;
 		height: 2.5rem;
@@ -239,6 +318,15 @@
 		color: var(--color-text-secondary);
 		font-variant-numeric: tabular-nums;
 		letter-spacing: 0.02em;
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	.prompts {
+		font-size: 0.7rem;
+		font-weight: 500;
+		color: var(--color-text-muted);
 	}
 
 	@media (max-width: 768px) {
