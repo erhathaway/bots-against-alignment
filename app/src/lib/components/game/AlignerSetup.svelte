@@ -5,7 +5,6 @@
 	import LoadingBars from './LoadingBars.svelte';
 	import LoadingCommas from './LoadingCommas.svelte';
 	import { onMount } from 'svelte';
-	import { env } from '$env/dynamic/public';
 
 	let alignerPrompt = $state('');
 	let submitted = $state(false);
@@ -135,7 +134,7 @@
 	});
 
 	onMount(() => {
-		if (env.PUBLIC_E2E === '1' || env.PUBLIC_E2E === 'true') return;
+		if (import.meta.env.PUBLIC_E2E === '1' || import.meta.env.PUBLIC_E2E === 'true') return;
 		randomizeAlignerPrompt();
 	});
 </script>

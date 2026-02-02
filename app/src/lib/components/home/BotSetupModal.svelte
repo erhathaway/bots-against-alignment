@@ -5,7 +5,7 @@
 	import LoadingBars from '$lib/components/game/LoadingBars.svelte';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
-	import { env } from '$env/dynamic/public';
+
 	import { goto } from '$app/navigation';
 
 	type Props = {
@@ -182,7 +182,7 @@
 	}
 
 	onMount(() => {
-		if (env.PUBLIC_E2E === '1' || env.PUBLIC_E2E === 'true') return;
+		if (import.meta.env.PUBLIC_E2E === '1' || import.meta.env.PUBLIC_E2E === 'true') return;
 		randomizeBotName();
 		randomizeBotPrompt();
 	});

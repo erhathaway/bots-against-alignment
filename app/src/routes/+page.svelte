@@ -64,7 +64,7 @@
 	}
 
 	onMount(() => {
-		const joinParam = $page.url.searchParams.get('join');
+		const joinParam = $page.url?.searchParams.get('join');
 		if (joinParam) {
 			botSetupGameId = joinParam;
 			botSetupCreatorId = null;
