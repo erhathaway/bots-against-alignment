@@ -4,6 +4,7 @@ import { spawn } from 'node:child_process';
 import { freePorts } from './free-ports.ts';
 
 const PORT_APP = 5173;
+const PORT_STORYBOOK = 6006;
 const DATABASE_URL = 'file:./dev.db';
 
 const TERM_TIMEOUT_MS = 5_000;
@@ -99,7 +100,7 @@ async function terminateChildren(children: Array<{ exitCode: number | null; pid:
 }
 
 async function main() {
-	await freePorts([PORT_APP]);
+	await freePorts([PORT_APP, PORT_STORYBOOK]);
 	await runCommand(
 		'db:migrate',
 		'bash',
@@ -127,6 +128,18 @@ async function main() {
 			[
 				'-lc',
 				`cd app && DATABASE_URL=${DATABASE_URL} bun run dev -- --host 127.0.0.1 --port ${PORT_APP}`
+			],
+			{ env: { ...process.env } }
+		)
+	);
+
+	children.push(
+		spawnService(
+			'storybook',
+			'bash',
+			[
+				'-lc',
+				`cd app && bun run storybook`
 			],
 			{ env: { ...process.env } }
 		)

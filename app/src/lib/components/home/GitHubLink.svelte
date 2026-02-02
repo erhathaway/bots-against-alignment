@@ -17,9 +17,6 @@
 
 <style>
 	.github-link {
-		position: fixed;
-		bottom: 1.5rem;
-		right: 8.5rem;
 		display: flex;
 		align-items: center;
 		gap: 0.4rem;

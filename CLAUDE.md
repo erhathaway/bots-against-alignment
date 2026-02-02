@@ -4,6 +4,8 @@
 > **CRITICAL: When designing new components or updating UI make sure the style matches:**
 """
 Minimalist ritual-console UI design system with selective yellow highlights, stark black and white interface dominated by white negative space, thick black rounded outlines, precise geometric UI components, muted warm yellow used sparingly for focus states, active indicators, selection rings, and system status accents, calm ceremonial mood, software that feels like an instrument or protocol terminal, deliberate modern sans-serif typography, buttons and inputs framed like physical modules, alignment and initiation metaphors, empty states emphasizing silence and readiness, high-contrast ethical console aesthetic, subtle shadows and depth, modern web UI screens for configuration, onboarding, and system control, authoritative but minimal visual language
+
+Futuristic ritual-console UI design system with luminous yellow highlights, stark black and white interface with expansive white negative space, thick black rounded outlines framing components, high-tech yellow accents used as glow lines, signal traces, focus rings, and activation markers, subtle neon yellow illumination suggesting energy and intent, calm but authoritative mood, software that feels like a control instrument or alignment terminal, modern restrained sans-serif typography, UI components arranged like modular hardware panels, buttons and inputs resembling calibrated devices, alignment and initiation metaphors, empty states that feel charged rather than blank, ethical sci-fi console aesthetic, soft shadows, precise spacing, modern web UI screens for configuration, onboarding, and system orchestration
 """
 
 # Bots Against Alignment — Agent Guide (AGENTS.md)

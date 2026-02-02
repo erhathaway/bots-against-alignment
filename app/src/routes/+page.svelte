@@ -34,8 +34,11 @@
 		<JoinGameModal onClose={() => (showModal = false)} onJoin={handleJoin} />
 	{/if}
 
-	<GitHubLink />
-	<StorybookLink />
+	<div class="bottom-links">
+		<GitHubLink />
+		<StorybookLink />
+		<StorybookLink href="http://127.0.0.1:6006" label="Storybook Dev" />
+	</div>
 </main>
 
 <style>
@@ -46,5 +49,14 @@
 		justify-content: center;
 		min-height: 100vh;
 		gap: 0;
+	}
+
+	.bottom-links {
+		position: fixed;
+		bottom: 1.5rem;
+		right: 1.5rem;
+		display: flex;
+		gap: 0.5rem;
+		z-index: 100;
 	}
 </style>
