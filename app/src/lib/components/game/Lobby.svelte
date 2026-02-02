@@ -156,7 +156,12 @@
 			});
 
 			if (response.ok) {
-				globalState.is_game_started = true;
+				const data = await response.json();
+				if (data.status === 'ALIGNER_SETUP') {
+					globalState.is_collecting_aligner_prompts = true;
+				} else {
+					globalState.is_game_started = true;
+				}
 			} else {
 				const data = await response.json();
 				addNotification({
