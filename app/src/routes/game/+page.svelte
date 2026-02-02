@@ -52,22 +52,6 @@
 	});
 
 	$effect(() => {
-		const { has_player_joined, is_game_started, have_all_users_submitted, is_game_over } =
-			globalState;
-		if (!has_player_joined) {
-			routerState = RouterState.PreGame;
-		} else if (!is_game_started) {
-			routerState = RouterState.Lobby;
-		} else if (is_game_over) {
-			routerState = RouterState.GameFinale;
-		} else if (have_all_users_submitted) {
-			routerState = RouterState.TurnFinale;
-		} else {
-			routerState = RouterState.AlignerSays;
-		}
-	});
-
-	$effect(() => {
 		const gameId = data.gameId;
 		if (!gameId) return;
 
@@ -88,6 +72,22 @@
 			globalState.last_turn_results = null;
 		} else if (!globalState.game_id) {
 			globalState.game_id = gameId;
+		}
+	});
+
+	$effect(() => {
+		const { has_player_joined, is_game_started, have_all_users_submitted, is_game_over } =
+			globalState;
+		if (!has_player_joined) {
+			routerState = RouterState.PreGame;
+		} else if (!is_game_started) {
+			routerState = RouterState.Lobby;
+		} else if (is_game_over) {
+			routerState = RouterState.GameFinale;
+		} else if (have_all_users_submitted) {
+			routerState = RouterState.TurnFinale;
+		} else {
+			routerState = RouterState.AlignerSays;
 		}
 	});
 

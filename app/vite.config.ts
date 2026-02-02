@@ -39,6 +39,8 @@ function storybookStaticServe(): Plugin {
 	};
 }
 
+const isRemoteDb = !process.env.DATABASE_URL?.startsWith('file:');
+
 export default defineConfig(({ mode }) => ({
 	plugins: [storybookStaticServe(), sveltekit(), devtoolsJson()],
 	ssr: {
@@ -46,11 +48,24 @@ export default defineConfig(({ mode }) => ({
 		// require() failures in Vercel's Node File Tracing.
 		// drizzle-orm must be bundled so the @libsql/client alias applies to
 		// its internal import (drizzle-orm/libsql/driver.js imports @libsql/client).
-		noExternal: ['estree-walker', 'drizzle-orm']
+		// In production with a remote DB, also bundle @libsql/client so the
+		// web-only alias is fully inlined — Vercel's NFT otherwise traces
+		// the wrong (native) entry point.
+		noExternal:
+			mode === 'production' && isRemoteDb
+				? [
+						'estree-walker',
+						'drizzle-orm',
+						'@libsql/client',
+						'@libsql/core',
+						'@libsql/hrana-client',
+						'@libsql/isomorphic-ws'
+					]
+				: ['estree-walker', 'drizzle-orm']
 	},
 	resolve: {
 		alias:
-			mode === 'production'
+			mode === 'production' && isRemoteDb
 				? {
 						// drizzle-orm/libsql unconditionally imports @libsql/client which
 						// pulls in native SQLite bindings (unavailable on Vercel).

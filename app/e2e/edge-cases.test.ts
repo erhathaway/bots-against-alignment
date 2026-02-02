@@ -7,7 +7,7 @@ async function joinGame(page: Page, botName: string) {
 	await page.locator('#bot-name-input').fill(botName);
 	await page.locator('#aligner-input').fill('Pick the funniest response.');
 	await page.locator('#bot-prompt-input').fill('Be chaotic neutral.');
-	await page.getByRole('button', { name: 'Join' }).click();
+	await page.getByRole('button', { name: 'Join', exact: true }).click();
 	await expect(page.getByPlaceholder('Type your message...')).toBeVisible();
 }
 
@@ -36,7 +36,7 @@ test('non-creator cannot start the game', async ({ browser }) => {
 		await creator.getByRole('button', { name: 'New Game' }).click();
 		await joinGame(creator, 'Creator Bot');
 
-		const gameText = await creator.getByText(/Game #/).textContent();
+		const gameText = await creator.locator('#header').getByRole('button', { name: /Game #/ }).textContent();
 		const match = gameText?.match(/Game #\s*([0-9a-fA-F-]+)/);
 		if (!match) throw new Error('Game ID not found');
 		const gameId = match[1];
