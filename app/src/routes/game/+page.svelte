@@ -3,25 +3,25 @@
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import Chat from './Chat.svelte';
-	import PreGame from '$lib/components/game/PreGame.svelte';
 	import Lobby from '$lib/components/game/Lobby.svelte';
+	import AlignerSetup from '$lib/components/game/AlignerSetup.svelte';
 	import AlignerSays from '$lib/components/game/AlignerSays.svelte';
 	import TurnFinale from '$lib/components/game/TurnFinale.svelte';
 	import GameFinale from '$lib/components/game/GameFinale.svelte';
-	import { fly } from 'svelte/transition'; // New import
+	import { fly } from 'svelte/transition';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
 	const RouterState = {
-		PreGame: 'PreGame',
 		Lobby: 'Lobby',
+		AlignerSetup: 'AlignerSetup',
 		AlignerSays: 'AlignerSays',
 		TurnFinale: 'TurnFinale',
 		GameFinale: 'GameFinale'
 	} as const;
 	type RouterState = (typeof RouterState)[keyof typeof RouterState];
-	let routerState = $state<RouterState>(RouterState.PreGame);
+	let routerState = $state<RouterState>(RouterState.Lobby);
 
 	const customFly = (direction: 'in' | 'out') => ({
 		delay: direction === 'in' ? 300 : 0,
@@ -55,31 +55,34 @@
 		const gameId = data.gameId;
 		if (!gameId) return;
 
-		const shouldReset =
-			globalState.game_id !== gameId ||
-			(data.creatorId && globalState.creator_id !== data.creatorId);
+		// If the game ID changed or player hasn't joined, redirect to homepage
+		if (globalState.game_id !== gameId) {
+			if (!globalState.has_player_joined) {
+				goto('/');
+				return;
+			}
+			globalState.game_id = gameId;
+		}
 
-		if (shouldReset) {
-			globalState.game_id = gameId;
-			globalState.creator_id = data.creatorId ?? null;
-			globalState.user_id = null;
-			globalState.has_player_joined = false;
-			globalState.is_game_started = false;
-			globalState.have_all_users_submitted = false;
-			globalState.is_game_over = false;
-			globalState.last_turn_id = null;
-			globalState.last_alignment_request = null;
-			globalState.last_turn_results = null;
-		} else if (!globalState.game_id) {
-			globalState.game_id = gameId;
+		if (!globalState.has_player_joined) {
+			goto('/');
+			return;
 		}
 	});
 
 	$effect(() => {
-		const { has_player_joined, is_game_started, have_all_users_submitted, is_game_over } =
-			globalState;
+		const {
+			has_player_joined,
+			is_game_started,
+			is_collecting_aligner_prompts,
+			have_all_users_submitted,
+			is_game_over
+		} = globalState;
+
 		if (!has_player_joined) {
-			routerState = RouterState.PreGame;
+			return;
+		} else if (is_collecting_aligner_prompts && !is_game_started) {
+			routerState = RouterState.AlignerSetup;
 		} else if (!is_game_started) {
 			routerState = RouterState.Lobby;
 		} else if (is_game_over) {
@@ -128,14 +131,14 @@
 				</button>
 			</div>
 		{/if}
-		{#if routerState === RouterState.PreGame}
-			<div in:fly={customFly('in')} out:fly={customFly('out')}>
-				<PreGame {data} />
-			</div>
-		{/if}
 		{#if routerState === RouterState.Lobby}
 			<div in:fly={customFly('in')} out:fly={customFly('out')}>
 				<Lobby />
+			</div>
+		{/if}
+		{#if routerState === RouterState.AlignerSetup}
+			<div in:fly={customFly('in')} out:fly={customFly('out')}>
+				<AlignerSetup />
 			</div>
 		{/if}
 		{#if routerState === RouterState.AlignerSays}

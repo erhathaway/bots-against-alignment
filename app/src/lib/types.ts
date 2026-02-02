@@ -28,6 +28,8 @@ export type GlobalState = {
 	is_game_started: boolean;
 	is_config_open: boolean;
 	last_alignment_request: string | null;
+	is_collecting_aligner_prompts: boolean;
+	has_submitted_aligner_prompt: boolean;
 	have_all_users_submitted: boolean;
 	is_game_over: boolean;
 	last_turn_results: AlignmentResponse[] | null;

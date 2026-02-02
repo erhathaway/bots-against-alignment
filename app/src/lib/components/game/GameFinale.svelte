@@ -75,12 +75,12 @@
 			const response = await fetch(`/api/game/${gameId}/play-again`, { method: 'POST' });
 			const data = await response.json();
 			if (response.ok && data.gameId) {
-				goto(`/game?game_id=${data.gameId}`);
+				goto(`/?join=${data.gameId}`);
 			} else {
-				goto('/game');
+				goto('/');
 			}
 		} catch {
-			goto('/game');
+			goto('/');
 		}
 	}
 

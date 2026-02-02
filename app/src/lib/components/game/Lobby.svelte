@@ -73,8 +73,13 @@
 			if (data.botPromptChanges != null) botPromptChanges = data.botPromptChanges;
 			if (data.countdownStartedAt !== undefined) countdownStartedAt = data.countdownStartedAt;
 
+			if (status === 'ALIGNER_SETUP') {
+				globalState.is_collecting_aligner_prompts = true;
+				if (fetchStatusInterval) clearInterval(fetchStatusInterval);
+			}
 			if (status === 'STARTED' || status === 'ENDED') {
 				globalState.is_game_started = true;
+				globalState.is_collecting_aligner_prompts = false;
 				if (fetchStatusInterval) clearInterval(fetchStatusInterval);
 			}
 		} else {

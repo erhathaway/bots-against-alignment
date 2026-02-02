@@ -16,6 +16,8 @@ const defaultState: GlobalState = {
 	has_player_joined: false,
 	is_game_started: false,
 	is_config_open: false,
+	is_collecting_aligner_prompts: false,
+	has_submitted_aligner_prompt: false,
 	have_all_users_submitted: false,
 	is_game_over: false,
 	last_turn_results: null

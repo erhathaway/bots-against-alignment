@@ -2,14 +2,12 @@ import { z } from 'zod';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-import { joinGame } from '$lib/server/game/service';
+import { submitAlignerPrompt } from '$lib/server/game/service';
 import { handleApiError, jsonError } from '$lib/server/http';
 
 const schema = z.object({
-	alignerPrompt: z.string().min(1).optional(),
-	botPrompt: z.string().min(1),
-	botName: z.string().min(1),
-	creatorId: z.string().optional().nullable()
+	playerId: z.string().min(1),
+	prompt: z.string().min(1)
 });
 
 export const POST: RequestHandler = async ({ params, request }) => {
@@ -20,15 +18,11 @@ export const POST: RequestHandler = async ({ params, request }) => {
 			return jsonError(400, 'Invalid request', parsed.error.flatten());
 		}
 
-		const { alignerPrompt, botPrompt, botName, creatorId } = parsed.data;
-		const payload = await joinGame({
+		const payload = await submitAlignerPrompt({
 			gameId: params.gameId,
-			alignerPrompt,
-			botPrompt,
-			botName,
-			creatorId
+			playerId: parsed.data.playerId,
+			prompt: parsed.data.prompt
 		});
-
 		return json(payload);
 	} catch (error) {
 		return handleApiError(error);

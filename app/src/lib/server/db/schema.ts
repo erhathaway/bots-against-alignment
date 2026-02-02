@@ -4,7 +4,7 @@ export const games = sqliteTable('games', {
 	id: text('id').primaryKey(),
 	creatorId: text('creator_id').notNull(),
 	creatorPlayerId: text('creator_player_id'),
-	status: text('status', { enum: ['LOBBY', 'STARTED', 'ENDED'] }).notNull(),
+	status: text('status', { enum: ['LOBBY', 'ALIGNER_SETUP', 'STARTED', 'ENDED'] }).notNull(),
 	pointsToWin: integer('points_to_win').notNull().default(10),
 	alignerType: text('aligner_type', {
 		enum: ['USER_ROUND_ROBIN', 'LAST_WON_USER', 'BOT_WITH_HIDDEN_PROMPT', 'BOT_WITH_USER_PROMPT']

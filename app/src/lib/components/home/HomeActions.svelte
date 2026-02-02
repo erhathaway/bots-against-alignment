@@ -2,14 +2,17 @@
 	type Props = {
 		onJoinGame?: () => void;
 		onNewGame?: () => void;
+		loading?: boolean;
 	};
 
-	let { onJoinGame, onNewGame }: Props = $props();
+	let { onJoinGame, onNewGame, loading = false }: Props = $props();
 </script>
 
 <div class="buttons-container">
-	<button onclick={onJoinGame}>Join Game</button>
-	<button onclick={onNewGame}>New Game</button>
+	<button onclick={onJoinGame} disabled={loading}>Join Game</button>
+	<button onclick={onNewGame} disabled={loading}>
+		{loading ? 'Creating...' : 'New Game'}
+	</button>
 </div>
 
 <style>

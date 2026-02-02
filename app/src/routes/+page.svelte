@@ -2,36 +2,103 @@
 	import HomeTitle from '$lib/components/home/HomeTitle.svelte';
 	import HomeActions from '$lib/components/home/HomeActions.svelte';
 	import JoinGameModal from '$lib/components/home/JoinGameModal.svelte';
+	import BotSetupModal from '$lib/components/home/BotSetupModal.svelte';
 	import StorybookLink from '$lib/components/home/StorybookLink.svelte';
 	import GitHubLink from '$lib/components/home/GitHubLink.svelte';
-	import { goto } from '$app/navigation';
+	import { globalState } from '$lib/state/store.svelte';
+	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
 
-	let showModal = $state(false);
+	let showJoinModal = $state(false);
+	let showBotSetup = $state(false);
+	let botSetupGameId = $state<string | null>(null);
+	let botSetupCreatorId = $state<string | null>(null);
+	let isCreatingGame = $state(false);
 
-	async function handleJoin(gameId: string) {
-		try {
-			const response = await fetch(`/api/game/${gameId}`, {
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json',
-					'Access-Control-Allow-Origin': '*'
-				}
-			});
-			if (response.ok) {
-				goto(`/game?game_id=${gameId}`);
-			}
-		} catch (error) {
-			console.error('Error:', error);
+	function showWithTransition(fn: () => void) {
+		if (document.startViewTransition) {
+			document.startViewTransition(() => fn());
+		} else {
+			fn();
 		}
 	}
+
+	async function handleNewGame() {
+		if (isCreatingGame) return;
+		isCreatingGame = true;
+		try {
+			const response = await fetch('/api/game', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' }
+			});
+			if (response.ok) {
+				const data = await response.json();
+				botSetupGameId = data.gameId;
+				botSetupCreatorId = data.creatorId;
+				globalState.game_id = data.gameId;
+				globalState.creator_id = data.creatorId;
+				showWithTransition(() => {
+					showBotSetup = true;
+				});
+			}
+		} finally {
+			isCreatingGame = false;
+		}
+	}
+
+	async function handleJoinValidated(gameId: string) {
+		showJoinModal = false;
+		botSetupGameId = gameId;
+		botSetupCreatorId = null;
+		globalState.game_id = gameId;
+		globalState.creator_id = null;
+		showWithTransition(() => {
+			showBotSetup = true;
+		});
+	}
+
+	function closeBotSetup() {
+		showBotSetup = false;
+		botSetupGameId = null;
+		botSetupCreatorId = null;
+	}
+
+	onMount(() => {
+		const joinParam = $page.url.searchParams.get('join');
+		if (joinParam) {
+			botSetupGameId = joinParam;
+			botSetupCreatorId = null;
+			globalState.game_id = joinParam;
+			globalState.creator_id = null;
+			showBotSetup = true;
+			// Clean up URL
+			const url = new URL(window.location.href);
+			url.searchParams.delete('join');
+			window.history.replaceState({}, '', url.toString());
+		}
+	});
 </script>
 
 <main>
-	<HomeTitle />
-	<HomeActions onJoinGame={() => (showModal = true)} onNewGame={() => goto('/game')} />
+	{#if !showBotSetup}
+		<HomeTitle />
+		<HomeActions
+			onJoinGame={() => (showJoinModal = true)}
+			onNewGame={handleNewGame}
+			loading={isCreatingGame}
+		/>
+	{/if}
 
-	{#if showModal}
-		<JoinGameModal onClose={() => (showModal = false)} onJoin={handleJoin} />
+	{#if showJoinModal}
+		<JoinGameModal onClose={() => (showJoinModal = false)} onJoin={handleJoinValidated} />
+	{/if}
+
+	{#if showBotSetup && botSetupGameId}
+		<BotSetupModal
+			gameId={botSetupGameId}
+			creatorId={botSetupCreatorId}
+			onClose={closeBotSetup}
+		/>
 	{/if}
 
 	<div class="bottom-links">

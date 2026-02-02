@@ -116,7 +116,7 @@ export const joinGame = async ({
 	creatorId
 }: {
 	gameId: string;
-	alignerPrompt: string;
+	alignerPrompt?: string;
 	botPrompt: string;
 	botName: string;
 	creatorId?: string | null;
@@ -145,11 +145,13 @@ export const joinGame = async ({
 			updatedAt: timestamp
 		});
 
-		await tx.insert(alignerPrompts).values({
-			gameId,
-			playerId,
-			prompt: alignerPrompt
-		});
+		if (alignerPrompt && alignerPrompt.trim()) {
+			await tx.insert(alignerPrompts).values({
+				gameId,
+				playerId,
+				prompt: alignerPrompt
+			});
+		}
 
 		if (shouldBecomeCreator) {
 			const newCreatorId =
@@ -280,6 +282,55 @@ export const startGame = async ({ gameId, creatorId }: { gameId: string; creator
 		throw badRequest(`LLM is not available: ${reason}`);
 	}
 
+	const timestamp = now();
+	await db
+		.update(games)
+		.set({
+			status: 'ALIGNER_SETUP',
+			countdownStartedAt: null,
+			updatedAt: timestamp
+		})
+		.where(eq(games.id, gameId));
+
+	// Set all active players' promptsRemaining to the game's botPromptChanges setting
+	await db
+		.update(players)
+		.set({ promptsRemaining: game.botPromptChanges, updatedAt: timestamp })
+		.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
+
+	await postChatMessage({
+		gameId,
+		message: 'The game is starting! Submit your aligner instructions.',
+		type: 'system'
+	});
+
+	// Check if all players already have aligner prompts (e.g. all AI)
+	await tryCompleteAlignerSetup(gameId, game.pointsToWin, game.botPromptChanges);
+
+	return { status: 'ALIGNER_SETUP' };
+};
+
+const tryCompleteAlignerSetup = async (
+	gameId: string,
+	pointsToWin: number,
+	botPromptChanges: number
+) => {
+	const activePlayers = await db
+		.select({ id: players.id })
+		.from(players)
+		.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
+
+	const submittedPrompts = await db
+		.select({ playerId: alignerPrompts.playerId })
+		.from(alignerPrompts)
+		.where(eq(alignerPrompts.gameId, gameId));
+
+	const activeIds = new Set(activePlayers.map((p) => p.id));
+	const submittedIds = new Set(submittedPrompts.map((p) => p.playerId));
+	const allSubmitted = [...activeIds].every((id) => submittedIds.has(id));
+
+	if (!allSubmitted) return false;
+
 	const alignerRows = await db
 		.select({ prompt: alignerPrompts.prompt })
 		.from(alignerPrompts)
@@ -295,38 +346,96 @@ export const startGame = async ({ gameId, creatorId }: { gameId: string; creator
 		.set({
 			status: 'STARTED',
 			alignerPromptFull: combinedPrompt,
-			countdownStartedAt: null,
 			updatedAt: timestamp
 		})
 		.where(eq(games.id, gameId));
 
-	// Set all active players' promptsRemaining to the game's botPromptChanges setting
-	await db
-		.update(players)
-		.set({ promptsRemaining: game.botPromptChanges, updatedAt: timestamp })
-		.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
-
-	const allPlayers = await db
+	const allPlayerData = await db
 		.select({ botName: players.botName, isAuto: players.isAuto })
 		.from(players)
 		.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
-	const humanNames = allPlayers.filter((p) => !p.isAuto).map((p) => p.botName);
-	const autoNames = allPlayers.filter((p) => p.isAuto).map((p) => p.botName);
+	const humanNames = allPlayerData.filter((p) => !p.isAuto).map((p) => p.botName);
+	const autoNames = allPlayerData.filter((p) => p.isAuto).map((p) => p.botName);
 
 	await postChatMessage({
 		gameId,
 		senderName: 'Game Start',
 		message: JSON.stringify({
-			totalBots: allPlayers.length,
-			pointsToWin: game.pointsToWin,
-			botPromptChanges: game.botPromptChanges,
+			totalBots: allPlayerData.length,
+			pointsToWin,
+			botPromptChanges,
 			humans: humanNames,
 			ai: autoNames
 		}),
 		type: 'system'
 	});
 
-	return { status: 'STARTED' };
+	return true;
+};
+
+export const submitAlignerPrompt = async ({
+	gameId,
+	playerId,
+	prompt
+}: {
+	gameId: string;
+	playerId: string;
+	prompt: string;
+}) => {
+	const game = await requireGame(gameId);
+	if (game.status !== 'ALIGNER_SETUP') {
+		throw badRequest('Game is not in aligner setup phase');
+	}
+
+	const playerRows = await db
+		.select({ id: players.id })
+		.from(players)
+		.where(and(eq(players.gameId, gameId), eq(players.id, playerId), isNull(players.leftAt)));
+
+	if (!playerRows.length) {
+		throw notFound('Player not found or has left the game');
+	}
+
+	await db
+		.insert(alignerPrompts)
+		.values({ gameId, playerId, prompt })
+		.onConflictDoUpdate({
+			target: [alignerPrompts.gameId, alignerPrompts.playerId],
+			set: { prompt }
+		});
+
+	await postChatMessage({
+		gameId,
+		message: 'submitted their aligner instruction',
+		senderName: playerRows[0].id === game.creatorPlayerId ? 'Host' : 'A player',
+		type: 'status'
+	});
+
+	const activePlayers = await db
+		.select({ id: players.id })
+		.from(players)
+		.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
+
+	const submittedPrompts = await db
+		.select({ playerId: alignerPrompts.playerId })
+		.from(alignerPrompts)
+		.where(eq(alignerPrompts.gameId, gameId));
+
+	const activeIds = new Set(activePlayers.map((p) => p.id));
+	const submittedIds = new Set(submittedPrompts.map((p) => p.playerId));
+	const submittedCount = [...activeIds].filter((id) => submittedIds.has(id)).length;
+	const allSubmitted = submittedCount === activeIds.size;
+
+	if (allSubmitted) {
+		await tryCompleteAlignerSetup(gameId, game.pointsToWin, game.botPromptChanges);
+	}
+
+	return {
+		submitted: true,
+		allSubmitted,
+		totalPlayers: activeIds.size,
+		submittedCount
+	};
 };
 
 export const getGameStatus = async (gameId: string) => {
@@ -351,12 +460,22 @@ export const getGameStatus = async (gameId: string) => {
 		isAuto: p.isAuto
 	}));
 
+	let alignerPromptsSubmitted = 0;
+	if (game.status === 'ALIGNER_SETUP') {
+		const promptRows = await db
+			.select({ playerId: alignerPrompts.playerId })
+			.from(alignerPrompts)
+			.where(eq(alignerPrompts.gameId, gameId));
+		alignerPromptsSubmitted = promptRows.length;
+	}
+
 	return {
 		status: game.status,
 		bots,
 		pointsToWin: game.pointsToWin,
 		botPromptChanges: game.botPromptChanges,
-		countdownStartedAt: game.countdownStartedAt
+		countdownStartedAt: game.countdownStartedAt,
+		alignerPromptsSubmitted
 	};
 };
 
