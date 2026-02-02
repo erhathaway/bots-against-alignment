@@ -20,8 +20,8 @@
 <style>
 	.message {
 		display: flex;
-		margin: 0.6rem;
 		flex-direction: column;
+		margin: 0.35rem 0.75rem;
 	}
 
 	.status {
@@ -31,30 +31,29 @@
 	}
 
 	.message-status-container {
-		display: flex;
-		flex-direction: row;
-		justify-content: center;
+		display: inline-flex;
 		align-items: center;
-		background-color: #e2f1ff;
-		border-radius: 5px;
-		padding: 0.3rem;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border-light);
+		border-radius: var(--radius-pill);
+		padding: 0.2rem 0.75rem;
+		gap: 0.35rem;
 	}
 
 	.name {
-		font-weight: bold;
-		font-size: 10px;
-		margin-right: 0.4rem;
-		margin-left: 0.4rem;
+		font-weight: 600;
+		font-size: 0.65rem;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+		color: var(--color-text-secondary);
 	}
 
 	.name.you {
-		color: #0066cc;
+		color: var(--color-accent-text);
 	}
 
 	.text {
-		font-size: 13px;
-		margin-right: 0.4rem;
-		margin-left: 0.4rem;
-		color: rgb(98, 98, 98);
+		font-size: 0.7rem;
+		color: var(--color-text-muted);
 	}
 </style>

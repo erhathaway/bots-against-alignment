@@ -115,94 +115,110 @@
 		left: 0;
 		width: 100%;
 		height: 100%;
-		background-color: rgb(0 255 51);
+		background: rgba(255, 255, 255, 0.85);
+		backdrop-filter: blur(8px);
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		z-index: 1000;
 	}
 
 	.modal {
-		border-radius: 8px;
-		max-width: 500px;
+		max-width: 440px;
+		width: 90%;
 	}
 
 	.join-game-container {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		padding: 2rem;
-		border: 2px solid black;
-		background-color: white;
-		border-radius: 0.7rem;
+		padding: 2.5rem;
+		border: 2px solid #000000;
+		background: #ffffff;
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-lg);
+	}
+
+	.join-game-container p {
+		font-size: 1.1rem;
+		font-weight: 600;
+		margin-bottom: 1.5rem;
 	}
 
 	input {
-		font-size: 1rem;
-		padding: 0.5rem;
-		margin-bottom: 1rem;
+		font-size: 0.875rem;
+		font-family: var(--font-mono);
+		padding: 0.75rem 1rem;
+		border: 2px solid var(--color-border-light);
+		border-radius: var(--radius-sm);
+		outline: none;
 		width: 100%;
-		max-width: 20rem;
-		outline: 2px solid rgb(0, 0, 0);
-		border: 1px solid black;
-		border-radius: 0.5rem;
-		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+		transition: border-color 150ms;
+		margin-bottom: 1rem;
+	}
+
+	input:focus {
+		border-color: var(--color-accent);
 	}
 
 	button {
-		font-size: 1.5rem;
-		font-weight: bold;
-		padding: 0.75rem 1.5rem;
-		margin: 0.5rem 0.5rem;
+		font-size: 1rem;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		padding: 0.75rem 2rem;
+		border: 2px solid var(--color-border);
+		background: #000000;
+		color: #ffffff;
+		border-radius: var(--radius-pill);
+		box-shadow: var(--shadow-md);
 		cursor: pointer;
-		border: 3px solid rgb(0, 0, 0);
-		background-color: rgb(0, 0, 0);
-		border-radius: 2rem;
-		color: white;
-		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+		transition: all 180ms var(--ease);
 	}
 
 	button:hover {
-		background-color: rgb(123, 255, 0);
-		color: rgb(0, 0, 0);
+		background: #ffffff;
+		color: #000000;
+		border-color: #000000;
+	}
+
+	button:active {
+		transform: scale(0.97);
 	}
 
 	.error {
-		color: rgb(123, 255, 0);
+		color: var(--color-accent);
 	}
 
 	section {
 		margin-top: 1rem;
 		height: 3rem;
-		background-color: black;
+		background: var(--color-text);
 		padding: 2rem;
-		border-radius: 7px;
+		border-radius: var(--radius-sm);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 	}
 
 	.subtext {
-		font-size: 0.8rem;
-		color: grey;
-		margin-bottom: 0.5rem;
+		font-size: 0.75rem;
+		color: var(--color-text-muted);
+		margin-bottom: 1rem;
 	}
 
 	::-webkit-input-placeholder {
-		color: #edc5c5;
-		opacity: 1 !important;
+		color: var(--color-border-light);
 	}
 
 	:-moz-placeholder {
-		color: #edc5c5;
-		opacity: 1 !important;
+		color: var(--color-border-light);
 	}
 
 	::-moz-placeholder {
-		color: #edc5c5;
-		opacity: 1 !important;
+		color: var(--color-border-light);
 	}
 
 	:-ms-input-placeholder {
-		color: #edc5c5;
+		color: var(--color-border-light);
 	}
 </style>

@@ -80,13 +80,11 @@
 <style>
 	.chat-window {
 		width: 100%;
-		height: 500px;
+		height: 100%;
 		display: flex;
 		flex-direction: column;
-		align-items: space-between;
-		justify-content: space-between;
-		flex-grow: 2;
-		overflow-y: hidden;
-		overflow-x: hidden;
+		flex: 1;
+		overflow: hidden;
+		background: white;
 	}
 </style>

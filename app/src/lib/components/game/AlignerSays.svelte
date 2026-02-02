@@ -248,124 +248,143 @@
 	.status-bar {
 		display: flex;
 		justify-content: space-between;
-		padding: 0.75rem 1.5rem;
-		font-size: 0.9rem;
-		font-weight: bold;
-		border-bottom: 1px solid #eee;
+		padding: 0.875rem 1.5rem;
+		font-size: 0.75rem;
+		font-weight: 500;
+		border-bottom: 1.5px solid var(--color-border-light);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
 	}
-	.status-bar .score {
-		color: rgb(0, 150, 0);
+
+	.score {
+		color: var(--color-accent-text);
 	}
-	.status-bar .prompts-left {
-		color: #666;
+
+	.prompts-left {
+		color: var(--color-text-muted);
 	}
-	.status-bar .progress {
-		color: #333;
+
+	.progress {
+		color: var(--color-text-secondary);
 	}
+
 	.submitted-text {
-		font-size: 1.1rem;
-		color: #666;
-		margin: 2rem 0 3rem;
+		font-size: 0.9rem;
+		color: var(--color-text-muted);
+		margin: 2rem 0;
 		text-align: center;
 	}
+
 	#button-container {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
 	}
+
 	section {
 		display: flex;
 		flex-direction: row;
 		align-items: center;
-		margin-top: 1rem;
-		flex-grow: 2;
+		margin-top: 0;
+		flex-grow: 1;
 	}
 
 	button {
-		font-size: 1.5rem;
-		font-weight: bold;
-		padding: 0.75rem 1.5rem;
-		margin: 0.5rem 0.5rem;
-		margin-top: 2rem;
-		margin-bottom: 3rem;
-		cursor: pointer;
-		border: 1px solid rgb(0, 0, 0);
-		background-color: rgb(0, 0, 0);
-		border-radius: 2rem;
+		font-weight: 600;
+		font-size: 0.95rem;
+		padding: 0.75rem 2rem;
+		border: 2px solid var(--color-border);
+		background: var(--color-text);
 		color: white;
-		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+		border-radius: var(--radius-pill);
+		box-shadow: var(--shadow-md);
+		transition: all 180ms var(--ease);
+		letter-spacing: 0.02em;
+		cursor: pointer;
+		margin: 1.5rem 0 2rem;
 	}
+
 	button:hover {
-		background-color: rgb(123, 255, 0);
-		color: rgb(0, 0, 0);
+		background: white;
+		color: var(--color-text);
+		border-color: var(--color-border);
+	}
+
+	button:active {
+		transform: scale(0.97);
 	}
 
 	#bot {
-		padding-top: 2rem;
-		margin-top: 0;
-
+		padding: 2rem;
+		margin: 0;
 		display: flex;
-		flex-direction: row;
 		justify-content: center;
 		align-items: center;
 	}
 
 	.card {
-		background-color: rgb(123, 255, 0);
-		display: flex;
-		flex-direction: column;
-		justify-content: space-between;
-		align-items: center;
-		padding: 2rem;
-		padding-top: 1rem;
-		width: 70%;
-		border-radius: 1rem;
+		background: white;
+		border: 2px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		padding: 1.5rem;
+		width: min(85%, 480px);
+		box-shadow: var(--shadow-sm);
 	}
+
 	.card .config-top {
 		display: flex;
 		flex-direction: row;
 		justify-content: space-between;
 		align-items: center;
 		width: 100%;
-	}
-	.card h2 {
-		font-size: 1.5rem;
-		font-weight: bold;
 		margin-bottom: 0.5rem;
 	}
 
-	#bot-card {
-		background-color: rgb(0, 204, 255);
+	.card h2 {
+		font-size: 0.8rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--color-text-secondary);
 	}
 
 	#bot-prompt-input {
-		margin-top: 1rem;
-		border-radius: 1rem;
-		padding: 1rem;
-
 		width: 100%;
+		min-height: 6rem;
+		border: 1.5px solid var(--color-border-light);
+		border-radius: var(--radius-sm);
+		padding: 0.75rem 1rem;
+		font-size: 0.9rem;
+		resize: vertical;
+		transition: border-color 150ms;
+	}
+
+	#bot-prompt-input:focus {
+		border-color: var(--color-accent);
+		outline: none;
 	}
 
 	#bot-prompt-input:disabled {
-		opacity: 0.6;
+		opacity: 0.5;
 		cursor: not-allowed;
+		background: var(--color-surface);
 	}
 
 	.locked-badge {
-		background: #666;
+		background: var(--color-text-muted);
 		color: white;
-		font-size: 0.7rem;
-		font-weight: bold;
+		font-size: 0.6rem;
+		font-weight: 700;
 		padding: 0.15rem 0.5rem;
-		border-radius: 1rem;
+		border-radius: var(--radius-pill);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
 	}
 
 	.config-bottom {
 		display: flex;
 		flex-direction: column;
-		justify-content: space-between;
-		align-items: center;
 		width: 100%;
 	}
 </style>

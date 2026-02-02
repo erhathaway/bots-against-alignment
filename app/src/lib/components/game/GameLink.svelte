@@ -35,13 +35,13 @@
 			color="#000000"
 			><path
 				d="M14 11.998C14 9.506 11.683 7 8.857 7H7.143C4.303 7 2 9.238 2 11.998c0 2.378 1.71 4.368 4 4.873a5.3 5.3 0 001.143.124"
-				stroke="#FFFF00"
+				stroke="#D4A843"
 				stroke-width="1.5"
 				stroke-linecap="round"
 				stroke-linejoin="round"
 			/><path
 				d="M10 11.998c0 2.491 2.317 4.997 5.143 4.997h1.714c2.84 0 5.143-2.237 5.143-4.997 0-2.379-1.71-4.37-4-4.874A5.304 5.304 0 0016.857 7"
-				stroke="#FFFF00"
+				stroke="#D4A843"
 				stroke-width="1.5"
 				stroke-linecap="round"
 				stroke-linejoin="round"
@@ -52,55 +52,44 @@
 
 <style>
 	.game-link {
-		display: flex;
-		flex-direction: row;
-		justify-content: space-between;
-		border: 2px solid black;
-		border-radius: 2rem;
-		padding: 0.1rem;
-		padding-left: 1rem;
-		padding-right: 1rem;
-		background-color: black;
-		color: white;
-		color: rgb(123, 255, 0);
-		cursor: pointer;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		border: 1.5px solid var(--color-border-light);
+		border-radius: var(--radius-pill);
+		padding: 0.35rem 0.875rem;
+		background: white;
+		color: var(--color-text);
 		font: inherit;
-		border: 2px solid black;
-		background: black;
-		padding: 0.1rem 1rem;
+		cursor: pointer;
+		box-shadow: var(--shadow-sm);
+		transition: all 150ms var(--ease);
 		text-align: left;
-		box-shadow:
-			0px 10px 15px -3px rgba(0, 0, 0, 0.1),
-			0px 10px 15px -3px rgba(0, 0, 0, 0.1);
 	}
 
 	.game-link:hover {
-		background-color: rgb(123, 255, 0);
-		color: black;
+		border-color: var(--color-border);
+		box-shadow: var(--shadow-md);
 	}
 
 	h2 {
-		font-size: 0.6rem;
+		font-size: 0.7rem;
+		font-weight: 500;
+		font-family: var(--font-mono);
+		color: var(--color-text-secondary);
+		letter-spacing: 0;
 	}
 
 	#link-icon {
 		display: flex;
-		flex-direction: row;
-		justify-content: center;
 		align-items: center;
-		margin-left: 2rem;
+		margin-left: 0.25rem;
 	}
 
 	#link-vertical-rule {
-		height: 100%;
-		background-color: rgb(123, 255, 0);
-		border: none;
+		width: 1px;
+		height: 16px;
+		background: var(--color-border-light);
 		margin-right: 0.5rem;
-		border-left: rgb(123, 255, 0) 1px solid;
-	}
-
-	#link-vertical-rule:hover {
-		background-color: black;
-		border-left: black 1px solid;
 	}
 </style>

@@ -363,177 +363,223 @@
 		align-items: center;
 		justify-content: center;
 		height: 100%;
+		padding: 2rem;
+		gap: 1.5rem;
 	}
+
 	.player-list {
 		text-align: center;
-		margin-bottom: 1.5rem;
 	}
+
 	.player-list h3 {
-		font-size: 1.2rem;
-		color: #666;
+		font-size: 0.8rem;
+		font-weight: 500;
+		color: var(--color-text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
 		margin-bottom: 0.75rem;
 	}
+
 	.players {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.5rem;
 		justify-content: center;
 	}
+
 	.player-chip {
-		background: rgb(240, 255, 220);
-		border: 1px solid rgb(123, 255, 0);
-		border-radius: 1rem;
-		padding: 0.3rem 0.8rem;
-		font-size: 0.9rem;
-		font-weight: bold;
+		background: white;
+		border: 1.5px solid var(--color-border-light);
+		border-radius: var(--radius-pill);
+		padding: 0.35rem 0.875rem;
+		font-size: 0.8rem;
+		font-weight: 500;
 		display: flex;
 		align-items: center;
-		gap: 0.3rem;
+		gap: 0.35rem;
 	}
+
 	.player-chip.host {
-		background: rgb(255, 245, 200);
-		border: 2px solid rgb(255, 180, 0);
+		border-color: var(--color-accent);
 	}
+
 	.player-chip.ai {
-		background: rgb(220, 235, 255);
-		border-color: rgb(100, 149, 237);
+		border-style: dashed;
 	}
+
 	.host-badge {
-		background: rgb(255, 180, 0);
+		background: var(--color-accent);
 		color: white;
-		font-size: 0.65rem;
-		font-weight: bold;
+		font-size: 0.6rem;
+		font-weight: 700;
 		padding: 0.1rem 0.4rem;
-		border-radius: 0.5rem;
-		vertical-align: middle;
+		border-radius: var(--radius-pill);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
 	}
+
 	.ai-badge {
-		background: rgb(100, 149, 237);
+		background: var(--color-text-muted);
 		color: white;
-		font-size: 0.65rem;
-		font-weight: bold;
+		font-size: 0.6rem;
+		font-weight: 700;
 		padding: 0.1rem 0.4rem;
-		border-radius: 0.5rem;
-		vertical-align: middle;
+		border-radius: var(--radius-pill);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
 	}
+
 	.remove-ai {
 		background: none;
 		border: none;
-		color: #999;
+		color: var(--color-text-muted);
 		cursor: pointer;
-		font-size: 0.8rem;
-		padding: 0 0.2rem;
+		font-size: 0.75rem;
+		padding: 0;
 		margin: 0;
 		line-height: 1;
+		transition: color 150ms;
 	}
+
 	.remove-ai:hover {
-		color: red;
+		color: var(--color-text);
 		background: none;
 	}
+
 	.ai-controls {
-		margin-bottom: 1rem;
+		/* spacing handled by #lobby gap */
+		display: contents;
 	}
+
 	.ai-btn {
-		font-size: 0.9rem;
+		font-size: 0.8rem;
 		padding: 0.4rem 1rem;
-		cursor: pointer;
-		border: 2px dashed #999;
+		border: 1.5px dashed var(--color-border-light);
 		background: white;
-		border-radius: 1rem;
-		color: #666;
-		font-weight: bold;
+		border-radius: var(--radius-pill);
+		color: var(--color-text-secondary);
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 150ms var(--ease);
 	}
+
 	.ai-btn:hover {
-		border-color: rgb(100, 149, 237);
-		color: black;
-		background: rgb(220, 235, 255);
+		border-color: var(--color-border);
+		color: var(--color-text);
 	}
+
 	.ai-btn:disabled {
-		opacity: 0.5;
+		opacity: 0.4;
 		cursor: not-allowed;
 	}
+
 	.settings {
 		display: flex;
-		gap: 2rem;
-		margin-bottom: 1.5rem;
+		flex-direction: row;
+		gap: 2.5rem;
+		padding: 1rem 1.5rem;
+		border: 1.5px solid var(--color-border-light);
+		border-radius: var(--radius-md);
+		background: white;
 	}
+
 	.setting-row {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0.4rem;
+		gap: 0.3rem;
 	}
+
 	.setting-row label {
-		font-size: 0.85rem;
-		color: #666;
+		font-size: 0.7rem;
+		font-weight: 500;
+		color: var(--color-text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+
+	.setting-row input[type='number'] {
+		width: 3.5rem;
+		text-align: center;
+		font-size: 1rem;
+		font-weight: 600;
+		padding: 0.3rem;
+		border: 1.5px solid var(--color-border-light);
+		border-radius: var(--radius-sm);
+		outline: none;
+		transition: border-color 150ms;
+	}
+
+	.setting-row input[type='number']:focus {
+		border-color: var(--color-accent);
+	}
+
+	.setting-value {
+		font-size: 1rem;
 		font-weight: 600;
 	}
-	.setting-row input[type='number'] {
-		width: 4rem;
-		text-align: center;
-		font-size: 1.1rem;
-		font-weight: bold;
-		padding: 0.3rem;
-		border: 2px solid #ccc;
-		border-radius: 0.5rem;
-		outline: none;
-	}
-	.setting-row input[type='number']:focus {
-		border-color: rgb(123, 255, 0);
-	}
-	.setting-value {
-		font-size: 1.1rem;
-		font-weight: bold;
-	}
+
 	.countdown {
 		text-align: center;
-		margin: 1rem 0;
 	}
+
 	.countdown-timer {
-		font-size: 2rem;
-		font-weight: bold;
-		color: #333;
+		font-size: 2.5rem;
+		font-weight: 700;
 		font-variant-numeric: tabular-nums;
+		color: var(--color-text);
+		letter-spacing: 0.02em;
 	}
+
 	.countdown-warning {
-		font-size: 1rem;
-		color: #e67e00;
-		font-weight: 600;
-		margin-top: 0.3rem;
+		font-size: 0.85rem;
+		color: var(--color-accent-text);
+		font-weight: 500;
+		margin-top: 0.25rem;
 	}
+
 	p.non-creator {
-		font-size: 2rem;
-		width: 20rem;
+		font-size: 1rem;
+		max-width: 20rem;
 		text-align: center;
-		color: gray;
+		color: var(--color-text-muted);
 	}
+
 	p.creator {
-		font-size: 2rem;
-		width: 30rem;
+		font-size: 1.1rem;
+		max-width: 24rem;
 		text-align: center;
-		color: black;
-		font-weight: bold;
+		color: var(--color-text);
+		font-weight: 500;
 	}
+
 	button {
-		font-size: 1.5rem;
-		font-weight: bold;
-		padding: 0.75rem 1.5rem;
-		margin: 0.5rem 0.5rem;
-		margin-top: 1rem;
-		margin-bottom: 2rem;
-		cursor: pointer;
-		border: 1px solid rgb(0, 0, 0);
-		background-color: rgb(0, 0, 0);
-		border-radius: 2rem;
+		font-weight: 600;
+		font-size: 1rem;
+		padding: 0.75rem 2rem;
+		border: 2px solid var(--color-border);
+		background: var(--color-text);
 		color: white;
-		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+		border-radius: var(--radius-pill);
+		box-shadow: var(--shadow-md);
+		transition: all 180ms var(--ease);
+		letter-spacing: 0.02em;
+		cursor: pointer;
 	}
+
 	button:hover {
-		background-color: rgb(123, 255, 0);
-		color: rgb(0, 0, 0);
+		background: white;
+		color: var(--color-text);
+		border-color: var(--color-border);
 	}
+
+	button:active {
+		transform: scale(0.97);
+	}
+
 	button:disabled {
-		opacity: 0.5;
+		opacity: 0.4;
 		cursor: not-allowed;
+		pointer-events: none;
 	}
 </style>

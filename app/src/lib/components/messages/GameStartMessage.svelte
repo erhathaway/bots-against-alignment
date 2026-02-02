@@ -30,12 +30,11 @@
 <style>
 	.message {
 		display: flex;
-		margin: 0.6rem;
 		flex-direction: column;
+		margin: 0.5rem 0.75rem;
 	}
 
 	.game-start {
-		flex-direction: row;
 		justify-content: center;
 		align-items: center;
 	}
@@ -44,48 +43,49 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		background: linear-gradient(135deg, #111 0%, #222 100%);
-		border: 2px solid rgb(123, 255, 0);
-		border-radius: 10px;
+		background: var(--color-text);
+		border: 1.5px solid var(--color-text);
+		border-radius: var(--radius-md);
 		padding: 0.75rem 1rem;
 		width: 90%;
-		gap: 0.4rem;
+		gap: 0.35rem;
 	}
 
 	.game-start-title {
-		font-size: 1rem;
-		font-weight: bold;
-		color: rgb(123, 255, 0);
-		letter-spacing: 0.05em;
+		font-size: 0.75rem;
+		font-weight: 700;
+		color: var(--color-accent);
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
 	}
 
 	.game-start-rules {
-		font-size: 11px;
-		color: #ccc;
+		font-size: 0.65rem;
+		color: var(--color-text-muted);
 	}
 
 	.game-start-players {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.3rem;
+		gap: 0.25rem;
 		justify-content: center;
-		margin-top: 0.2rem;
+		margin-top: 0.15rem;
 	}
 
 	.player-chip {
-		font-size: 10px;
-		font-weight: bold;
-		padding: 0.15rem 0.5rem;
-		border-radius: 1rem;
+		font-size: 0.6rem;
+		font-weight: 600;
+		padding: 0.1rem 0.45rem;
+		border-radius: var(--radius-pill);
 	}
 
 	.player-chip.human {
-		background: rgb(123, 255, 0);
-		color: #111;
+		background: var(--color-accent);
+		color: black;
 	}
 
 	.player-chip.ai {
-		background: rgb(100, 149, 237);
+		background: var(--color-text-muted);
 		color: white;
 	}
 </style>

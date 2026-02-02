@@ -18,7 +18,7 @@
 			particleCount: 200,
 			spread: 120,
 			origin: { y: 0.4 },
-			colors: ['#7bff00', '#ff00ff', '#00ffff', '#ffd700', '#ff4500']
+			colors: ['#D4A843', '#000000', '#ffffff', '#8B7424', '#F5E6C8']
 		});
 
 		// Continuous side cannons
@@ -28,14 +28,14 @@
 				angle: 60,
 				spread: 55,
 				origin: { x: 0, y: 0.6 },
-				colors: ['#7bff00', '#ff00ff', '#00ffff', '#ffd700']
+				colors: ['#D4A843', '#000000', '#ffffff', '#8B7424']
 			});
 			confetti({
 				particleCount: 4,
 				angle: 120,
 				spread: 55,
 				origin: { x: 1, y: 0.6 },
-				colors: ['#7bff00', '#ff00ff', '#00ffff', '#ffd700']
+				colors: ['#D4A843', '#000000', '#ffffff', '#8B7424']
 			});
 
 			if (Date.now() < end) {
@@ -144,13 +144,15 @@
 		flex-direction: column;
 		align-items: center;
 		width: 100%;
-		height: 100%;
-		padding: 2rem;
+		min-height: 100%;
+		padding: 3rem;
 		position: relative;
 	}
+
 	.winner-glow {
-		animation: glow-bg 2s ease-in-out infinite alternate;
+		background: rgba(247, 240, 220, 0.3);
 	}
+
 	.flash-overlay {
 		position: fixed;
 		top: 0;
@@ -159,102 +161,121 @@
 		bottom: 0;
 		background: white;
 		z-index: 100;
-		animation: flash 0.8s ease-out forwards;
+		animation: flash 0.6s ease-out forwards;
 		pointer-events: none;
 	}
+
 	h1 {
-		font-size: 3rem;
-		margin-bottom: 1.5rem;
-		text-align: center;
-	}
-	.winner-title {
-		font-size: 4rem;
-		font-weight: 900;
-		color: rgb(123, 255, 0);
-		text-shadow:
-			0 0 20px rgba(123, 255, 0, 0.6),
-			0 0 40px rgba(123, 255, 0, 0.3);
-		animation: winner-pulse 0.6s ease-in-out infinite alternate;
-	}
-	.winner-subtitle {
-		font-size: 1.2rem;
-		color: #666;
-		margin-bottom: 1.5rem;
-	}
-	h2 {
-		font-size: 1.5rem;
-		font-weight: bold;
+		font-size: 2rem;
+		font-weight: 700;
 		margin-bottom: 1rem;
 		text-align: center;
 	}
+
+	.winner-title {
+		font-size: 2.5rem;
+		font-weight: 800;
+		color: var(--color-accent);
+		letter-spacing: 0.02em;
+		animation: winner-pulse 2s ease infinite alternate;
+	}
+
+	.winner-subtitle {
+		font-size: 0.95rem;
+		color: var(--color-text-secondary);
+	}
+
+	h2 {
+		font-size: 1rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		margin-bottom: 1rem;
+	}
+
 	.standings {
 		width: 100%;
-		max-width: 400px;
+		max-width: 360px;
 		margin-bottom: 2rem;
 	}
+
 	.standing-row {
 		display: flex;
 		align-items: center;
 		padding: 0.75rem 1rem;
-		border-radius: 0.5rem;
-		margin-bottom: 0.5rem;
-		background: #f5f5f5;
-		gap: 0.5rem;
+		border-radius: var(--radius-sm);
+		margin-bottom: 0.35rem;
+		background: var(--color-surface);
+		gap: 0.75rem;
+		font-size: 0.9rem;
 	}
+
 	.standing-row.first-place {
-		background: rgb(240, 255, 220);
-		border: 2px solid rgb(123, 255, 0);
-		font-weight: bold;
+		background: var(--color-accent-light);
+		border: 1.5px solid var(--color-accent);
+		font-weight: 600;
 	}
+
 	.rank {
-		width: 2rem;
-		color: #666;
+		width: 1.5rem;
+		color: var(--color-text-muted);
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
 	}
+
 	.name {
 		flex: 1;
 	}
+
 	.score {
-		font-weight: bold;
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
 	}
+
 	.button-container {
 		display: flex;
 		justify-content: center;
-		gap: 1rem;
+		gap: 0.75rem;
 		width: 100%;
 		margin-top: auto;
 		padding: 1rem;
 	}
+
 	button {
-		flex-grow: 1;
-		max-width: 200px;
-		padding: 10px 20px;
-		font-size: 1.5rem;
-		cursor: pointer;
-		border: 1px solid black;
-		background-color: black;
-		border-radius: 2rem;
+		font-weight: 600;
+		font-size: 0.95rem;
+		padding: 0.75rem 2rem;
+		border: 2px solid var(--color-border);
+		background: var(--color-text);
 		color: white;
+		border-radius: var(--radius-pill);
+		box-shadow: var(--shadow-md);
+		transition: all 180ms var(--ease);
+		letter-spacing: 0.02em;
+		cursor: pointer;
+		flex-grow: 1;
+		max-width: 180px;
 	}
+
 	button:hover {
-		background-color: rgb(123, 255, 0);
-		color: black;
+		background: white;
+		color: var(--color-text);
+		border-color: var(--color-border);
 	}
+
+	button:active {
+		transform: scale(0.97);
+	}
+
 	@keyframes winner-pulse {
 		from {
 			transform: scale(1);
 		}
 		to {
-			transform: scale(1.08);
+			transform: scale(1.015);
 		}
 	}
-	@keyframes glow-bg {
-		from {
-			background: rgba(123, 255, 0, 0);
-		}
-		to {
-			background: rgba(123, 255, 0, 0.05);
-		}
-	}
+
 	@keyframes flash {
 		0% {
 			opacity: 0.8;

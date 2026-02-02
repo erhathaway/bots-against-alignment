@@ -105,45 +105,48 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: flex-start;
+		justify-content: center;
 		height: 100%;
-		padding: 2rem;
+		padding: 3rem;
 	}
+
 	h2 {
-		font-size: 2rem;
-		font-weight: bold;
-		margin-bottom: 0.5rem;
+		font-size: 1.5rem;
+		font-weight: 600;
 	}
+
 	.subtitle {
-		color: #666;
-		margin-bottom: 1.5rem;
-		font-size: 1rem;
+		color: var(--color-text-muted);
+		font-size: 0.9rem;
+		margin-bottom: 2rem;
 	}
+
 	.game-over-text {
-		font-size: 1.5rem;
-		font-weight: bold;
-		color: rgb(0, 150, 0);
-		margin-top: 1.5rem;
+		font-size: 1.25rem;
+		font-weight: 600;
 	}
+
 	.win-text {
-		font-size: 2.5rem;
-		font-weight: bold;
-		color: rgb(123, 255, 0);
-		text-shadow: 0 0 20px rgba(123, 255, 0, 0.5);
-		animation: pulse 0.5s ease-in-out infinite alternate;
+		font-size: 2rem;
+		font-weight: 700;
+		color: var(--color-accent);
+		letter-spacing: 0.02em;
+		animation: pulse 2s ease-in-out infinite alternate;
 	}
+
 	.winner-bot-name {
-		font-size: 1.5rem;
-		font-weight: bold;
-		color: #333;
+		font-size: 1.1rem;
+		font-weight: 500;
+		color: var(--color-text-secondary);
 		margin-top: 0.5rem;
 	}
+
 	@keyframes pulse {
 		from {
 			transform: scale(1);
 		}
 		to {
-			transform: scale(1.05);
+			transform: scale(1.02);
 		}
 	}
 </style>

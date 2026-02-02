@@ -105,10 +105,10 @@
 
 <style>
 	.message-container {
-		flex: 2;
+		flex: 1;
 		overflow-y: auto;
 		width: 100%;
-		padding: 5px;
+		padding: 0.5rem 0;
 		display: flex;
 		flex-direction: column;
 	}

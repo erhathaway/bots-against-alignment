@@ -55,6 +55,27 @@
 </div>
 
 <style>
+	.toast-container {
+		position: fixed;
+		top: 1.5rem;
+		right: 1.5rem;
+		z-index: 9999;
+	}
+
+	.toast {
+		background: var(--color-text);
+		color: #ffffff;
+		border-radius: var(--radius-md);
+		padding: 1rem 1.25rem;
+		margin-bottom: 0.75rem;
+		width: 320px;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		box-shadow: var(--shadow-lg);
+		border-left: 3px solid var(--color-accent);
+	}
+
 	.top {
 		display: flex;
 		justify-content: space-between;
@@ -68,55 +89,39 @@
 		align-items: flex-start;
 		width: 100%;
 	}
+
 	h1 {
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--color-accent);
 		margin: 0;
-		font-size: 1.2rem;
-		color: yellow;
 	}
+
 	h2 {
-		margin: 0;
-		padding: 1rem 0;
 		font-size: 0.8rem;
+		font-weight: 400;
+		margin: 0;
+		padding: 0.5rem 0 0.25rem;
 	}
 
 	small {
-		text-shadow:
-			0px 0px 0px #3e3d3d,
-			-1px -1px 0px rgb(53, 53, 53);
-		color: rgba(29, 29, 29, 0.884);
-		font-weight: bold;
-		letter-spacing: 0.3rem;
-	}
-	.toast-container {
-		position: fixed;
-		top: 1rem;
-		right: 1rem;
-		z-index: 100;
-	}
-
-	.toast {
-		background-color: rgb(0, 0, 0);
-		color: white;
-		border-radius: 5px;
-		padding: 1rem;
-		margin-bottom: 1rem;
-		width: 300px;
-		display: flex;
-		flex-direction: column;
-		justify-content: space-between;
-		align-items: center;
-		opacity: 1;
-		transition: opacity 0.5s ease;
-		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+		font-size: 0.65rem;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--color-text-muted);
+		font-weight: 600;
 	}
 
 	.close-button {
 		background: none;
 		border: none;
-		color: inherit;
-		font: inherit;
+		color: rgba(255, 255, 255, 0.5);
+		font-size: 0.875rem;
 		cursor: pointer;
-		font-weight: bold;
-		margin: 1rem;
+		padding: 0.25rem;
+	}
+
+	.close-button:hover {
+		color: #ffffff;
 	}
 </style>

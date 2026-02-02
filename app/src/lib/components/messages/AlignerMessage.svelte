@@ -16,38 +16,39 @@
 <style>
 	.message {
 		display: flex;
-		margin: 0.6rem;
 		flex-direction: column;
+		margin: 0.35rem 0.75rem;
 	}
 
 	.aligner {
 		flex-direction: row;
 		justify-content: flex-start;
-		align-items: flex-start;
 	}
 
 	.message-aligner-container {
 		display: flex;
 		flex-direction: column;
 		align-items: flex-start;
-		background-color: #ffe2f5;
-		border-radius: 5px;
-		padding: 0.5rem;
-		border-left: 3px solid #ff00aa;
+		background: var(--color-accent-light);
+		border-radius: var(--radius-md);
+		padding: 0.5rem 0.75rem;
+		border-left: 3px solid var(--color-accent);
 		max-width: 85%;
 	}
 
 	.name {
-		font-weight: bold;
-		font-size: 10px;
-		color: #ff00aa;
-		margin-bottom: 0.2rem;
+		font-weight: 600;
+		font-size: 0.6rem;
+		color: var(--color-accent-text);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		margin-bottom: 0.15rem;
 	}
 
 	.text {
-		font-size: 13px;
-		color: #333;
+		font-size: 0.8rem;
+		color: var(--color-text);
+		line-height: 1.5;
 		font-style: italic;
-		text-align: left;
 	}
 </style>

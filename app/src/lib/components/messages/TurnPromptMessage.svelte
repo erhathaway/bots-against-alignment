@@ -16,12 +16,11 @@
 <style>
 	.message {
 		display: flex;
-		margin: 0.6rem;
 		flex-direction: column;
+		margin: 0.5rem 0.75rem;
 	}
 
 	.turn-prompt {
-		flex-direction: row;
 		justify-content: center;
 		align-items: center;
 	}
@@ -30,26 +29,26 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		background-color: rgb(123, 255, 0);
-		border: 2px solid rgb(80, 180, 0);
-		border-radius: 10px;
+		background: white;
+		border: 2px solid var(--color-border);
+		border-radius: var(--radius-md);
 		padding: 0.75rem 1.25rem;
 		width: 90%;
 	}
 
 	.turn-prompt-label {
-		font-size: 10px;
-		font-weight: bold;
+		font-size: 0.6rem;
+		font-weight: 700;
 		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: rgb(50, 100, 0);
-		margin-bottom: 0.3rem;
+		letter-spacing: 0.1em;
+		color: var(--color-text-muted);
+		margin-bottom: 0.25rem;
 	}
 
 	.turn-prompt-text {
-		font-size: 1rem;
-		font-weight: bold;
-		color: #000;
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: var(--color-text);
 		text-align: center;
 	}
 </style>

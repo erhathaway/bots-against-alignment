@@ -41,8 +41,8 @@
 		display: inline-flex;
 		justify-content: flex-start;
 		align-items: flex-start;
-		font-size: 2rem;
-		width: 5rem;
+		font-size: 1.5rem;
+		width: 3rem;
 	}
 
 	.comma {

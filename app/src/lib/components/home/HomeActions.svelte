@@ -13,56 +13,35 @@
 </div>
 
 <style>
+	.buttons-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1rem;
+		padding: 3rem;
+	}
+
 	button {
-		font-weight: bold;
+		font-size: clamp(1rem, 3vw, 1.5rem);
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		padding: 1rem 2.5rem;
+		border: 2px solid var(--color-border);
+		background: #000000;
+		color: #ffffff;
+		border-radius: var(--radius-pill);
+		box-shadow: var(--shadow-md);
 		cursor: pointer;
-		border: 3px solid rgb(0, 0, 0);
-		background-color: rgb(0, 0, 0);
-		border-radius: 2rem;
-		color: white;
-		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.3);
-		font-size: 80px;
-		margin: 5%;
+		transition: all 180ms var(--ease);
 	}
 
 	button:hover {
-		background-color: rgb(123, 255, 0);
-		color: rgb(0, 0, 0);
+		background: #ffffff;
+		color: #000000;
+		border-color: #000000;
 	}
 
-	.buttons-container {
-		display: flex;
-		justify-content: center;
-		flex-direction: column;
-		width: 100%;
-		height: 100%;
-		padding: 70px;
-	}
-
-	@media (max-width: 1300px) {
-		button {
-			font-size: 60px;
-		}
-	}
-
-	@media (max-width: 950px) {
-		button {
-			font-size: 50px;
-		}
-
-		.buttons-container {
-			padding: 10px;
-		}
-	}
-
-	@media (max-width: 800px) {
-		button {
-			font-size: 30px;
-			margin: 5px;
-		}
-
-		.buttons-container {
-			width: 100%;
-		}
+	button:active {
+		transform: scale(0.97);
 	}
 </style>

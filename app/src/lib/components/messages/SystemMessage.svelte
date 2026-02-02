@@ -15,28 +15,25 @@
 <style>
 	.message {
 		display: flex;
-		margin: 0.6rem;
 		flex-direction: column;
+		margin: 0.35rem 0.75rem;
 	}
 
 	.system {
-		justify-content: center;
 		align-items: center;
 	}
 
 	.message-part-bottom {
 		display: flex;
-		flex-direction: row;
 		align-items: center;
 	}
 
 	.message-text {
-		border-radius: 5px;
-		font-size: 13px;
-		margin-right: 0.4rem;
-		margin-left: 0.4rem;
-		padding: 0.3rem;
-		background-color: #ecffe2;
-		color: rgb(98, 98, 98);
+		font-size: 0.7rem;
+		color: var(--color-text-muted);
+		padding: 0.25rem 0.75rem;
+		background: transparent;
+		border: none;
+		font-style: italic;
 	}
 </style>

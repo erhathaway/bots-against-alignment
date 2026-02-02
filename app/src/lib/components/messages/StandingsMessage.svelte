@@ -29,12 +29,11 @@
 <style>
 	.message {
 		display: flex;
-		margin: 0.6rem;
 		flex-direction: column;
+		margin: 0.5rem 0.75rem;
 	}
 
 	.standings {
-		flex-direction: row;
 		justify-content: center;
 		align-items: center;
 	}
@@ -43,17 +42,17 @@
 		display: flex;
 		flex-direction: column;
 		width: 90%;
-		border: 1px solid #ddd;
-		border-radius: 8px;
+		border: 1.5px solid var(--color-border-light);
+		border-radius: var(--radius-sm);
 		overflow: hidden;
 	}
 
 	.standings-row {
 		display: flex;
 		align-items: center;
-		padding: 0.3rem 0.6rem;
-		font-size: 12px;
-		border-bottom: 1px solid #eee;
+		padding: 0.3rem 0.75rem;
+		font-size: 0.7rem;
+		border-bottom: 1px solid var(--color-border-light);
 		gap: 0.4rem;
 	}
 
@@ -62,35 +61,37 @@
 	}
 
 	.standings-row.leader {
-		background: #fff8e1;
-		font-weight: bold;
+		background: var(--color-accent-light);
+		font-weight: 600;
 	}
 
 	.standings-rank {
 		width: 1.2rem;
-		color: #999;
-		font-weight: bold;
+		color: var(--color-text-muted);
+		font-weight: 600;
 		text-align: center;
+		font-variant-numeric: tabular-nums;
 	}
 
 	.standings-name {
 		flex: 1;
 		display: flex;
 		align-items: center;
-		gap: 0.3rem;
+		gap: 0.25rem;
 	}
 
 	.standings-ai {
-		font-size: 8px;
-		font-weight: bold;
-		background: rgb(100, 149, 237);
+		font-size: 0.5rem;
+		font-weight: 700;
+		background: var(--color-text-muted);
 		color: white;
 		padding: 0.05rem 0.3rem;
-		border-radius: 0.5rem;
+		border-radius: var(--radius-pill);
+		text-transform: uppercase;
 	}
 
 	.standings-score {
-		font-weight: bold;
-		color: #333;
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
 	}
 </style>

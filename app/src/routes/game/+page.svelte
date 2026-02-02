@@ -172,26 +172,26 @@
 	#game-details {
 		display: flex;
 		flex-direction: column;
-		overflow-y: scroll;
+		flex: 1;
+		overflow-y: auto;
 		max-width: 50%;
+		min-width: 50%;
 	}
 
 	#right {
 		display: flex;
 		flex-direction: column;
-		flex-grow: 2;
-		background-color: white;
+		flex: 1;
 		max-width: 50%;
-		border-left: 2px solid black;
+		border-left: 1.5px solid var(--color-border-light);
+		background: white;
 	}
 
 	section {
 		display: flex;
-		flex-direction: row;
 		align-items: center;
-		margin-top: 1rem;
 		width: 100%;
-		flex-grow: 2;
+		flex-grow: 1;
 	}
 
 	.leave-bar {
@@ -201,21 +201,26 @@
 		padding: 0.5rem 1rem;
 		flex-grow: 0;
 	}
+
 	.leave-btn {
-		font-size: 0.8rem;
-		padding: 0.3rem 0.8rem;
-		cursor: pointer;
-		border: 1px solid #ccc;
+		font-size: 0.7rem;
+		font-weight: 500;
+		padding: 0.3rem 0.75rem;
+		border: 1px solid var(--color-border-light);
 		background: white;
-		border-radius: 1rem;
-		color: #666;
+		border-radius: var(--radius-pill);
+		color: var(--color-text-muted);
+		cursor: pointer;
+		transition: all 150ms var(--ease);
 	}
+
 	.leave-btn:hover {
-		border-color: red;
-		color: red;
+		border-color: var(--color-text);
+		color: var(--color-text);
 	}
+
 	.leave-btn:disabled {
-		opacity: 0.5;
+		opacity: 0.4;
 		cursor: not-allowed;
 	}
 </style>

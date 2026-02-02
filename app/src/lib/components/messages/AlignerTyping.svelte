@@ -11,39 +11,38 @@
 <style>
 	.message {
 		display: flex;
-		margin: 0.6rem;
 		flex-direction: column;
+		margin: 0.35rem 0.75rem;
 	}
 
 	.aligner {
 		flex-direction: row;
 		justify-content: flex-start;
-		align-items: flex-start;
 	}
 
 	.message-aligner-container {
 		display: flex;
 		flex-direction: column;
 		align-items: flex-start;
-		background-color: #ffe2f5;
-		border-radius: 5px;
-		padding: 0.5rem;
-		border-left: 3px solid #ff00aa;
+		background: var(--color-accent-light);
+		border-radius: var(--radius-md);
+		padding: 0.5rem 0.75rem;
+		border-left: 3px solid var(--color-accent);
 		max-width: 85%;
 	}
 
 	.typing-dots {
 		display: flex;
-		gap: 4px;
-		padding: 6px 10px;
+		gap: 5px;
+		padding: 4px 8px;
 		align-items: center;
 	}
 
 	.dot {
-		width: 8px;
-		height: 8px;
+		width: 6px;
+		height: 6px;
 		border-radius: 50%;
-		background-color: #ff00aa;
+		background: var(--color-accent);
 		animation: bounce 1.4s infinite ease-in-out both;
 	}
 

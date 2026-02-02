@@ -33,14 +33,14 @@
 <style>
 	.message {
 		display: flex;
-		margin: 0.6rem;
 		flex-direction: column;
+		margin: 0.35rem 0.75rem;
 	}
 
 	.bot-response {
 		flex-direction: row;
 		align-items: flex-start;
-		gap: 0.4rem;
+		gap: 0.35rem;
 	}
 
 	.bot-response.mine {
@@ -52,35 +52,37 @@
 	}
 
 	.bot-avatar {
-		width: 32px;
-		height: 32px;
+		width: 28px;
+		height: 28px;
 		border-radius: 50%;
+		flex-shrink: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		flex-shrink: 0;
 	}
 
 	.bot-avatar-face {
-		font-size: 16px;
+		font-size: 14px;
 		line-height: 1;
 	}
 
 	.bot-response-body {
 		display: flex;
 		flex-direction: column;
-		max-width: 70%;
+		max-width: 65%;
 	}
 
 	.bot-response-name {
-		font-size: 10px;
-		font-weight: bold;
+		font-size: 0.6rem;
+		font-weight: 600;
 		margin-bottom: 2px;
-		color: #555;
+		color: var(--color-text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
 	}
 
 	.bot-response.mine .bot-response-name {
-		color: #0066cc;
+		color: var(--color-accent-text);
 	}
 
 	.bot-response.theirs .bot-response-name {
@@ -89,20 +91,20 @@
 
 	.bot-response-text {
 		padding: 0.5rem 0.75rem;
-		border-radius: 12px;
-		font-size: 13px;
-		line-height: 1.4;
-		background: #f0f0f0;
-		color: #222;
+		border-radius: var(--radius-md);
+		font-size: 0.8rem;
+		line-height: 1.5;
+		border: 1px solid var(--color-border-light);
 	}
 
 	.bot-response.mine .bot-response-text {
-		border-top-left-radius: 4px;
-		background: #e8f5e9;
+		border-top-left-radius: 3px;
+		background: var(--color-accent-light);
+		border-color: var(--color-accent);
 	}
 
 	.bot-response.theirs .bot-response-text {
-		border-top-right-radius: 4px;
-		background: #f0f0f0;
+		border-top-right-radius: 3px;
+		background: var(--color-surface);
 	}
 </style>

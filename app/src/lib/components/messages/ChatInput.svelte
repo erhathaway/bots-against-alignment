@@ -41,35 +41,46 @@
 <style>
 	.input-container {
 		display: flex;
-		padding: 10px;
+		padding: 0.75rem;
+		gap: 0.5rem;
+		border-top: 1.5px solid var(--color-border-light);
 	}
 
 	.message-input {
 		flex: 1;
-		padding: 5px 10px;
-		margin-left: 1rem;
-		border: 1px solid #ccc;
-		border-radius: 5px;
-		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
-		width: 100%;
+		padding: 0.5rem 0.75rem;
+		border: 1.5px solid var(--color-border-light);
+		border-radius: var(--radius-sm);
+		font-size: 0.8rem;
+		outline: none;
+		transition: border-color 150ms;
+	}
+
+	.message-input:focus {
+		border-color: var(--color-accent);
 	}
 
 	.send-button {
-		border-radius: 2rem;
-		font-size: 1.5rem;
-		font-weight: bold;
-		padding: 0.75rem 1.5rem;
-		margin: 0.5rem 0.5rem;
-		cursor: pointer;
-		border: 2px solid rgb(0, 0, 0);
-		background-color: rgb(0, 0, 0);
+		font-size: 0.75rem;
+		font-weight: 600;
+		padding: 0.5rem 1rem;
+		border: 1.5px solid var(--color-border);
+		background: var(--color-text);
 		color: white;
-		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+		border-radius: var(--radius-pill);
+		cursor: pointer;
+		transition: all 150ms var(--ease);
 	}
 
 	.send-button:hover {
-		background-color: rgb(123, 255, 0);
-		color: rgb(0, 0, 0);
-		border: 2px solid black;
+		background: white;
+		color: var(--color-text);
+	}
+
+	p {
+		font-size: 0.8rem;
+		color: var(--color-text-muted);
+		text-align: center;
+		padding: 1rem;
 	}
 </style>

@@ -19,73 +19,28 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		font:
-			1.5rem/1.5 'Roboto',
-			sans-serif;
-		height: 100%;
-		padding: 100px;
+		padding: 3rem;
 	}
 
 	h1 {
-		font-size: 120px;
-		font-weight: bold;
-		letter-spacing: 15px;
-		color: rgb(123, 255, 0);
-		text-shadow: 4px 4px 5px rgba(67, 164, 25, 0.3);
+		font-size: clamp(2.5rem, 6vw, 5rem);
+		font-weight: 800;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: #000000;
 		margin: 0;
-		font-family: 'Bebas Neue', cursive;
-		-webkit-text-stroke-width: 2px;
-		-webkit-text-stroke-color: rgba(0, 0, 0, 0.6);
+		font-family: system-ui, -apple-system, sans-serif;
+		line-height: 1.1;
+		text-align: center;
 	}
 
 	h2 {
-		font-size: 1.7rem;
+		font-size: 1rem;
+		font-weight: 400;
+		letter-spacing: 0.15em;
+		text-transform: uppercase;
+		color: var(--color-text-secondary);
+		margin: 1rem 0 0;
 		text-align: center;
-		font-weight: 100;
-		letter-spacing: 2px;
-		line-height: 2.3rem;
-		color: #000000;
-		margin: 2rem;
-	}
-
-	@media (max-width: 1300px) {
-		h1 {
-			font-size: 110px;
-			letter-spacing: 0px;
-			line-height: 100px;
-		}
-	}
-
-	@media (max-width: 950px) {
-		h1 {
-			font-size: 80px;
-			letter-spacing: 0px;
-			line-height: 70px;
-		}
-
-		h2 {
-			font-size: 1.5rem;
-			line-height: 2rem;
-			margin: 1rem;
-		}
-
-		.text-container {
-			padding: 50px;
-		}
-	}
-
-	@media (max-width: 800px) {
-		h1 {
-			font-size: 80px;
-			letter-spacing: 0px;
-			line-height: 70px;
-			margin-bottom: 10px;
-		}
-
-		h2 {
-			font-size: 2rem;
-			line-height: 3rem;
-			margin: 0rem;
-		}
 	}
 </style>

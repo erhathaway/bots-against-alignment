@@ -18,12 +18,11 @@
 <style>
 	.message {
 		display: flex;
-		margin: 0.6rem;
 		flex-direction: column;
+		margin: 0.5rem 0.75rem;
 	}
 
 	.round-winner {
-		flex-direction: row;
 		justify-content: center;
 		align-items: center;
 	}
@@ -32,30 +31,30 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		background: linear-gradient(135deg, #fff8e1 0%, #fff3c4 100%);
-		border: 2px solid #ffb300;
-		border-radius: 10px;
-		padding: 0.6rem 1rem;
+		background: var(--color-accent-light);
+		border: 1.5px solid var(--color-accent);
+		border-radius: var(--radius-md);
+		padding: 0.5rem 1rem;
 		width: 90%;
-		gap: 0.15rem;
+		gap: 0.1rem;
 	}
 
 	.round-winner-label {
-		font-size: 9px;
-		font-weight: bold;
+		font-size: 0.55rem;
+		font-weight: 700;
 		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: #b77b00;
+		letter-spacing: 0.1em;
+		color: var(--color-accent-text);
 	}
 
 	.round-winner-name {
-		font-size: 1rem;
-		font-weight: bold;
-		color: #333;
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: var(--color-text);
 	}
 
 	.round-winner-score {
-		font-size: 11px;
-		color: #777;
+		font-size: 0.65rem;
+		color: var(--color-text-muted);
 	}
 </style>

@@ -41,18 +41,10 @@
 <style>
 	main {
 		display: flex;
-		flex-direction: row;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		font:
-			1.5rem/1.5 'Roboto',
-			sans-serif;
-		height: 100vh;
-	}
-
-	@media (max-width: 800px) {
-		main {
-			flex-direction: column;
-		}
+		min-height: 100vh;
+		gap: 0;
 	}
 </style>

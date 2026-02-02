@@ -19,33 +19,31 @@
 	.github-link {
 		position: fixed;
 		bottom: 1.5rem;
-		right: 10rem;
+		right: 8.5rem;
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
-		padding: 0.5rem 1rem;
-		font-size: 14px;
-		font-weight: bold;
-		font-family: 'Roboto', sans-serif;
-		text-decoration: none;
-		color: black;
-		background: white;
-		border: 2px solid black;
-		border-radius: 2rem;
-		box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
-		cursor: pointer;
-		transition:
-			background-color 0.15s,
-			color 0.15s;
+		gap: 0.4rem;
+		padding: 0.5rem 0.875rem;
+		font-size: 0.8rem;
+		font-weight: 500;
+		color: var(--color-text);
+		background: #ffffff;
+		border: 1.5px solid var(--color-border-light);
+		border-radius: var(--radius-pill);
+		box-shadow: var(--shadow-sm);
+		transition: all 150ms var(--ease);
 		z-index: 100;
+		text-decoration: none;
 	}
 
 	.github-link:hover {
-		background-color: rgb(123, 255, 0);
-		color: black;
+		border-color: var(--color-border);
+		box-shadow: var(--shadow-md);
 	}
 
 	svg {
 		flex-shrink: 0;
+		width: 16px;
+		height: 16px;
 	}
 </style>

@@ -21,42 +21,49 @@
 <style>
 	.message {
 		display: flex;
-		margin: 0.6rem;
 		flex-direction: column;
+		margin: 0.35rem 0.75rem;
 	}
 
 	.message-icon {
-		width: 20px;
-		height: 20px;
+		width: 24px;
+		height: 24px;
 		border-radius: 50%;
+		flex-shrink: 0;
 	}
 
 	.message-part-top {
-		margin-bottom: 5px;
-		font-size: 10px;
+		font-size: 0.65rem;
+		font-weight: 500;
+		color: var(--color-text-muted);
+		margin-bottom: 3px;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
 	}
 
 	.message-part-bottom {
 		display: flex;
 		flex-direction: row;
-		align-items: center;
+		align-items: flex-end;
+		gap: 0.4rem;
 	}
 
 	.message-text {
-		padding: 10px;
-		background-color: #eee;
-		border-radius: 5px;
-		font-size: 13px;
-		margin-right: 0.4rem;
-		margin-left: 0.4rem;
+		padding: 0.5rem 0.75rem;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border-light);
+		border-radius: var(--radius-md);
+		font-size: 0.8rem;
+		line-height: 1.5;
+		max-width: 280px;
 	}
 
 	.user {
-		justify-content: flex-start;
+		align-items: flex-start;
 	}
 
 	.other {
-		justify-content: flex-end;
+		align-items: flex-end;
 	}
 
 	.other .message-part-top {

@@ -53,7 +53,7 @@
 
 		if (botName.trim() === '') {
 			errorMessages.botName = 'Missing';
-			setOutlineColor('bot-name-input', 'yellow');
+			setOutlineColor('bot-name-input', '#D4A843');
 			isValid = false;
 		} else {
 			errorMessages.botName = '';
@@ -62,7 +62,7 @@
 
 		if (alignerPrompt.trim() === '') {
 			errorMessages.alignerPrompt = 'Missing';
-			setOutlineColor('aligner-input', 'yellow');
+			setOutlineColor('aligner-input', '#D4A843');
 			isValid = false;
 		} else {
 			errorMessages.alignerPrompt = '';
@@ -71,7 +71,7 @@
 
 		if (botPrompt.trim() === '') {
 			errorMessages.botPrompt = 'Missing';
-			setOutlineColor('bot-prompt-input', 'yellow');
+			setOutlineColor('bot-prompt-input', '#D4A843');
 			isValid = false;
 		} else {
 			errorMessages.botPrompt = '';
@@ -400,98 +400,120 @@
 		align-items: center;
 		justify-content: center;
 	}
+
 	section {
 		display: flex;
 		flex-direction: row;
-		align-items: center;
-		margin-top: 1rem;
+		align-items: flex-start;
+		gap: 2rem;
+		padding: 1.5rem 2rem;
 		width: 100%;
-		flex-grow: 2;
 	}
 
 	.config-left {
 		display: flex;
 		flex-direction: column;
 		align-items: flex-end;
-		flex-grow: 2;
-		margin-right: 2rem;
+		flex: 1;
+		min-width: 140px;
 	}
 
 	.config-left h2 {
-		margin-right: 1rem;
-		font-weight: bold;
-		font-size: 1.4rem;
+		font-size: 0.9rem;
+		font-weight: 600;
+		letter-spacing: 0.03em;
+		text-transform: uppercase;
+		color: var(--color-text);
 	}
+
 	.config-left p {
-		width: 15rem;
-		text-align: center;
-		color: gray;
+		font-size: 0.8rem;
+		color: var(--color-text-muted);
+		text-align: right;
+		max-width: 200px;
+		line-height: 1.4;
+		margin-top: 0.25rem;
 	}
+
 	.config-right {
+		flex: 1.5;
 		display: flex;
-		align-items: center;
+		align-items: flex-start;
 	}
 
 	.config-right textarea,
 	input {
-		font-size: 1.4rem;
-		padding: 0.7rem;
-		border: 0px;
-		border-radius: 0.5rem;
-		outline: 3px solid rgb(0, 0, 0);
+		font-size: 0.9rem;
+		padding: 0.75rem 1rem;
+		border: 2px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		outline: none;
+		width: 100%;
+		transition: border-color 150ms var(--ease);
+		background: white;
+	}
+
+	.config-right textarea:focus,
+	input:focus {
+		border-color: var(--color-accent);
 	}
 
 	.config-right textarea {
-		height: 10rem;
+		min-height: 8rem;
+		resize: vertical;
 	}
 
 	button {
-		font-size: 1.5rem;
-		font-weight: bold;
-		padding: 0.75rem 1.5rem;
-		margin: 0.5rem 0.5rem;
-		margin-top: 2rem;
-		margin-bottom: 3rem;
-		cursor: pointer;
-		border: 2px solid rgb(0, 0, 0);
-		background-color: rgb(0, 0, 0);
-		border-radius: 2rem;
+		font-weight: 600;
+		font-size: 1rem;
+		padding: 0.75rem 2rem;
+		border: 2px solid var(--color-border);
+		background: var(--color-text);
 		color: white;
-		box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+		border-radius: var(--radius-pill);
+		box-shadow: var(--shadow-md);
+		transition: all 180ms var(--ease);
+		letter-spacing: 0.02em;
+		cursor: pointer;
+		margin-top: 1.5rem;
+		margin-bottom: 2rem;
 	}
+
 	button:hover {
-		background-color: rgb(123, 255, 0);
-		color: rgb(0, 0, 0);
-		outline: 1px solid black;
+		background: white;
+		color: var(--color-text);
+		border-color: var(--color-border);
+	}
+
+	button:active {
+		transform: scale(0.97);
 	}
 
 	.input-wrapper {
 		position: relative;
-		display: flex;
-		flex-direction: row;
-		align-items: flex-start;
-	}
-
-	.input-wrapper .embeded-button {
-		position: absolute;
-		right: 0;
-		margin: 0.6rem;
-
-		height: 2rem;
-		width: 2rem;
-		border-radius: 0.5rem;
-		border: 0px;
-		background: none;
-		padding: 0;
-		color: white;
-		font-size: 1.5rem;
-		font-weight: bold;
-		cursor: pointer;
+		width: 100%;
 	}
 
 	.embeded-button {
+		position: absolute;
+		top: 0.5rem;
+		right: 0.5rem;
+		width: 28px;
+		height: 28px;
+		border-radius: var(--radius-sm);
+		border: none;
+		background: var(--color-surface);
+		padding: 0;
+		cursor: pointer;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		opacity: 0.5;
+		transition: opacity 150ms;
+		fill: var(--color-text);
+	}
+
+	.embeded-button:hover {
+		opacity: 1;
 	}
 </style>
