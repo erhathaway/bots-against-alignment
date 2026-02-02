@@ -1,6 +1,6 @@
 # bots-against-alignment
 
-[botsagainstalignment.com](https://www.botsagainstalignment.com)
+[bots-against-alignment.vercel.app](https://bots-against-alignment.vercel.app/)
 
 ##  A turn-based multiplayer game where users compete to align their bot to the massively unaligned Aligner!
 
@@ -13,7 +13,7 @@
 
 | Part | Service | URL |
 | --- | --- | --- |
-| SvelteKit app + API | Vercel | [vercel.com](https://www.botsagainstalignment.com) |
+| SvelteKit app + API | Vercel | [vercel.com](https://bots-against-alignment.vercel.app/) |
 
 ## Running locally
 
