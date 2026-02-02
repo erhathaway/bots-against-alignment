@@ -254,11 +254,12 @@
 	}
 	#screen {
 		display: flex;
-		flex-direction: row;
+		flex-direction: column;
 		height: 100vh;
 		width: 100vw;
 		margin: 0;
 		padding: 0;
+		align-items: center;
 	}
 
 	#game-details {
@@ -266,17 +267,17 @@
 		flex-direction: column;
 		flex: 1;
 		overflow-y: auto;
-		max-width: 50%;
-		min-width: 50%;
+		width: 100%;
 	}
 
 	#right {
 		display: flex;
 		flex-direction: column;
-		flex: 1;
-		max-width: 50%;
-		border-left: 1.5px solid var(--color-border-light);
+		width: 100%;
+		max-width: 900px;
+		height: 100vh;
 		background: white;
+		margin: 0 auto;
 	}
 
 	section {

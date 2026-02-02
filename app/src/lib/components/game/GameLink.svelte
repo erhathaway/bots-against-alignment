@@ -3,6 +3,7 @@
 	import { globalState } from '$lib/state/store.svelte';
 
 	let gameLink = $state('');
+	let copied = $state(false);
 
 	$effect(() => {
 		if (!browser) return;
@@ -18,6 +19,10 @@
 
 	function copyToClipboard(text: string) {
 		navigator.clipboard.writeText(text);
+		copied = true;
+		setTimeout(() => {
+			copied = false;
+		}, 2000);
 	}
 
 	function truncateGameId(id: string | null): string {
@@ -27,8 +32,12 @@
 	}
 </script>
 
-<button type="button" class="game-link" onclick={() => copyToClipboard(gameLink)}>
-	<h2>Game # {truncateGameId(globalState.game_id)}</h2>
+<button type="button" class="game-link" class:copied onclick={() => copyToClipboard(gameLink)}>
+	{#if copied}
+		<h2 class="copied-text">✓ Copied!</h2>
+	{:else}
+		<h2>Game # {truncateGameId(globalState.game_id)}</h2>
+	{/if}
 	<div id="link-icon">
 		<div id="link-vertical-rule"></div>
 		<svg
@@ -90,6 +99,15 @@
 		transform: scale(0.98);
 	}
 
+	.game-link.copied {
+		border-color: var(--color-accent);
+		background: var(--color-accent-light);
+	}
+
+	.game-link.copied h2 {
+		color: var(--color-accent-text);
+	}
+
 	h2 {
 		font-size: 0.8rem;
 		font-weight: 500;
@@ -97,6 +115,21 @@
 		color: var(--color-text-secondary);
 		letter-spacing: 0.02em;
 		transition: color 220ms var(--ease);
+	}
+
+	.copied-text {
+		animation: fadeInScale 220ms var(--ease);
+	}
+
+	@keyframes fadeInScale {
+		from {
+			opacity: 0;
+			transform: scale(0.95);
+		}
+		to {
+			opacity: 1;
+			transform: scale(1);
+		}
 	}
 
 	#link-icon {
