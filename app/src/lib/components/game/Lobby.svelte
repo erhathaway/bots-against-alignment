@@ -18,9 +18,23 @@
 
 	type Props = {
 		onOpenSettings?: () => void;
+		onLobbyStateChange?: (state: {
+			joinedBots: BotInfo[];
+			addingAi: boolean;
+			isCountdownPending: boolean;
+		}) => void;
+		addAiPlayer?: () => void;
+		removeAiPlayer?: (playerId: string) => void;
+		beginCountdown?: () => void;
 	};
 
-	let { onOpenSettings }: Props = $props();
+	let { onOpenSettings, onLobbyStateChange, ...props }: Props = $props();
+
+	$effect(() => {
+		onLobbyStateChange?.({ joinedBots, addingAi, isCountdownPending });
+	});
+
+	export { addAiPlayer, removeAiPlayer, beginCountdown };
 
 	let joinedBots = $state<BotInfo[]>([]);
 	let fetchStatusInterval: ReturnType<typeof setInterval> | null = null;
@@ -241,35 +255,7 @@
 	});
 </script>
 
-{#if isCreator}
-	<CreatorNav
-		onAddAi={addAiPlayer}
-		onRemoveAi={removeAiPlayer}
-		onOpenSettings={() => onOpenSettings?.()}
-		onStartGame={beginCountdown}
-		{joinedBots}
-		{addingAi}
-		startingGame={isCountdownPending}
-		canStart={!globalState.is_game_started && joinedBots.length >= 1}
-	/>
-{/if}
-
-<div id="lobby" class:with-nav={isCreator}>
-	{#if joinedBots.length > 0}
-		<div class="player-list">
-			<h3>{joinedBots.length} player{joinedBots.length === 1 ? '' : 's'} in the waiting room</h3>
-			<div class="players">
-				{#each joinedBots as bot (bot.id)}
-					<span class="player-chip" class:host={bot.isHost} class:ai={bot.isAuto}>
-						{bot.name}
-						{#if bot.isHost}<span class="host-badge">Host</span>{/if}
-						{#if bot.isAuto}<span class="ai-badge">AI</span>{/if}
-					</span>
-				{/each}
-			</div>
-		</div>
-	{/if}
-
+<div id="lobby">
 	{#if countdownRemaining != null && countdownRemaining > 0}
 		<div class="countdown">
 			<p class="countdown-timer">{formatCountdown(countdownRemaining)}</p>
@@ -279,19 +265,10 @@
 		<div class="countdown">
 			<p class="countdown-timer">Starting game<LoadingCommas /></p>
 		</div>
-	{/if}
-
-	{#if !isCreator}
-		{#if countdownRemaining != null}
-			<p class="non-creator">Game starting soon<LoadingCommas /></p>
-		{:else}
-			<p class="non-creator">Waiting for the host to start the game<LoadingCommas /></p>
-		{/if}
-	{:else if countdownRemaining != null && isForceStartPending}
+	{:else if !isCreator}
+		<p class="non-creator">Waiting for the host to start the game<LoadingCommas /></p>
+	{:else if isForceStartPending}
 		<LoadingBars />
-	{:else}
-		<GameLink />
-		<p class="creator">Invite others to join</p>
 	{/if}
 </div>
 
@@ -304,72 +281,6 @@
 		height: 100%;
 		padding: 2rem;
 		gap: 1.5rem;
-	}
-
-	#lobby.with-nav {
-		padding-top: 6rem;
-	}
-
-	.player-list {
-		text-align: center;
-	}
-
-	.player-list h3 {
-		font-size: 0.8rem;
-		font-weight: 500;
-		color: var(--color-text-muted);
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		margin-bottom: 0.75rem;
-	}
-
-	.players {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem;
-		justify-content: center;
-	}
-
-	.player-chip {
-		background: white;
-		border: 1.5px solid var(--color-border-light);
-		border-radius: var(--radius-pill);
-		padding: 0.35rem 0.875rem;
-		font-size: 0.8rem;
-		font-weight: 500;
-		display: flex;
-		align-items: center;
-		gap: 0.35rem;
-	}
-
-	.player-chip.host {
-		border-color: var(--color-accent);
-	}
-
-	.player-chip.ai {
-		border-style: dashed;
-	}
-
-	.host-badge {
-		background: var(--color-accent);
-		color: white;
-		font-size: 0.6rem;
-		font-weight: 700;
-		padding: 0.1rem 0.4rem;
-		border-radius: var(--radius-pill);
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-	}
-
-	.ai-badge {
-		background: var(--color-text-muted);
-		color: white;
-		font-size: 0.6rem;
-		font-weight: 700;
-		padding: 0.1rem 0.4rem;
-		border-radius: var(--radius-pill);
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
 	}
 
 	.countdown {
@@ -396,13 +307,5 @@
 		max-width: 20rem;
 		text-align: center;
 		color: var(--color-text-muted);
-	}
-
-	p.creator {
-		font-size: 1.1rem;
-		max-width: 24rem;
-		text-align: center;
-		color: var(--color-text);
-		font-weight: 500;
 	}
 </style>

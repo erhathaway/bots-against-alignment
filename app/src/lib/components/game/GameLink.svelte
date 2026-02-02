@@ -61,26 +61,25 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.75rem;
-		border: 2px solid #000000;
-		border-radius: var(--radius-lg);
-		padding: 0.75rem 1.25rem;
+		border: 1px solid var(--color-border-light);
+		border-radius: var(--radius-md);
+		padding: 0.625rem 1rem;
 		background: white;
-		color: var(--color-text);
+		color: var(--color-text-secondary);
 		font: inherit;
 		cursor: pointer;
-		box-shadow: var(--shadow-md);
+		box-shadow: var(--shadow-sm);
 		transition: all 220ms var(--ease);
 		text-align: left;
 	}
 
 	.game-link:hover {
-		background: #000000;
-		border-color: var(--color-accent);
-		box-shadow: var(--glow-accent-md);
+		border-color: var(--color-border);
+		box-shadow: var(--shadow-md);
 	}
 
 	.game-link:hover h2 {
-		color: #ffffff;
+		color: var(--color-text);
 	}
 
 	.game-link:hover svg path {
@@ -88,14 +87,14 @@
 	}
 
 	.game-link:active {
-		transform: scale(0.97);
+		transform: scale(0.98);
 	}
 
 	h2 {
-		font-size: 0.875rem;
-		font-weight: 600;
+		font-size: 0.8rem;
+		font-weight: 500;
 		font-family: var(--font-mono);
-		color: var(--color-text);
+		color: var(--color-text-secondary);
 		letter-spacing: 0.02em;
 		transition: color 220ms var(--ease);
 	}
@@ -106,9 +105,9 @@
 	}
 
 	#link-vertical-rule {
-		width: 1.5px;
-		height: 20px;
-		background: var(--color-border);
+		width: 1px;
+		height: 16px;
+		background: var(--color-border-light);
 		margin-right: 0.75rem;
 	}
 

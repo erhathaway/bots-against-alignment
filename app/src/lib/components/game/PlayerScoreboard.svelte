@@ -2,6 +2,12 @@
 	import { globalState } from '$lib/state/store.svelte';
 	import { untrack } from 'svelte';
 
+	type Props = {
+		withCreatorNav?: boolean;
+	};
+
+	let { withCreatorNav = false }: Props = $props();
+
 	type Player = {
 		id: string;
 		name: string;
@@ -74,7 +80,7 @@
 </script>
 
 {#if players.length > 0}
-	<div class="scoreboard">
+	<div class="scoreboard" class:with-creator-nav={withCreatorNav}>
 		<div class="players">
 			{#each players as player (player.id)}
 				{@const isCurrentPlayer = player.name === globalState.bot_name}
@@ -126,6 +132,10 @@
 		justify-content: center;
 		z-index: 100;
 		pointer-events: none;
+	}
+
+	.scoreboard.with-creator-nav {
+		top: 5.5rem;
 	}
 
 	.players {
