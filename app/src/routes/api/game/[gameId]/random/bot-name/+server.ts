@@ -1,10 +1,11 @@
 import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 import { generateRandomBotName } from '$lib/server/llm/random';
 import { getClientAddressSafe, handleApiError, jsonError } from '$lib/server/http';
 import { rateLimit } from '$lib/server/rate-limit';
 
-export const POST = async (event) => {
+export const POST: RequestHandler = async (event) => {
 	try {
 		const limit = await rateLimit({
 			key: `${getClientAddressSafe(event)}:${event.params.gameId}:random-bot-name`,

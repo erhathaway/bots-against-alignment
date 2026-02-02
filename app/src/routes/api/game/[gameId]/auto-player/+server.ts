@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 import { addAutoPlayer, removeAutoPlayer } from '$lib/server/game/service';
 import { handleApiError, jsonError } from '$lib/server/http';
@@ -13,7 +14,7 @@ const removeSchema = z.object({
 	playerId: z.string().min(1)
 });
 
-export const POST = async ({ params, request }) => {
+export const POST: RequestHandler = async ({ params, request }) => {
 	try {
 		const body = await request.json();
 		const parsed = addSchema.safeParse(body);
@@ -31,7 +32,7 @@ export const POST = async ({ params, request }) => {
 	}
 };
 
-export const DELETE = async ({ params, request }) => {
+export const DELETE: RequestHandler = async ({ params, request }) => {
 	try {
 		const body = await request.json();
 		const parsed = removeSchema.safeParse(body);

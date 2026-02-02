@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 import { processTurn } from '$lib/server/game/service';
 import { getClientAddressSafe, handleApiError, jsonError } from '$lib/server/http';
@@ -9,7 +10,7 @@ const schema = z.object({
 	playerId: z.string().min(1)
 });
 
-export const POST = async (event) => {
+export const POST: RequestHandler = async (event) => {
 	try {
 		const turnId = Number(event.params.turnId);
 		if (!Number.isFinite(turnId)) {

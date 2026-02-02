@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 import { postChatMessage, getChatMessages } from '$lib/server/chat/service';
 import { handleApiError, jsonError } from '$lib/server/http';
@@ -9,7 +10,7 @@ const postSchema = z.object({
 	senderName: z.string().min(1).max(30)
 });
 
-export const POST = async ({ params, request }) => {
+export const POST: RequestHandler = async ({ params, request }) => {
 	try {
 		const body = await request.json();
 		const parsed = postSchema.safeParse(body);
@@ -30,7 +31,7 @@ export const POST = async ({ params, request }) => {
 	}
 };
 
-export const GET = async ({ params, url }) => {
+export const GET: RequestHandler = async ({ params, url }) => {
 	try {
 		const afterId = Number(url.searchParams.get('after') ?? '0');
 		const messages = await getChatMessages(

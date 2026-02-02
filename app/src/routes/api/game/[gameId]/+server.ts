@@ -1,9 +1,10 @@
 import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 import { getGame } from '$lib/server/game/service';
 import { jsonError, handleApiError } from '$lib/server/http';
 
-export const GET = async ({ params }) => {
+export const GET: RequestHandler = async ({ params }) => {
 	try {
 		const game = await getGame(params.gameId);
 		if (!game) {

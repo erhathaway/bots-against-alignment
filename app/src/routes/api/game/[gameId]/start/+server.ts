@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 import { startGame } from '$lib/server/game/service';
 import { handleApiError, jsonError } from '$lib/server/http';
@@ -8,7 +9,7 @@ const schema = z.object({
 	creatorId: z.string().min(1)
 });
 
-export const POST = async ({ params, request }) => {
+export const POST: RequestHandler = async ({ params, request }) => {
 	try {
 		const body = await request.json();
 		const parsed = schema.safeParse(body);

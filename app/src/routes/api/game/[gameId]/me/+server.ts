@@ -1,9 +1,10 @@
 import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 import { getUserStatus } from '$lib/server/game/service';
 import { handleApiError, jsonError } from '$lib/server/http';
 
-export const GET = async ({ params, url }) => {
+export const GET: RequestHandler = async ({ params, url }) => {
 	try {
 		const playerId = url.searchParams.get('playerId');
 		if (!playerId) {

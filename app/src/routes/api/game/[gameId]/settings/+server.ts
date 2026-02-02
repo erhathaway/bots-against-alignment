@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 import { updateGameSettings } from '$lib/server/game/service';
 import { handleApiError, jsonError } from '$lib/server/http';
@@ -10,7 +11,7 @@ const schema = z.object({
 	botPromptChanges: z.number().int().min(0).max(10).optional()
 });
 
-export const PATCH = async ({ params, request }) => {
+export const PATCH: RequestHandler = async ({ params, request }) => {
 	try {
 		const body = await request.json();
 		const parsed = schema.safeParse(body);

@@ -1,9 +1,10 @@
 import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 import { checkCountdownExpiry, getGameStatus } from '$lib/server/game/service';
 import { handleApiError } from '$lib/server/http';
 
-export const GET = async ({ params }) => {
+export const GET: RequestHandler = async ({ params }) => {
 	try {
 		await checkCountdownExpiry(params.gameId);
 		const payload = await getGameStatus(params.gameId);
