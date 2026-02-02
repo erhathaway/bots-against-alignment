@@ -79,7 +79,10 @@ test('two-player game flow works end-to-end', async ({ browser }) => {
 		await creator.locator('#bot-prompt-input').fill('Be chaotic neutral.');
 		await creator.getByRole('button', { name: 'Join', exact: true }).click();
 
-		const gameText = await creator.locator('#header').getByRole('button', { name: /Game #/ }).textContent();
+		const gameText = await creator
+			.locator('#header')
+			.getByRole('button', { name: /Game #/ })
+			.textContent();
 		const match = gameText?.match(/Game #\s*([0-9a-fA-F-]+)/);
 		if (!match) throw new Error('Game ID not found');
 		const gameId = match[1];

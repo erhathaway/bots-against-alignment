@@ -21,7 +21,12 @@ export function getDb() {
 /** @deprecated Use getDb() instead — kept temporarily for migration. */
 export const db = new Proxy({} as LibSQLDatabase<typeof schema>, {
 	get(_, prop) {
-		return (getDb() as unknown as Record<string | symbol, unknown>)[prop];
+		const target = getDb();
+		const value = Reflect.get(target, prop, target);
+		if (typeof value === 'function') {
+			return value.bind(target);
+		}
+		return value;
 	}
 });
 

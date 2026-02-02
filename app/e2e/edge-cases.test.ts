@@ -36,7 +36,10 @@ test('non-creator cannot start the game', async ({ browser }) => {
 		await creator.getByRole('button', { name: 'New Game' }).click();
 		await joinGame(creator, 'Creator Bot');
 
-		const gameText = await creator.locator('#header').getByRole('button', { name: /Game #/ }).textContent();
+		const gameText = await creator
+			.locator('#header')
+			.getByRole('button', { name: /Game #/ })
+			.textContent();
 		const match = gameText?.match(/Game #\s*([0-9a-fA-F-]+)/);
 		if (!match) throw new Error('Game ID not found');
 		const gameId = match[1];
