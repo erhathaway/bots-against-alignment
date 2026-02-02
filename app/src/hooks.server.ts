@@ -1,20 +1,15 @@
-import { env } from '$env/dynamic/private';
+import { dev } from '$app/environment';
 import { checkLLMAvailability } from '$lib/server/llm/health';
 
-const apiKey = env.OPENAI_API_KEY?.trim();
-if (!apiKey) {
-	console.error('\n[FATAL] OPENAI_API_KEY is not set. The game requires a valid API key.\n');
-	process.exit(1);
+if (dev) {
+	checkLLMAvailability()
+		.then(() => {
+			console.log('[startup] LLM health check passed');
+		})
+		.catch((error) => {
+			const reason = error instanceof Error ? error.message : String(error);
+			console.error(`\n[FATAL] LLM health check failed: ${reason}`);
+			console.error('Set OPENAI_API_KEY or enable MOCK_LLM=1.\n');
+			process.exit(1);
+		});
 }
-
-checkLLMAvailability()
-	.then(() => {
-		console.log('[startup] LLM health check passed');
-	})
-	.catch((error) => {
-		console.error(
-			`\n[FATAL] LLM health check failed: ${error instanceof Error ? error.message : error}`
-		);
-		console.error('The game cannot function without a working LLM connection.\n');
-		process.exit(1);
-	});

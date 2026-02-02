@@ -40,5 +40,10 @@ function storybookStaticServe(): Plugin {
 }
 
 export default defineConfig({
-	plugins: [storybookStaticServe(), sveltekit(), devtoolsJson()]
+	plugins: [storybookStaticServe(), sveltekit(), devtoolsJson()],
+	ssr: {
+		// estree-walker v3 is ESM-only (no CJS export); bundle it to avoid
+		// require() failures in Vercel's Node File Tracing.
+		noExternal: ['estree-walker']
+	}
 });
