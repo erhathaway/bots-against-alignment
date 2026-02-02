@@ -94,11 +94,7 @@
 	{/if}
 
 	{#if showBotSetup && botSetupGameId}
-		<BotSetupModal
-			gameId={botSetupGameId}
-			creatorId={botSetupCreatorId}
-			onClose={closeBotSetup}
-		/>
+		<BotSetupModal gameId={botSetupGameId} creatorId={botSetupCreatorId} onClose={closeBotSetup} />
 	{/if}
 
 	<div class="bottom-links">

@@ -162,8 +162,8 @@
 				<h2>Aligner Instruction</h2>
 			</div>
 			<p class="panel-desc">
-				Your secret instruction to the aligner. It will be combined with other players'
-				instructions to judge each round.
+				Your secret instruction to the aligner. It will be combined with other players' instructions
+				to judge each round.
 			</p>
 			<div class="input-wrapper">
 				<button type="button" class="embeded-button" onclick={randomizeAlignerPrompt}>

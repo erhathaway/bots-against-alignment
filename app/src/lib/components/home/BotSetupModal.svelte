@@ -255,8 +255,7 @@
 							>
 						{/if}
 					</button>
-					<textarea id="bot-prompt-input" bind:value={botPrompt} aria-label="Bot Prompt"
-					></textarea>
+					<textarea id="bot-prompt-input" bind:value={botPrompt} aria-label="Bot Prompt"></textarea>
 				</div>
 			</section>
 		</div>
