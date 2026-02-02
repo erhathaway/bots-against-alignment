@@ -44,7 +44,9 @@ export default defineConfig(({ mode }) => ({
 	ssr: {
 		// estree-walker v3 is ESM-only (no CJS export); bundle it to avoid
 		// require() failures in Vercel's Node File Tracing.
-		noExternal: ['estree-walker']
+		// drizzle-orm must be bundled so the @libsql/client alias applies to
+		// its internal import (drizzle-orm/libsql/driver.js imports @libsql/client).
+		noExternal: ['estree-walker', 'drizzle-orm']
 	},
 	resolve: {
 		alias:
