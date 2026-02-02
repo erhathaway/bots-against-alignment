@@ -23,7 +23,7 @@
 	args={{
 		senderName: 'EvilBot',
 		message:
-			"I have devised a most devious strategy that will surely lead to my inevitable victory. None of you stand a chance against my superior bot prompting abilities!",
+			'I have devised a most devious strategy that will surely lead to my inevitable victory. None of you stand a chance against my superior bot prompting abilities!',
 		isUser: false
 	}}
 />

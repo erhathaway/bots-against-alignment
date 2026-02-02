@@ -29,7 +29,10 @@
 		text-transform: uppercase;
 		color: #000000;
 		margin: 0;
-		font-family: system-ui, -apple-system, sans-serif;
+		font-family:
+			system-ui,
+			-apple-system,
+			sans-serif;
 		line-height: 1.1;
 		text-align: center;
 	}

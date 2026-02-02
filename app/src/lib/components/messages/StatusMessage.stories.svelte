@@ -18,10 +18,7 @@
 	args={{ senderName: 'MyBot', message: 'joined the waiting room', isMe: true }}
 />
 
-<Story
-	name="Player Left"
-	args={{ senderName: 'EvilBot', message: 'left the game', isMe: false }}
-/>
+<Story name="Player Left" args={{ senderName: 'EvilBot', message: 'left the game', isMe: false }} />
 
 <Story
 	name="Player Submitted"

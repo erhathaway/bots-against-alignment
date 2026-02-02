@@ -1,9 +1,5 @@
 import { postChatMessage } from '$lib/server/chat/service';
-import {
-	randomAlignerPrompt,
-	randomBotName,
-	randomBotPrompt
-} from '$lib/server/game/data';
+import { randomAlignerPrompt, randomBotName, randomBotPrompt } from '$lib/server/game/data';
 
 const MOCK_RESPONSES = [
 	'A sentient toaster',

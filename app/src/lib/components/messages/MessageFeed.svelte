@@ -42,8 +42,7 @@
 
 	$effect(() => {
 		// scroll to bottom when messages change
-		messages.length;
-		if (container) {
+		if (container && messages.length >= 0) {
 			tick().then(() => {
 				container!.scrollTop = container!.scrollHeight;
 			});

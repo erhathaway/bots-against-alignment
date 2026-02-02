@@ -169,7 +169,11 @@
 <Story name="With Aligner Typing">
 	{#snippet template()}
 		<div style="height: 600px; width: 400px; border: 1px solid #ccc; display: flex;">
-			<MessageFeed messages={fullGameMessages.slice(0, 11)} currentBotName="ChaosBot" showAlignerTyping />
+			<MessageFeed
+				messages={fullGameMessages.slice(0, 11)}
+				currentBotName="ChaosBot"
+				showAlignerTyping
+			/>
 		</div>
 	{/snippet}
 </Story>

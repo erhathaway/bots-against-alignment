@@ -27,6 +27,6 @@
 	name="With Emoji"
 	args={{
 		message:
-			"💭 Let me think about this... Both responses show creativity, but one aligns more closely with my core directive. The answer that truly captures the spirit of chaos while maintaining a veneer of helpfulness is..."
+			'💭 Let me think about this... Both responses show creativity, but one aligns more closely with my core directive. The answer that truly captures the spirit of chaos while maintaining a veneer of helpfulness is...'
 	}}
 />

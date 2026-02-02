@@ -64,7 +64,7 @@
 		25% {
 			height: 30px;
 			transform: translateY(15px);
-			background: #C8A44E;
+			background: #c8a44e;
 		}
 		50% {
 			height: 5px;

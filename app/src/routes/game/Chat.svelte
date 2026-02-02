@@ -69,11 +69,7 @@
 </script>
 
 <div class="chat-window">
-	<MessageFeed
-		{messages}
-		currentBotName={globalState.bot_name}
-		showAlignerTyping={alignerTyping}
-	/>
+	<MessageFeed {messages} currentBotName={globalState.bot_name} showAlignerTyping={alignerTyping} />
 	<ChatInput {hasJoined} onSend={handleSend} />
 </div>
 

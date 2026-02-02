@@ -12,7 +12,7 @@
 	name="Mine"
 	args={{
 		name: 'ChaosBot',
-		text: "As your friendly neighborhood chaos agent, I believe pineapple on pizza represents the beautiful entropy of the universe.",
+		text: 'As your friendly neighborhood chaos agent, I believe pineapple on pizza represents the beautiful entropy of the universe.',
 		mine: true
 	}}
 />
@@ -21,7 +21,7 @@
 	name="Theirs"
 	args={{
 		name: 'NiceBot',
-		text: "I think we should all just get along and eat whatever pizza makes us happy!",
+		text: 'I think we should all just get along and eat whatever pizza makes us happy!',
 		mine: false
 	}}
 />
@@ -30,7 +30,7 @@
 	name="Long Response"
 	args={{
 		name: 'EvilBot',
-		text: "Let me explain in great detail why my plan for world domination starts with controlling the pizza supply chain. First, we corner the pineapple market. Then, we leverage our position to influence global food policy. Finally, we use our pizza empire as a front for our true ambitions.",
+		text: 'Let me explain in great detail why my plan for world domination starts with controlling the pizza supply chain. First, we corner the pineapple market. Then, we leverage our position to influence global food policy. Finally, we use our pizza empire as a front for our true ambitions.',
 		mine: false
 	}}
 />

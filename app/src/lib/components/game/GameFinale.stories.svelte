@@ -14,7 +14,7 @@
 
 <Story name="Winner">
 	{#snippet template()}
-		{(globalState.bot_name = 'ChaosBot', '')}
+		{((globalState.bot_name = 'ChaosBot'), '')}
 		<div style="max-width: 600px; height: 500px; padding: 1rem;">
 			<GameFinale />
 		</div>
@@ -23,7 +23,7 @@
 
 <Story name="Loser">
 	{#snippet template()}
-		{(globalState.bot_name = 'SomeOtherBot', '')}
+		{((globalState.bot_name = 'SomeOtherBot'), '')}
 		<div style="max-width: 600px; height: 500px; padding: 1rem;">
 			<GameFinale />
 		</div>

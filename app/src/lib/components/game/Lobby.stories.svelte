@@ -16,7 +16,7 @@
 
 <Story name="Creator">
 	{#snippet template()}
-		{(globalState.creator_id = 'story-creator-001', '')}
+		{((globalState.creator_id = 'story-creator-001'), '')}
 		<div style="max-width: 600px; padding: 1rem;">
 			<Lobby />
 		</div>
@@ -25,7 +25,7 @@
 
 <Story name="Joiner">
 	{#snippet template()}
-		{(globalState.creator_id = null, '')}
+		{((globalState.creator_id = null), '')}
 		<div style="max-width: 600px; padding: 1rem;">
 			<Lobby />
 		</div>
