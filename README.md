@@ -48,6 +48,64 @@ Client-side (`app/.env`):
 
 - `PUBLIC_E2E=1` — disables auto-randomization in E2E runs
 
+## Deploying to Vercel
+
+The app deploys to Vercel as serverless functions with a Turso (hosted LibSQL) database.
+
+### Prerequisites
+
+- [Vercel CLI](https://vercel.com/docs/cli) installed and authenticated (`vercel login`)
+- A Vercel project linked (`vercel link` from the repo root)
+- A [Turso](https://turso.tech) database for production
+
+### Required Vercel env vars (production)
+
+Set these via the Vercel dashboard or CLI:
+
+```bash
+# Turso database URL (libsql:// protocol)
+vercel env add DATABASE_URL production
+# e.g. libsql://your-db-name.turso.io?authToken=your-token
+
+# Use mock LLM (set to 1 to skip OpenAI calls)
+vercel env add MOCK_LLM production
+
+# Or set a real OpenAI key for LLM features
+vercel env add OPENAI_API_KEY production
+```
+
+> **Important:** Use `printf '%s' 'value' | vercel env add ...` instead of `echo` to avoid trailing newlines in env var values.
+
+### Database setup (Turso)
+
+```bash
+# Create a database
+turso db create your-db-name
+
+# Get the URL
+turso db show your-db-name --url
+
+# Create an auth token
+turso db tokens create your-db-name
+
+# Run migrations
+cd app && DATABASE_URL="libsql://..." bun run db:migrate
+```
+
+### Deploy
+
+```bash
+bun run deploy
+```
+
+This runs `vercel --prod` from the repo root, which uploads the source, builds on Vercel, and deploys to production.
+
+### How it works
+
+- **Adapter**: `@sveltejs/adapter-vercel` splits the app into serverless functions
+- **Database**: In production, `@libsql/client/web` (HTTP-only) is used via a Vite alias, avoiding native SQLite bindings that aren't available on Vercel
+- **LLM**: Set `MOCK_LLM=1` to use mock responses, or provide `OPENAI_API_KEY` for real LLM calls
+
 ##  How to play
 
 For detailed rules, see [`RULES.md`](RULES.md).
