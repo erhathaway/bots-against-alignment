@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { globalState } from '$lib/state/store.svelte';
 	import type { BotInfo } from './Lobby.svelte';
 
 	type Props = {
@@ -27,10 +26,17 @@
 	let aiBots = $derived(joinedBots.filter((b) => b.isAuto));
 </script>
 
-<nav class="creator-nav">
+<nav class="game-owner-nav">
 	<div class="nav-left">
 		<button class="config-btn" onclick={onOpenSettings}>
-			<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+			<svg
+				width="18"
+				height="18"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2.5"
+			>
 				<circle cx="12" cy="12" r="3"></circle>
 				<path
 					d="M12 1v6m0 6v6m6-12h-6m-6 0H1m17.66 3.66l-4.24 4.24M9.88 14.12l-4.24 4.24m12.72 0l-4.24-4.24M9.88 9.88L5.64 5.64"
@@ -42,7 +48,14 @@
 		<div class="divider"></div>
 
 		<button class="ai-btn" onclick={onAddAi} disabled={addingAi || joinedBots.length >= 8}>
-			<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+			<svg
+				width="18"
+				height="18"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2.5"
+			>
 				<circle cx="12" cy="12" r="10"></circle>
 				<line x1="12" y1="8" x2="12" y2="16"></line>
 				<line x1="8" y1="12" x2="16" y2="12"></line>
@@ -77,7 +90,7 @@
 </nav>
 
 <style>
-	.creator-nav {
+	.game-owner-nav {
 		position: fixed;
 		top: 0;
 		left: 0;
@@ -86,7 +99,7 @@
 		background: #000000;
 		display: flex;
 		align-items: stretch;
-		z-index: 100;
+		z-index: 150;
 		border-bottom: 3px solid var(--color-accent);
 		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 	}

@@ -80,13 +80,7 @@
 				<label for="points-to-win">Points to win</label>
 				<div class="setting-description">First player to reach this score wins the game</div>
 				{#if isCreator}
-					<input
-						id="points-to-win"
-						type="number"
-						min="1"
-						max="20"
-						bind:value={pointsToWin}
-					/>
+					<input id="points-to-win" type="number" min="1" max="20" bind:value={pointsToWin} />
 				{:else}
 					<div class="setting-value">{pointsToWin}</div>
 				{/if}

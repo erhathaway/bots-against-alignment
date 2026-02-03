@@ -2,9 +2,9 @@
 	import { addNotification, globalState } from '$lib/state/store.svelte';
 	import { NotificationKind } from '$lib/types';
 	import LoadingBars from './LoadingBars.svelte';
-	let botsSubmitted = $state(0);
-	let totalBots = $state(0);
-	let points = $state(0);
+	// let botsSubmitted = $state(0);
+	// let totalBots = $state(0);
+	// let points = $state(0);
 	let promptsRemaining = $state(2);
 	let hasSubmittedThisTurn = $state(false);
 	let trackedTurnId = $state<number | null>(null);
@@ -35,8 +35,8 @@
 			const response = await fetch(url);
 			const data = await response.json();
 			if (response.ok) {
-				botsSubmitted = data.botsSubmitted;
-				totalBots = data.totalBots;
+				// botsSubmitted = data.botsSubmitted;
+				// totalBots = data.totalBots;
 			} else if (response.status !== 404) {
 				addNotification({
 					source_url: 'aligner says',
@@ -68,18 +68,18 @@
 			}
 
 			let allBotsTurnComplete = true;
-			let completedBots = 0;
+			// let completedBots = 0;
 
 			if (data && data.bots) {
 				for (const bot of data.bots) {
 					if (bot.turnComplete) {
-						completedBots++;
+						// completedBots++;
 					} else {
 						allBotsTurnComplete = false;
 					}
 				}
-				botsSubmitted = completedBots;
-				totalBots = data.bots.length;
+				// botsSubmitted = completedBots;
+				// totalBots = data.bots.length;
 
 				if (botName && totalBots > 0) {
 					globalState.have_all_users_submitted = allBotsTurnComplete;
@@ -136,7 +136,7 @@
 		const statusData = await statusResponse.json();
 
 		if (statusResponse.ok) {
-			points = statusData.points ?? 0;
+			// points = statusData.points ?? 0;
 			promptsRemaining = statusData.promptsRemaining ?? 0;
 			if (statusData.creatorId) {
 				globalState.creator_id = statusData.creatorId;

@@ -2,10 +2,7 @@
 	import { addNotification, globalState } from '$lib/state/store.svelte';
 	import { NotificationKind } from '$lib/types';
 	import { untrack } from 'svelte';
-	import LoadingBars from './LoadingBars.svelte';
 	import LoadingCommas from './LoadingCommas.svelte';
-	import GameLink from './GameLink.svelte';
-	import CreatorNav from './CreatorNav.svelte';
 
 	export type BotInfo = {
 		id: string;
@@ -17,24 +14,18 @@
 	};
 
 	type Props = {
-		onOpenSettings?: () => void;
 		onLobbyStateChange?: (state: {
 			joinedBots: BotInfo[];
 			addingAi: boolean;
 			isCountdownPending: boolean;
 		}) => void;
-		addAiPlayer?: () => void;
-		removeAiPlayer?: (playerId: string) => void;
-		beginCountdown?: () => void;
 	};
 
-	let { onOpenSettings, onLobbyStateChange, ...props }: Props = $props();
+	let { onLobbyStateChange }: Props = $props();
 
 	$effect(() => {
 		onLobbyStateChange?.({ joinedBots, addingAi, isCountdownPending });
 	});
-
-	export { addAiPlayer, removeAiPlayer, beginCountdown };
 
 	let joinedBots = $state<BotInfo[]>([]);
 	let fetchStatusInterval: ReturnType<typeof setInterval> | null = null;
@@ -96,133 +87,6 @@
 		}
 	}
 
-	let isCountdownPending = $state(false);
-	async function beginCountdown() {
-		if (isCountdownPending) return;
-		isCountdownPending = true;
-		try {
-			if (globalState.creator_id == null) throw new Error('Only the creator can start the game');
-			if (globalState.game_id == null) throw new Error('Game ID is null');
-			const url = `/api/game/${globalState.game_id}/countdown`;
-			const response = await fetch(url, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ creatorId: globalState.creator_id })
-			});
-
-			if (response.ok) {
-				const data = await response.json();
-				countdownStartedAt = data.countdownStartedAt;
-			} else {
-				const data = await response.json();
-				addNotification({
-					source_url: 'lobby',
-					title: 'Error starting countdown',
-					body: data.error || data.message || JSON.stringify(data),
-					kind: NotificationKind.ERROR,
-					action_url: url,
-					action_text: 'start_countdown'
-				});
-			}
-		} finally {
-			isCountdownPending = false;
-		}
-	}
-
-	let isForceStartPending = $state(false);
-	async function forceStart() {
-		if (isForceStartPending) return;
-		isForceStartPending = true;
-		try {
-			if (globalState.creator_id == null) throw new Error('Only the creator can start the game');
-			if (globalState.is_game_started) throw new Error('Game already started');
-			if (globalState.game_id == null) throw new Error('Game ID is null');
-			const url = `/api/game/${globalState.game_id}/start`;
-			const response = await fetch(url, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ creatorId: globalState.creator_id })
-			});
-
-			if (response.ok) {
-				const data = await response.json();
-				if (data.status === 'ALIGNER_SETUP') {
-					globalState.is_collecting_aligner_prompts = true;
-				} else {
-					globalState.is_game_started = true;
-				}
-			} else {
-				const data = await response.json();
-				addNotification({
-					source_url: 'lobby',
-					title: 'Error starting game',
-					body: data.error || data.message || JSON.stringify(data),
-					kind: NotificationKind.ERROR,
-					action_url: url,
-					action_text: 'start_game'
-				});
-			}
-		} finally {
-			isForceStartPending = false;
-		}
-	}
-
-	async function addAiPlayer() {
-		if (addingAi) return;
-		const gameId = globalState.game_id;
-		const creatorId = globalState.creator_id;
-		if (!gameId || !creatorId) return;
-		addingAi = true;
-		try {
-			const response = await fetch(`/api/game/${gameId}/auto-player`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ creatorId })
-			});
-			if (!response.ok) {
-				const data = await response.json();
-				addNotification({
-					source_url: 'lobby',
-					title: 'Error adding AI player',
-					body: data.error || data.message || JSON.stringify(data),
-					kind: NotificationKind.ERROR,
-					action_url: null,
-					action_text: 'add_ai'
-				});
-			}
-			await fetchStatus();
-		} finally {
-			addingAi = false;
-		}
-	}
-
-	async function removeAiPlayer(playerId: string) {
-		const gameId = globalState.game_id;
-		const creatorId = globalState.creator_id;
-		if (!gameId || !creatorId) return;
-		try {
-			const response = await fetch(`/api/game/${gameId}/auto-player`, {
-				method: 'DELETE',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ creatorId, playerId })
-			});
-			if (!response.ok) {
-				const data = await response.json();
-				addNotification({
-					source_url: 'lobby',
-					title: 'Error removing AI player',
-					body: data.error || data.message || JSON.stringify(data),
-					kind: NotificationKind.ERROR,
-					action_url: null,
-					action_text: 'remove_ai'
-				});
-			}
-			await fetchStatus();
-		} catch {
-			// ignore
-		}
-	}
-
 	function formatCountdown(ms: number) {
 		const totalSeconds = Math.ceil(ms / 1000);
 		const minutes = Math.floor(totalSeconds / 60);
@@ -267,8 +131,6 @@
 		</div>
 	{:else if !isCreator}
 		<p class="non-creator">Waiting for the host to start the game<LoadingCommas /></p>
-	{:else if isForceStartPending}
-		<LoadingBars />
 	{/if}
 </div>
 

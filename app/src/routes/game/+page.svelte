@@ -1,59 +1,20 @@
 <script lang="ts">
-	import { globalState, leaveCurrentGame } from '$lib/state/store.svelte';
+	import { globalState, leaveCurrentGame, addNotification } from '$lib/state/store.svelte';
+	import { NotificationKind } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
-	import Chat from './Chat.svelte';
-	import Lobby from '$lib/components/game/Lobby.svelte';
-	import AlignerSetup from '$lib/components/game/AlignerSetup.svelte';
-	import AlignerSays from '$lib/components/game/AlignerSays.svelte';
-	import TurnFinale from '$lib/components/game/TurnFinale.svelte';
-	import GameFinale from '$lib/components/game/GameFinale.svelte';
-	import PlayerScoreboard from '$lib/components/game/PlayerScoreboard.svelte';
+	import { untrack } from 'svelte';
+	import GameLayout from '$lib/components/game/GameLayout.svelte';
 	import GameSettingsModal from '$lib/components/game/GameSettingsModal.svelte';
-	import CreatorNav from '$lib/components/game/CreatorNav.svelte';
-	import { fly } from 'svelte/transition';
 	import type { PageData } from './$types';
+	import type { FeedMessage } from '$lib/components/messages/MessageFeed.svelte';
 	import type { BotInfo } from '$lib/components/game/Lobby.svelte';
 
 	let { data }: { data: PageData } = $props();
 
-	const RouterState = {
-		Lobby: 'Lobby',
-		AlignerSetup: 'AlignerSetup',
-		AlignerSays: 'AlignerSays',
-		TurnFinale: 'TurnFinale',
-		GameFinale: 'GameFinale'
-	} as const;
-	type RouterState = (typeof RouterState)[keyof typeof RouterState];
-	let routerState = $state<RouterState>(RouterState.Lobby);
-
-	const customFly = (direction: 'in' | 'out') => ({
-		delay: direction === 'in' ? 300 : 0,
-		duration: 300,
-		easing: (time: number) => --time * time * time + 1,
-		y: direction === 'in' ? 200 : -200
-	});
-
-	const screenTransition = (direction: 'in' | 'out') => ({
-		delay: direction === 'in' ? 300 : 0,
-		duration: 300,
-		easing: (time: number) => --time * time * time + 1,
-		x: direction === 'in' ? 200 : 0,
-		y: direction === 'in' ? 0 : 500
-	});
-
-	const gameDetailsTransition = (direction: 'in' | 'out') => ({
-		delay: direction === 'in' ? 300 : 0,
-		duration: 300,
-		easing: (time: number) => --time * time * time + 1,
-		x: direction === 'in' ? 200 : 0,
-		y: direction === 'in' ? 0 : 500
-	});
-
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const chatTransition = (_direction: 'in' | 'out') => ({
-		easing: (time: number) => --time * time * time + 1
-	});
+	// =====================
+	// Game state tracking
+	// =====================
 
 	$effect(() => {
 		const gameId = data.gameId;
@@ -75,30 +36,6 @@
 	});
 
 	$effect(() => {
-		const {
-			has_player_joined,
-			is_game_started,
-			is_collecting_aligner_prompts,
-			have_all_users_submitted,
-			is_game_over
-		} = globalState;
-
-		if (!has_player_joined) {
-			return;
-		} else if (is_collecting_aligner_prompts && !is_game_started) {
-			routerState = RouterState.AlignerSetup;
-		} else if (!is_game_started) {
-			routerState = RouterState.Lobby;
-		} else if (is_game_over) {
-			routerState = RouterState.GameFinale;
-		} else if (have_all_users_submitted) {
-			routerState = RouterState.TurnFinale;
-		} else {
-			routerState = RouterState.AlignerSays;
-		}
-	});
-
-	$effect(() => {
 		if (!browser) return;
 		const gameId = globalState.game_id;
 		if (!gameId) return;
@@ -109,6 +46,17 @@
 			goto(`?${url.searchParams.toString()}`, { replaceState: true });
 		}
 	});
+
+	// =====================
+	// Settings modal
+	// =====================
+
+	let showSettingsModal = $state(false);
+	let isCreator = $derived(globalState.creator_id != null);
+
+	// =====================
+	// Leave game
+	// =====================
 
 	let isLeavePending = $state(false);
 	async function handleLeave() {
@@ -125,229 +73,233 @@
 		}
 	}
 
-	let showSettingsModal = $state(false);
-	let isCreator = $derived(globalState.creator_id != null);
+	// =====================
+	// AI Player Management (moved from Lobby.svelte)
+	// =====================
 
-	type LobbyState = {
-		joinedBots: Array<{
-			id: string;
-			name: string;
-			points: number;
-			turnComplete: boolean;
-			isHost: boolean;
-			isAuto: boolean;
-		}>;
-		addingAi: boolean;
-		isCountdownPending: boolean;
-	};
+	let joinedBots = $state<BotInfo[]>([]);
+	let addingAi = $state(false);
+	let isCountdownPending = $state(false);
 
-	let lobbyState = $state<LobbyState>({
-		joinedBots: [],
-		addingAi: false,
-		isCountdownPending: false
+	async function addAiPlayer() {
+		if (addingAi) return;
+		const gameId = globalState.game_id;
+		const creatorId = globalState.creator_id;
+		if (!gameId || !creatorId) return;
+		addingAi = true;
+		try {
+			const response = await fetch(`/api/game/${gameId}/auto-player`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ creatorId })
+			});
+			if (!response.ok) {
+				const data = await response.json();
+				addNotification({
+					source_url: 'game',
+					title: 'Error adding AI player',
+					body: data.error || data.message || JSON.stringify(data),
+					kind: NotificationKind.ERROR,
+					action_url: null,
+					action_text: 'add_ai'
+				});
+			}
+			await fetchGameStatus();
+		} finally {
+			addingAi = false;
+		}
+	}
+
+	async function removeAiPlayer(playerId: string) {
+		const gameId = globalState.game_id;
+		const creatorId = globalState.creator_id;
+		if (!gameId || !creatorId) return;
+		try {
+			const response = await fetch(`/api/game/${gameId}/auto-player`, {
+				method: 'DELETE',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ creatorId, playerId })
+			});
+			if (!response.ok) {
+				const data = await response.json();
+				addNotification({
+					source_url: 'game',
+					title: 'Error removing AI player',
+					body: data.error || data.message || JSON.stringify(data),
+					kind: NotificationKind.ERROR,
+					action_url: null,
+					action_text: 'remove_ai'
+				});
+			}
+			await fetchGameStatus();
+		} catch {
+			// ignore
+		}
+	}
+
+	async function beginCountdown() {
+		if (isCountdownPending) return;
+		isCountdownPending = true;
+		try {
+			if (globalState.creator_id == null) throw new Error('Only the creator can start the game');
+			if (globalState.game_id == null) throw new Error('Game ID is null');
+			const url = `/api/game/${globalState.game_id}/countdown`;
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ creatorId: globalState.creator_id })
+			});
+
+			if (!response.ok) {
+				const data = await response.json();
+				addNotification({
+					source_url: 'game',
+					title: 'Error starting countdown',
+					body: data.error || data.message || JSON.stringify(data),
+					kind: NotificationKind.ERROR,
+					action_url: url,
+					action_text: 'start_countdown'
+				});
+			}
+		} finally {
+			isCountdownPending = false;
+		}
+	}
+
+	async function fetchGameStatus() {
+		const gameId = globalState.game_id;
+		if (!gameId) return;
+		const url = `/api/game/${gameId}/status`;
+
+		try {
+			const response = await fetch(url, {
+				method: 'GET',
+				headers: { 'Content-Type': 'application/json' }
+			});
+			if (!response.ok) return;
+			const data = await response.json();
+
+			if (data.bots && Array.isArray(data.bots)) {
+				joinedBots = data.bots as BotInfo[];
+			}
+
+			const status = data.status;
+			if (status === 'ALIGNER_SETUP') {
+				globalState.is_collecting_aligner_prompts = true;
+			}
+			if (status === 'STARTED' || status === 'ENDED') {
+				globalState.is_game_started = true;
+				globalState.is_collecting_aligner_prompts = false;
+			}
+		} catch {
+			// silently ignore polling errors
+		}
+	}
+
+	$effect(() => {
+		const gameId = globalState.game_id;
+		if (!gameId) return;
+
+		untrack(() => fetchGameStatus());
+		const intervalId = setInterval(fetchGameStatus, 3000);
+		return () => clearInterval(intervalId);
 	});
 
-	let addAiPlayer: () => void = () => {};
-	let removeAiPlayer: (id: string) => void = () => {};
-	let beginCountdown: () => void = () => {};
-</script>
+	// =====================
+	// Chat messages (moved from Chat.svelte)
+	// =====================
 
-{#if globalState.has_player_joined}
-	<PlayerScoreboard withCreatorNav={isCreator && routerState === RouterState.Lobby} />
-{/if}
+	let messages = $state<FeedMessage[]>([]);
+	let lastMessageId = $state(0);
+	let hasJoined = $derived(Boolean(globalState.bot_name && globalState.has_player_joined));
+
+	let alignerTyping = $derived(
+		messages.length > 0 &&
+			messages[messages.length - 1].senderName === 'The Aligner' &&
+			messages[messages.length - 1].type === 'system'
+	);
+
+	async function fetchMessages() {
+		const gameId = globalState.game_id;
+		if (!gameId) return;
+
+		try {
+			const url = `/api/game/${gameId}/chat?after=${lastMessageId}`;
+			const response = await fetch(url);
+			if (!response.ok) return;
+			const data = await response.json();
+			if (data.messages && data.messages.length > 0) {
+				const newMessages = data.messages as FeedMessage[];
+				messages = [...messages, ...newMessages];
+				lastMessageId = newMessages[newMessages.length - 1].id;
+			}
+		} catch {
+			// silently ignore polling errors
+		}
+	}
+
+	$effect(() => {
+		const gameId = globalState.game_id;
+		if (!gameId) return;
+
+		// Reset on game change
+		messages = [];
+		lastMessageId = 0;
+
+		untrack(() => fetchMessages());
+		const intervalId = setInterval(fetchMessages, 1500);
+		return () => clearInterval(intervalId);
+	});
+
+	async function handleSendMessage(text: string) {
+		const gameId = globalState.game_id;
+		const botName = globalState.bot_name;
+		if (!gameId || !botName) return;
+
+		try {
+			await fetch(`/api/game/${gameId}/chat`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ message: text, senderName: botName })
+			});
+			await fetchMessages();
+		} catch {
+			// silently ignore send errors
+		}
+	}
+
+	// =====================
+	// Game phase detection
+	// =====================
+
+	let showGameOwnerNav = $derived(
+		isCreator && !globalState.is_game_started && !globalState.is_collecting_aligner_prompts
+	);
+
+	let canStart = $derived(!globalState.is_game_started && joinedBots.length >= 1);
+</script>
 
 {#if showSettingsModal}
 	<GameSettingsModal onClose={() => (showSettingsModal = false)} {isCreator} />
 {/if}
 
-{#if isCreator && routerState === RouterState.Lobby}
-	<CreatorNav
+{#if globalState.has_player_joined}
+	<GameLayout
+		{showGameOwnerNav}
 		onAddAi={addAiPlayer}
 		onRemoveAi={removeAiPlayer}
-		onOpenSettings={() => (showSettingsModal = true)}
 		onStartGame={beginCountdown}
-		joinedBots={lobbyState.joinedBots}
-		addingAi={lobbyState.addingAi}
-		startingGame={lobbyState.isCountdownPending}
-		canStart={!globalState.is_game_started && lobbyState.joinedBots.length >= 1}
+		onOpenSettings={() => (showSettingsModal = true)}
+		{joinedBots}
+		{addingAi}
+		startingGame={isCountdownPending}
+		{canStart}
+		onLeave={handleLeave}
+		{isLeavePending}
+		{messages}
+		currentBotName={globalState.bot_name}
+		showAlignerTyping={alignerTyping}
+		{hasJoined}
+		onSendMessage={handleSendMessage}
 	/>
 {/if}
-
-<div
-	class="page-wrapper"
-	class:with-creator-nav={isCreator && routerState === RouterState.Lobby}
->
-	<!-- Bottom left leave button -->
-	{#if globalState.has_player_joined}
-		<button class="nav-btn leave-btn" onclick={handleLeave} disabled={isLeavePending}>
-			<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-				<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-				<polyline points="16 17 21 12 16 7"></polyline>
-				<line x1="21" y1="12" x2="9" y2="12"></line>
-			</svg>
-			<span>{isLeavePending ? 'Leaving...' : 'Leave Game'}</span>
-		</button>
-	{/if}
-
-	<!-- Top right settings button (hidden when creator nav is visible) -->
-	{#if globalState.has_player_joined && !(isCreator && routerState === RouterState.Lobby)}
-		<button class="nav-btn settings-btn" onclick={() => (showSettingsModal = true)}>
-			<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-				<circle cx="12" cy="12" r="3"></circle>
-				<path
-					d="M12 1v6m0 6v6m6-12h-6m-6 0H1m17.66 3.66l-4.24 4.24M9.88 14.12l-4.24 4.24m12.72 0l-4.24-4.24M9.88 9.88L5.64 5.64"
-				></path>
-			</svg>
-			<span>Settings</span>
-		</button>
-	{/if}
-
-	<div id="screen" role="region" aria-label="Game" in:fly={screenTransition('in')}>
-		<section id="game-details" out:fly={gameDetailsTransition('out')}>
-		{#if routerState === RouterState.Lobby}
-			<div in:fly={customFly('in')} out:fly={customFly('out')}>
-				<Lobby
-					onOpenSettings={() => (showSettingsModal = true)}
-					onLobbyStateChange={(state) => (lobbyState = state)}
-					bind:addAiPlayer
-					bind:removeAiPlayer
-					bind:beginCountdown
-				/>
-			</div>
-		{/if}
-		{#if routerState === RouterState.AlignerSetup}
-			<div in:fly={customFly('in')} out:fly={customFly('out')}>
-				<AlignerSetup />
-			</div>
-		{/if}
-		{#if routerState === RouterState.AlignerSays}
-			<div in:fly={customFly('in')} out:fly={customFly('out')}>
-				<AlignerSays />
-			</div>
-		{/if}
-		{#if routerState === RouterState.TurnFinale}
-			<div in:fly={customFly('in')} out:fly={customFly('out')}>
-				<TurnFinale />
-			</div>
-		{/if}
-		{#if routerState === RouterState.GameFinale}
-			<div in:fly={customFly('in')} out:fly={customFly('out')}>
-				<GameFinale />
-			</div>
-		{/if}
-	</section>
-	<section id="right" out:fly={chatTransition('out')}>
-		<Chat />
-	</section>
-	</div>
-</div>
-
-<style>
-	.page-wrapper {
-		width: 100%;
-		height: 100vh;
-		position: relative;
-	}
-
-	.page-wrapper.with-creator-nav {
-		padding-top: 4rem;
-	}
-	#screen {
-		display: flex;
-		flex-direction: column;
-		height: 100vh;
-		width: 100vw;
-		margin: 0;
-		padding: 0;
-		align-items: center;
-	}
-
-	#game-details {
-		display: flex;
-		flex-direction: column;
-		flex: 1;
-		overflow-y: auto;
-		width: 100%;
-	}
-
-	#right {
-		display: flex;
-		flex-direction: column;
-		width: 100%;
-		max-width: 900px;
-		height: 100vh;
-		background: white;
-		margin: 0 auto;
-	}
-
-	section {
-		display: flex;
-		align-items: center;
-		width: 100%;
-		flex-grow: 1;
-	}
-
-	.nav-btn {
-		position: fixed;
-		display: flex;
-		align-items: center;
-		gap: 0.625rem;
-		padding: 0.625rem 1rem;
-		font-size: 0.8rem;
-		font-weight: 500;
-		letter-spacing: 0.02em;
-		background: #ffffff;
-		border: 1px solid var(--color-border-light);
-		border-radius: var(--radius-md);
-		color: var(--color-text-secondary);
-		cursor: pointer;
-		transition: all 220ms var(--ease);
-		box-shadow: var(--shadow-sm);
-		text-decoration: none;
-		z-index: 99;
-	}
-
-	.nav-btn svg {
-		flex-shrink: 0;
-		opacity: 0.7;
-		transition: opacity 220ms var(--ease);
-	}
-
-	.nav-btn:hover {
-		border-color: var(--color-border);
-		color: var(--color-text);
-		box-shadow: var(--shadow-md);
-	}
-
-	.nav-btn:hover svg {
-		opacity: 1;
-	}
-
-	.nav-btn:active {
-		transform: scale(0.98);
-	}
-
-	.leave-btn {
-		bottom: 1.5rem;
-		left: 1.5rem;
-	}
-
-	.settings-btn {
-		top: 1.5rem;
-		right: 1.5rem;
-	}
-
-	.leave-btn:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-		background: #ffffff;
-		color: var(--color-text);
-	}
-
-	.leave-btn:disabled:hover {
-		background: #ffffff;
-		color: var(--color-text);
-		border-color: #000000;
-		box-shadow: var(--shadow-md);
-	}
-</style>

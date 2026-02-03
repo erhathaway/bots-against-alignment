@@ -3,10 +3,10 @@
 	import { untrack } from 'svelte';
 
 	type Props = {
-		withCreatorNav?: boolean;
+		withGameOwnerNav?: boolean;
 	};
 
-	let { withCreatorNav = false }: Props = $props();
+	let { withGameOwnerNav = false }: Props = $props();
 
 	type Player = {
 		id: string;
@@ -80,7 +80,7 @@
 </script>
 
 {#if players.length > 0}
-	<div class="scoreboard" class:with-creator-nav={withCreatorNav}>
+	<div class="scoreboard" class:with-game-owner-nav={withGameOwnerNav}>
 		<div class="players">
 			{#each players as player (player.id)}
 				{@const isCurrentPlayer = player.name === globalState.bot_name}
@@ -107,7 +107,11 @@
 						<div class="points">
 							{player.points}/{pointsToWin}
 							{#if player.promptsRemaining > 0}
-								<span class="prompts">· {player.promptsRemaining} change{player.promptsRemaining === 1 ? '' : 's'}</span>
+								<span class="prompts"
+									>· {player.promptsRemaining} change{player.promptsRemaining === 1
+										? ''
+										: 's'}</span
+								>
 							{/if}
 						</div>
 					</div>
@@ -130,11 +134,11 @@
 		max-width: 900px;
 		display: flex;
 		justify-content: center;
-		z-index: 100;
+		z-index: 140;
 		pointer-events: none;
 	}
 
-	.scoreboard.with-creator-nav {
+	.scoreboard.with-game-owner-nav {
 		top: 5.5rem;
 	}
 

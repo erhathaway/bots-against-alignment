@@ -57,7 +57,7 @@
 			0 2px 8px rgba(0, 0, 0, 0.08),
 			0 0 0 1px rgba(230, 200, 50, 0.4),
 			0 0 20px rgba(230, 200, 50, 0.15);
-		z-index: 100;
+		z-index: 120;
 	}
 
 	/* Subtle yellow signal trace at top edge */
