@@ -67,9 +67,19 @@
 
 <div class="modal-backdrop" onclick={onClose}></div>
 <div class="modal" role="dialog" aria-modal="true" onclick={(e) => e.stopPropagation()}>
+	<button class="close-btn" onclick={onClose} aria-label="Close">
+		<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+			<path
+				d="M18 6L6 18M6 6L18 18"
+				stroke="currentColor"
+				stroke-width="2.5"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			/>
+		</svg>
+	</button>
 	<div class="modal-header">
 		<h2>Game Settings</h2>
-		<button class="close-btn" onclick={onClose} aria-label="Close">×</button>
 	</div>
 
 	{#if loading}
@@ -125,9 +135,27 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(0, 0, 0, 0.85);
+		background:
+			radial-gradient(
+				ellipse at center,
+				rgba(0, 0, 0, 0.95) 0%,
+				rgba(0, 0, 0, 0.85) 60%,
+				rgba(230, 200, 50, 0.15) 100%
+			),
+			#000000;
+		backdrop-filter: blur(8px);
 		z-index: 200;
-		backdrop-filter: blur(4px);
+		box-shadow: inset 0 0 200px rgba(230, 200, 50, 0.1);
+		animation: fadeIn 300ms var(--ease);
+	}
+
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
 	}
 
 	.modal {
@@ -136,128 +164,193 @@
 		left: 50%;
 		transform: translate(-50%, -50%);
 		width: calc(100% - 4rem);
-		max-width: 500px;
-		background: #ffffff;
-		border: 2px solid #000000;
+		max-width: 540px;
+		background: rgba(0, 0, 0, 0.85);
+		backdrop-filter: blur(20px);
+		border: 2.5px solid rgba(230, 200, 50, 0.4);
 		border-radius: var(--radius-lg);
 		box-shadow:
-			0 20px 60px rgba(0, 0, 0, 0.3),
-			0 0 0 1px rgba(230, 200, 50, 0.4),
-			0 0 40px rgba(230, 200, 50, 0.2);
+			0 0 40px rgba(230, 200, 50, 0.2),
+			0 0 80px rgba(230, 200, 50, 0.1),
+			inset 0 0 60px rgba(230, 200, 50, 0.05);
 		z-index: 201;
 		display: flex;
 		flex-direction: column;
+		animation: slideIn 400ms var(--ease);
 	}
 
-	.modal-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding: 1.5rem 1.5rem 1rem;
-		border-bottom: 2px solid #000000;
-	}
-
-	.modal-header h2 {
-		font-size: 1.25rem;
-		font-weight: 700;
-		letter-spacing: 0.03em;
-		text-transform: uppercase;
-		color: var(--color-text);
+	@keyframes slideIn {
+		from {
+			opacity: 0;
+			transform: translate(-50%, -55%);
+		}
+		to {
+			opacity: 1;
+			transform: translate(-50%, -50%);
+		}
 	}
 
 	.close-btn {
-		background: none;
-		border: none;
-		font-size: 2rem;
-		line-height: 1;
+		position: absolute;
+		top: 1.5rem;
+		right: 1.5rem;
+		width: 44px;
+		height: 44px;
+		border-radius: 50%;
+		border: 2px solid var(--color-accent);
+		background: rgba(0, 0, 0, 0.9);
+		color: var(--color-accent);
 		cursor: pointer;
-		color: var(--color-text-muted);
-		transition: color 220ms var(--ease);
-		padding: 0;
-		width: 2rem;
-		height: 2rem;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		transition: all 220ms var(--ease);
+		box-shadow:
+			0 0 15px rgba(230, 200, 50, 0.2),
+			inset 0 0 20px rgba(230, 200, 50, 0.05);
+		z-index: 202;
+	}
+
+	.close-btn svg {
+		width: 20px;
+		height: 20px;
 	}
 
 	.close-btn:hover {
-		color: var(--color-text);
+		background: var(--color-accent);
+		color: #000000;
+		box-shadow:
+			0 0 25px rgba(230, 200, 50, 0.4),
+			0 0 50px rgba(230, 200, 50, 0.2);
+		transform: rotate(90deg);
+	}
+
+	.close-btn:active {
+		transform: scale(0.95) rotate(90deg);
+	}
+
+	.modal-header {
+		padding: 2.5rem 2rem 1.5rem;
+		text-align: center;
+		position: relative;
+	}
+
+	.modal-header::after {
+		content: '';
+		position: absolute;
+		bottom: 0;
+		left: 2rem;
+		right: 2rem;
+		height: 2px;
+		background: linear-gradient(
+			90deg,
+			transparent,
+			var(--color-accent) 30%,
+			var(--color-accent) 70%,
+			transparent
+		);
+		border-radius: 1px;
+		box-shadow:
+			0 0 15px rgba(230, 200, 50, 0.5),
+			0 0 30px rgba(230, 200, 50, 0.2);
+	}
+
+	.modal-header h2 {
+		font-size: 1.6rem;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: #ffffff;
+		text-shadow: 0 0 15px rgba(230, 200, 50, 0.3);
 	}
 
 	.modal-body {
-		padding: 2rem 1.5rem;
+		padding: 2.5rem 2rem;
 		display: flex;
 		flex-direction: column;
-		gap: 2rem;
+		gap: 2.5rem;
 		flex: 1;
 	}
 
 	.modal-body.loading {
 		text-align: center;
-		color: var(--color-text-muted);
+		color: rgba(255, 255, 255, 0.5);
+		font-family: var(--font-mono);
+		font-size: 1.1rem;
 	}
 
 	.setting-row {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 0.75rem;
 	}
 
 	.setting-row label {
-		font-size: 0.875rem;
-		font-weight: 600;
-		color: var(--color-text);
+		font-size: 1.1rem;
+		font-weight: 700;
+		color: var(--color-accent);
 		text-transform: uppercase;
-		letter-spacing: 0.05em;
+		letter-spacing: 0.08em;
+		font-family: var(--font-mono);
+		text-shadow: 0 0 10px rgba(230, 200, 50, 0.3);
 	}
 
 	.setting-description {
-		font-size: 0.8rem;
-		color: var(--color-text-secondary);
-		line-height: 1.4;
+		font-size: 0.95rem;
+		color: rgba(255, 255, 255, 0.6);
+		line-height: 1.5;
 		margin-bottom: 0.5rem;
+		font-family: var(--font-mono);
 	}
 
 	.setting-row input[type='number'] {
 		width: 100%;
-		font-size: 1.25rem;
-		font-weight: 600;
-		padding: 0.75rem 1rem;
-		border: 2px solid #000000;
+		font-size: 2rem;
+		font-weight: 700;
+		padding: 1rem 1.5rem;
+		border: 2px solid rgba(230, 200, 50, 0.3);
 		border-radius: var(--radius-md);
 		outline: none;
 		transition: all 220ms var(--ease);
 		text-align: center;
+		background: rgba(0, 0, 0, 0.6);
+		backdrop-filter: blur(10px);
+		color: var(--color-accent);
+		font-family: var(--font-mono);
 	}
 
 	.setting-row input[type='number']:focus {
 		border-color: var(--color-accent);
-		box-shadow: var(--glow-accent-md);
+		box-shadow:
+			0 0 20px rgba(230, 200, 50, 0.3),
+			inset 0 0 20px rgba(230, 200, 50, 0.05);
+		background: rgba(0, 0, 0, 0.8);
 	}
 
 	.setting-value {
-		font-size: 1.5rem;
+		font-size: 2rem;
 		font-weight: 700;
 		text-align: center;
 		padding: 1rem;
-		color: var(--color-text);
+		color: var(--color-accent);
+		font-family: var(--font-mono);
+		text-shadow: 0 0 15px rgba(230, 200, 50, 0.4);
 	}
 
 	.modal-footer {
 		display: flex;
 		justify-content: flex-end;
 		gap: 1rem;
-		padding: 1rem 1.5rem 1.5rem;
-		border-top: 1px solid var(--color-border-light);
+		padding: 1.5rem 2rem 2rem;
+		border-top: 1px solid rgba(230, 200, 50, 0.2);
 	}
 
 	.btn-primary,
 	.btn-secondary {
-		font-size: 0.875rem;
+		font-size: 1rem;
 		font-weight: 600;
-		letter-spacing: 0.03em;
-		padding: 0.75rem 1.5rem;
+		letter-spacing: 0.05em;
+		padding: 1rem 2rem;
 		border-radius: var(--radius-lg);
 		cursor: pointer;
 		transition: all 220ms var(--ease);
@@ -265,31 +358,87 @@
 	}
 
 	.btn-primary {
-		background: #000000;
-		color: #ffffff;
-		border: 2px solid #000000;
+		background: rgba(0, 0, 0, 0.9);
+		color: var(--color-accent);
+		border: 2.5px solid var(--color-accent);
+		box-shadow:
+			0 0 15px rgba(230, 200, 50, 0.2),
+			inset 0 0 25px rgba(230, 200, 50, 0.05);
 	}
 
 	.btn-primary:hover:not(:disabled) {
-		background: #ffffff;
+		background: var(--color-accent);
 		color: #000000;
-		border-color: var(--color-accent);
-		box-shadow: var(--glow-accent-md);
+		box-shadow:
+			0 0 25px rgba(230, 200, 50, 0.4),
+			0 0 50px rgba(230, 200, 50, 0.2);
+		text-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+	}
+
+	.btn-primary:active:not(:disabled) {
+		transform: scale(0.97);
+		box-shadow:
+			0 0 35px rgba(230, 200, 50, 0.5),
+			0 0 70px rgba(230, 200, 50, 0.3);
 	}
 
 	.btn-primary:disabled {
-		opacity: 0.5;
+		opacity: 0.3;
 		cursor: not-allowed;
+		border-color: rgba(230, 200, 50, 0.2);
+		color: rgba(230, 200, 50, 0.3);
+		box-shadow: none;
 	}
 
 	.btn-secondary {
-		background: #ffffff;
-		color: var(--color-text);
-		border: 2px solid #000000;
+		background: rgba(0, 0, 0, 0.6);
+		color: rgba(255, 255, 255, 0.7);
+		border: 2px solid rgba(255, 255, 255, 0.3);
 	}
 
 	.btn-secondary:hover {
-		background: #000000;
+		background: rgba(255, 255, 255, 0.1);
 		color: #ffffff;
+		border-color: rgba(255, 255, 255, 0.5);
+	}
+
+	.btn-secondary:active {
+		transform: scale(0.97);
+	}
+
+	@media (max-width: 768px) {
+		.modal {
+			width: calc(100% - 2rem);
+			max-width: 100%;
+		}
+
+		.modal-header h2 {
+			font-size: 1.3rem;
+		}
+
+		.setting-row label {
+			font-size: 1rem;
+		}
+
+		.setting-description {
+			font-size: 0.85rem;
+		}
+
+		.setting-row input[type='number'],
+		.setting-value {
+			font-size: 1.6rem;
+		}
+
+		.close-btn {
+			width: 40px;
+			height: 40px;
+			top: 1rem;
+			right: 1rem;
+		}
+
+		.close-btn svg {
+			width: 18px;
+			height: 18px;
+		}
 	}
 </style>

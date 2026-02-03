@@ -6,10 +6,12 @@
 		onRemoveAi: (playerId: string) => void;
 		onOpenSettings: () => void;
 		onStartGame: () => void;
+		onForceStart: () => void;
 		joinedBots: BotInfo[];
 		addingAi: boolean;
 		startingGame: boolean;
 		canStart: boolean;
+		countdownRemaining: number | null;
 	};
 
 	let {
@@ -17,13 +19,23 @@
 		onRemoveAi,
 		onOpenSettings,
 		onStartGame,
+		onForceStart,
 		joinedBots,
 		addingAi,
 		startingGame,
-		canStart
+		canStart,
+		countdownRemaining
 	}: Props = $props();
 
 	let aiBots = $derived(joinedBots.filter((b) => b.isAuto));
+	let isCountdownActive = $derived(countdownRemaining != null && countdownRemaining > 0);
+
+	function formatCountdown(ms: number) {
+		const totalSeconds = Math.ceil(ms / 1000);
+		const minutes = Math.floor(totalSeconds / 60);
+		const seconds = totalSeconds % 60;
+		return `${minutes}:${String(seconds).padStart(2, '0')}`;
+	}
 </script>
 
 <nav class="game-owner-nav">
@@ -75,18 +87,37 @@
 		{/if}
 	</div>
 
-	<button class="start-btn" onclick={onStartGame} disabled={!canStart || startingGame}>
-		<div class="start-content">
-			{#if startingGame}
-				<span class="start-text">Starting...</span>
-			{:else}
-				<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+	{#if isCountdownActive}
+		<!-- Countdown Display + Start Immediately Button -->
+		<div class="countdown-section">
+			<div class="countdown-display">
+				<div class="countdown-label">Starting in</div>
+				<div class="countdown-timer">
+					{formatCountdown(countdownRemaining!)}
+				</div>
+			</div>
+			<button class="force-start-btn" onclick={onForceStart} disabled={startingGame}>
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
 					<path d="M8 5v14l11-7z" />
 				</svg>
-				<span class="start-text">Start Game</span>
-			{/if}
+				<span>{startingGame ? 'Starting...' : 'Start Now'}</span>
+			</button>
 		</div>
-	</button>
+	{:else}
+		<!-- Normal Start Game Button -->
+		<button class="start-btn" onclick={onStartGame} disabled={!canStart || startingGame}>
+			<div class="start-content">
+				{#if startingGame}
+					<span class="start-text">Starting...</span>
+				{:else}
+					<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+						<path d="M8 5v14l11-7z" />
+					</svg>
+					<span class="start-text">Start Game</span>
+				{/if}
+			</div>
+		</button>
+	{/if}
 </nav>
 
 <style>
@@ -185,6 +216,73 @@
 		color: #ffffff;
 	}
 
+	/* Countdown Section */
+	.countdown-section {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		padding: 0 1.5rem;
+		border-left: 3px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.countdown-display {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.125rem;
+	}
+
+	.countdown-label {
+		font-size: 0.7rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: rgba(255, 255, 255, 0.5);
+	}
+
+	.countdown-timer {
+		font-size: 1.5rem;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		color: var(--color-accent);
+		text-shadow: 0 0 10px rgba(230, 200, 50, 0.3);
+		letter-spacing: 0.05em;
+	}
+
+	.force-start-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.625rem;
+		padding: 0.75rem 1.25rem;
+		background: rgba(255, 255, 255, 0.1);
+		color: var(--color-accent);
+		border: 2px solid var(--color-accent);
+		border-radius: var(--radius-md);
+		font-size: 0.9rem;
+		font-weight: 700;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		cursor: pointer;
+		transition: all 220ms var(--ease);
+		white-space: nowrap;
+	}
+
+	.force-start-btn:hover:not(:disabled) {
+		background: var(--color-accent);
+		color: #000000;
+		box-shadow: 0 0 20px rgba(230, 200, 50, 0.4);
+	}
+
+	.force-start-btn:active:not(:disabled) {
+		transform: scale(0.98);
+	}
+
+	.force-start-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	/* Normal Start Button */
 	.start-btn {
 		min-width: 280px;
 		background: var(--color-accent);

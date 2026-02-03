@@ -80,6 +80,8 @@
 	let joinedBots = $state<BotInfo[]>([]);
 	let addingAi = $state(false);
 	let isCountdownPending = $state(false);
+	let countdownStartedAt = $state<number | null>(null);
+	let countdownRemaining = $state<number | null>(null);
 
 	async function addAiPlayer() {
 		if (addingAi) return;
@@ -150,7 +152,10 @@
 				body: JSON.stringify({ creatorId: globalState.creator_id })
 			});
 
-			if (!response.ok) {
+			if (response.ok) {
+				const data = await response.json();
+				countdownStartedAt = data.countdownStartedAt;
+			} else {
 				const data = await response.json();
 				addNotification({
 					source_url: 'game',
@@ -159,6 +164,46 @@
 					kind: NotificationKind.ERROR,
 					action_url: url,
 					action_text: 'start_countdown'
+				});
+			}
+		} finally {
+			isCountdownPending = false;
+		}
+	}
+
+	async function forceStartGame() {
+		if (isCountdownPending) return;
+		isCountdownPending = true;
+		try {
+			if (globalState.creator_id == null) throw new Error('Only the creator can start the game');
+			if (globalState.is_game_started) throw new Error('Game already started');
+			if (globalState.game_id == null) throw new Error('Game ID is null');
+			const url = `/api/game/${globalState.game_id}/start`;
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ creatorId: globalState.creator_id })
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				if (data.status === 'ALIGNER_SETUP') {
+					globalState.is_collecting_aligner_prompts = true;
+				} else {
+					globalState.is_game_started = true;
+				}
+				// Clear countdown
+				countdownStartedAt = null;
+				countdownRemaining = null;
+			} else {
+				const data = await response.json();
+				addNotification({
+					source_url: 'game',
+					title: 'Error starting game',
+					body: data.error || data.message || JSON.stringify(data),
+					kind: NotificationKind.ERROR,
+					action_url: url,
+					action_text: 'start_game'
 				});
 			}
 		} finally {
@@ -183,6 +228,10 @@
 				joinedBots = data.bots as BotInfo[];
 			}
 
+			if (data.countdownStartedAt !== undefined) {
+				countdownStartedAt = data.countdownStartedAt;
+			}
+
 			const status = data.status;
 			if (status === 'ALIGNER_SETUP') {
 				globalState.is_collecting_aligner_prompts = true;
@@ -203,6 +252,22 @@
 		untrack(() => fetchGameStatus());
 		const intervalId = setInterval(fetchGameStatus, 3000);
 		return () => clearInterval(intervalId);
+	});
+
+	// Countdown timer — ticks every second when active
+	$effect(() => {
+		if (!countdownStartedAt) {
+			countdownRemaining = null;
+			return;
+		}
+		const update = () => {
+			const elapsed = Date.now() - countdownStartedAt!;
+			const remaining = Math.max(0, 3 * 60 * 1000 - elapsed);
+			countdownRemaining = remaining;
+		};
+		update();
+		const id = setInterval(update, 1000);
+		return () => clearInterval(id);
 	});
 
 	// =====================
@@ -289,11 +354,13 @@
 		onAddAi={addAiPlayer}
 		onRemoveAi={removeAiPlayer}
 		onStartGame={beginCountdown}
+		onForceStart={forceStartGame}
 		onOpenSettings={() => (showSettingsModal = true)}
 		{joinedBots}
 		{addingAi}
 		startingGame={isCountdownPending}
 		{canStart}
+		{countdownRemaining}
 		onLeave={handleLeave}
 		{isLeavePending}
 		{messages}
