@@ -24,6 +24,8 @@
 		botPrompt: ''
 	});
 
+	const isFormValid = $derived(botName.trim() !== '' && botPrompt.trim() !== '');
+
 	function setOutlineColor(id: string, color: string) {
 		const el = document.getElementById(id);
 		if (el instanceof HTMLElement) {
@@ -264,7 +266,7 @@
 			{#if joinLoading}
 				<LoadingBars />
 			{:else}
-				<button class="enter-button" onclick={handleJoin}>Enter</button>
+				<button class="enter-button" onclick={handleJoin} disabled={!isFormValid}>Enter</button>
 			{/if}
 		</div>
 	</div>
@@ -336,35 +338,7 @@
 		flex-direction: column;
 		gap: 0.75rem;
 		padding: 2rem;
-		border: 2.5px solid rgba(230, 200, 50, 0.4);
-		border-radius: var(--radius-lg);
-		background: rgba(0, 0, 0, 0.85);
-		backdrop-filter: blur(20px);
-		box-shadow:
-			0 0 40px rgba(230, 200, 50, 0.2),
-			0 0 80px rgba(230, 200, 50, 0.1),
-			inset 0 0 60px rgba(230, 200, 50, 0.05);
 		position: relative;
-	}
-
-	.panel::before {
-		content: '';
-		position: absolute;
-		top: -1px;
-		left: 1.5rem;
-		right: 1.5rem;
-		height: 3px;
-		background: linear-gradient(
-			90deg,
-			transparent,
-			var(--color-accent) 30%,
-			var(--color-accent) 70%,
-			transparent
-		);
-		border-radius: 2px;
-		box-shadow:
-			0 0 20px rgba(230, 200, 50, 0.6),
-			0 0 40px rgba(230, 200, 50, 0.3);
 	}
 
 	/* ── Panel header ── */
@@ -376,7 +350,7 @@
 
 	.panel-number {
 		font-family: var(--font-mono);
-		font-size: 0.7rem;
+		font-size: 1rem;
 		font-weight: 600;
 		letter-spacing: 0.1em;
 		color: var(--color-accent);
@@ -385,8 +359,8 @@
 	}
 
 	.panel-header h2 {
-		font-size: 0.8rem;
-		font-weight: 600;
+		font-size: 1.6rem;
+		font-weight: 700;
 		letter-spacing: 0.15em;
 		text-transform: uppercase;
 		color: #ffffff;
@@ -395,7 +369,7 @@
 	}
 
 	.panel-desc {
-		font-size: 0.75rem;
+		font-size: 0.95rem;
 		font-family: var(--font-mono);
 		color: rgba(255, 255, 255, 0.5);
 		line-height: 1.5;
@@ -405,9 +379,9 @@
 	/* ── Input fields ── */
 	.panel textarea,
 	.panel input {
-		font-size: 0.875rem;
+		font-size: 1.1rem;
 		font-family: var(--font-mono);
-		padding: 0.875rem 3rem 0.875rem 1rem;
+		padding: 1.25rem 3.5rem 1.25rem 1.5rem;
 		border: 2px solid rgba(230, 200, 50, 0.2);
 		border-radius: var(--radius-sm);
 		outline: none;
@@ -431,7 +405,7 @@
 	}
 
 	.panel textarea {
-		min-height: 8rem;
+		min-height: 10rem;
 		resize: vertical;
 	}
 
@@ -444,10 +418,10 @@
 	/* ── Randomize button (embedded) ── */
 	.embeded-button {
 		position: absolute;
-		top: 0.5rem;
-		right: 0.5rem;
-		width: 36px;
-		height: 36px;
+		top: 0.75rem;
+		right: 0.75rem;
+		width: 44px;
+		height: 44px;
 		border-radius: 50%;
 		border: 1.5px solid rgba(230, 200, 50, 0.3);
 		background: rgba(0, 0, 0, 0.8);
@@ -469,8 +443,8 @@
 	}
 
 	.embeded-button svg {
-		width: 14px;
-		height: 14px;
+		width: 18px;
+		height: 18px;
 	}
 
 	.embeded-button:hover {
@@ -494,10 +468,10 @@
 	/* ── Enter button ── */
 	.enter-button {
 		font-weight: 600;
-		font-size: 1rem;
+		font-size: 1.25rem;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
-		padding: 1rem 3rem;
+		padding: 1.25rem 3.5rem;
 		border: 2.5px solid var(--color-accent);
 		background: rgba(0, 0, 0, 0.9);
 		color: var(--color-accent);
@@ -507,7 +481,7 @@
 			inset 0 0 30px rgba(230, 200, 50, 0.05);
 		cursor: pointer;
 		transition: all 220ms var(--ease);
-		min-width: 220px;
+		min-width: 260px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -516,11 +490,11 @@
 	.enter-button::before {
 		content: '';
 		display: inline-block;
-		width: 6px;
-		height: 6px;
+		width: 8px;
+		height: 8px;
 		background: var(--color-accent);
 		border-radius: 50%;
-		margin-right: 0.75rem;
+		margin-right: 0.85rem;
 		box-shadow:
 			0 0 10px rgba(230, 200, 50, 0.8),
 			0 0 20px rgba(230, 200, 50, 0.4);
@@ -550,6 +524,37 @@
 		box-shadow:
 			0 0 40px rgba(230, 200, 50, 0.6),
 			0 0 80px rgba(230, 200, 50, 0.4);
+	}
+
+	.enter-button:disabled {
+		opacity: 0.3;
+		cursor: not-allowed;
+		border-color: rgba(230, 200, 50, 0.2);
+		color: rgba(230, 200, 50, 0.3);
+		box-shadow: none;
+	}
+
+	.enter-button:disabled::before {
+		opacity: 0.3;
+		box-shadow:
+			0 0 5px rgba(230, 200, 50, 0.2),
+			0 0 10px rgba(230, 200, 50, 0.1);
+	}
+
+	.enter-button:disabled:hover {
+		background: rgba(0, 0, 0, 0.9);
+		color: rgba(230, 200, 50, 0.3);
+		border-color: rgba(230, 200, 50, 0.2);
+		box-shadow: none;
+		text-shadow: none;
+		transform: none;
+	}
+
+	.enter-button:disabled:hover::before {
+		background: var(--color-accent);
+		box-shadow:
+			0 0 5px rgba(230, 200, 50, 0.2),
+			0 0 10px rgba(230, 200, 50, 0.1);
 	}
 
 	/* ── Scrollbar styling ── */

@@ -163,39 +163,11 @@
 		flex-direction: column;
 		align-items: center;
 		padding: 3rem;
-		border: 2.5px solid rgba(230, 200, 50, 0.4);
-		background: rgba(0, 0, 0, 0.85);
-		backdrop-filter: blur(20px);
-		border-radius: var(--radius-lg);
-		box-shadow:
-			0 0 40px rgba(230, 200, 50, 0.2),
-			0 0 80px rgba(230, 200, 50, 0.1),
-			inset 0 0 60px rgba(230, 200, 50, 0.05);
 		position: relative;
 	}
 
-	.join-game-container::before {
-		content: '';
-		position: absolute;
-		top: -1px;
-		left: 2rem;
-		right: 2rem;
-		height: 3px;
-		background: linear-gradient(
-			90deg,
-			transparent,
-			var(--color-accent) 30%,
-			var(--color-accent) 70%,
-			transparent
-		);
-		border-radius: 2px;
-		box-shadow:
-			0 0 20px rgba(230, 200, 50, 0.6),
-			0 0 40px rgba(230, 200, 50, 0.3);
-	}
-
 	.join-game-container p {
-		font-size: 1rem;
+		font-size: 1.5rem;
 		font-weight: 600;
 		letter-spacing: 0.12em;
 		text-transform: uppercase;
@@ -205,9 +177,9 @@
 	}
 
 	input {
-		font-size: 0.85rem;
+		font-size: 1.1rem;
 		font-family: var(--font-mono);
-		padding: 0.875rem 1rem;
+		padding: 1.25rem 1.5rem;
 		border: 2px solid rgba(230, 200, 50, 0.2);
 		border-radius: var(--radius-sm);
 		outline: none;
@@ -231,11 +203,11 @@
 	}
 
 	button {
-		font-size: 0.95rem;
+		font-size: 1.25rem;
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
-		padding: 0.75rem 2.5rem;
+		padding: 1rem 3rem;
 		border: 2.5px solid var(--color-accent);
 		background: rgba(0, 0, 0, 0.9);
 		color: var(--color-accent);
@@ -267,7 +239,7 @@
 	.error {
 		color: var(--color-accent);
 		letter-spacing: 0.04em;
-		font-size: 0.875rem;
+		font-size: 1.1rem;
 		text-shadow: 0 0 10px rgba(230, 200, 50, 0.4);
 	}
 
@@ -288,7 +260,7 @@
 	}
 
 	.subtext {
-		font-size: 0.7rem;
+		font-size: 0.9rem;
 		color: rgba(255, 255, 255, 0.5);
 		margin-bottom: 1.25rem;
 		letter-spacing: 0.02em;
