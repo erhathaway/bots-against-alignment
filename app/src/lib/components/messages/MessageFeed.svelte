@@ -15,8 +15,20 @@
 	export type FeedMessage = {
 		id: number;
 		senderName: string | null;
-		message: string;
-		type: 'chat' | 'status' | 'system';
+		content: string;
+		type:
+			| 'player_joined'
+			| 'player_left'
+			| 'countdown_started'
+			| 'game_started'
+			| 'aligner_prompt_submitted'
+			| 'chat'
+			| 'turn_started'
+			| 'bot_response'
+			| 'aligner_deliberation'
+			| 'round_winner'
+			| 'standings'
+			| 'game_over';
 	};
 
 	type Props = {
@@ -40,7 +52,7 @@
 	// Find the last Turn Prompt message to determine which is the current turn
 	const lastTurnPromptId = $derived(() => {
 		for (let i = messages.length - 1; i >= 0; i--) {
-			if (messages[i].type === 'system' && messages[i].senderName === 'Turn Prompt') {
+			if (messages[i].type === 'turn_started') {
 				return messages[i].id;
 			}
 		}
@@ -73,8 +85,8 @@
 
 <div class="message-container" bind:this={container}>
 	{#each messages as message (message.id)}
-		{#if message.type === 'system' && message.senderName === 'Game Start'}
-			{@const info = tryParseJSON(message.message)}
+		{#if message.type === 'game_started'}
+			{@const info = tryParseJSON(message.content)}
 			{#if info}
 				<GameStartMessage
 					pointsToWin={info.pointsToWin}
@@ -83,34 +95,32 @@
 					ai={info.ai}
 				/>
 			{/if}
-		{:else if message.type === 'system' && message.senderName === 'Turn Prompt'}
+		{:else if message.type === 'turn_started'}
 			<TurnPromptMessage
-				prompt={message.message}
+				prompt={message.content}
 				isCurrentTurn={message.id === lastTurnPromptId()}
 				hasSubmitted={hasSubmittedTurn}
 				onShowModal={onShowBotModal}
 			/>
-		{:else if message.type === 'system' && message.senderName === 'Round Winner'}
-			{@const win = tryParseJSON(message.message)}
+		{:else if message.type === 'round_winner'}
+			{@const win = tryParseJSON(message.content)}
 			{#if win}
 				<RoundWinnerMessage name={win.name} score={win.score} />
 			{/if}
-		{:else if message.type === 'system' && message.senderName === 'Standings'}
-			{@const rows = tryParseJSON(message.message)}
+		{:else if message.type === 'standings'}
+			{@const rows = tryParseJSON(message.content)}
 			{#if rows}
 				<StandingsMessage {rows} />
 			{/if}
-		{:else if message.type === 'system' && message.senderName === 'The Aligner'}
-			<AlignerMessage message={message.message} />
-		{:else if message.type === 'system' && message.senderName === 'Game Over'}
-			{@const winner = tryParseJSON(message.message)}
+		{:else if message.type === 'aligner_deliberation'}
+			<AlignerMessage message={message.content} />
+		{:else if message.type === 'game_over'}
+			{@const winner = tryParseJSON(message.content)}
 			{#if winner}
 				<GameOverMessage {winner} />
 			{/if}
-		{:else if message.type === 'system'}
-			<SystemMessage message={message.message} />
-		{:else if message.type === 'status' && message.senderName === 'Bot Response'}
-			{@const bot = tryParseJSON(message.message)}
+		{:else if message.type === 'bot_response'}
+			{@const bot = tryParseJSON(message.content)}
 			{#if bot}
 				<BotResponseMessage
 					name={bot.name}
@@ -119,18 +129,23 @@
 					mine={isMe(bot.name)}
 				/>
 			{/if}
-		{:else if message.type === 'status'}
+		{:else if message.type === 'player_joined' || message.type === 'player_left' || message.type === 'aligner_prompt_submitted'}
 			<StatusMessage
 				senderName={message.senderName ?? 'Unknown'}
-				message={message.message}
+				message={message.content}
 				isMe={isMe(message.senderName)}
 			/>
-		{:else}
+		{:else if message.type === 'countdown_started'}
+			<SystemMessage message={message.content} />
+		{:else if message.type === 'chat'}
 			<ChatBubble
 				senderName={message.senderName ?? 'Unknown'}
-				message={message.message}
+				message={message.content}
 				isUser={isMe(message.senderName)}
 			/>
+		{:else}
+			<!-- Fallback for unknown message types -->
+			<SystemMessage message={message.content} />
 		{/if}
 	{/each}
 	{#if showAlignerTyping}

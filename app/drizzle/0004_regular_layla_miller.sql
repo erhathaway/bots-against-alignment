@@ -1,1 +1,0 @@
-ALTER TABLE `games` ADD `countdown_started_at` integer;

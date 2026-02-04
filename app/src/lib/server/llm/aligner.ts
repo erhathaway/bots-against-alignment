@@ -3,7 +3,7 @@ import { streamText } from 'ai';
 import { isMockMode, modelAligner } from './config';
 import { mockPickWinner } from './mock';
 import { getOpenAI } from './provider';
-import { postChatMessage } from '$lib/server/chat/service';
+import { messageQueue } from '$lib/server/messages';
 
 type ResponseMap = Record<string, string>;
 
@@ -70,12 +70,8 @@ export const pickWinner = async ({
 
 	prompt += '\n\nDeliberate dramatically, then declare the winner.';
 
-	await postChatMessage({
-		gameId,
-		message: 'The Aligner is deliberating...',
-		senderName: ALIGNER_SENDER,
-		type: 'system'
-	});
+	// Note: The initial "deliberating..." message is published by the processor
+	// before calling this function, so we don't need to publish it here
 
 	const openai = getOpenAI();
 
@@ -98,11 +94,13 @@ export const pickWinner = async ({
 
 	const postAligner = async (message: string) => {
 		await randomDelay();
-		await postChatMessage({
+		await messageQueue.publish({
 			gameId,
-			message,
+			channel: 'buffered',
+			type: 'aligner_deliberation',
 			senderName: ALIGNER_SENDER,
-			type: 'system'
+			content: message,
+			bufferDuration: 2000
 		});
 	};
 

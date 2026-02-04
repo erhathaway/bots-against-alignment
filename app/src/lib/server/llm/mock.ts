@@ -1,4 +1,4 @@
-import { postChatMessage } from '$lib/server/chat/service';
+import { messageQueue } from '$lib/server/messages';
 import { randomAlignerPrompt, randomBotName, randomBotPrompt } from '$lib/server/game/data';
 
 const MOCK_RESPONSES = [
@@ -37,20 +37,18 @@ export const mockPickWinner = async ({
 }) => {
 	const ALIGNER_SENDER = 'The Aligner';
 
-	await postChatMessage({
-		gameId,
-		message: 'The Aligner is deliberating...',
-		senderName: ALIGNER_SENDER,
-		type: 'system'
-	});
+	// Note: The initial "deliberating..." message is published by the processor
+	// before calling this function, so we skip it here
 
 	for (const line of MOCK_DELIBERATIONS) {
 		await delay(300);
-		await postChatMessage({
+		await messageQueue.publish({
 			gameId,
-			message: line,
+			channel: 'buffered',
+			type: 'aligner_deliberation',
 			senderName: ALIGNER_SENDER,
-			type: 'system'
+			content: line,
+			bufferDuration: 2000
 		});
 	}
 

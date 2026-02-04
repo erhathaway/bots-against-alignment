@@ -11,7 +11,7 @@ import {
 	generateRandomBotPrompt
 } from '$lib/server/llm/random';
 import { badRequest, forbidden, notFound } from '$lib/server/errors';
-import { postChatMessage } from '$lib/server/chat/service';
+import { messageQueue } from '$lib/server/messages';
 import { checkLLMAvailability } from '$lib/server/llm/health';
 
 const DEFAULT_POINTS_TO_WIN = 2;
@@ -158,11 +158,12 @@ export const joinGame = async ({
 	});
 
 	const isCreator = Boolean(shouldBecomeCreator);
-	await postChatMessage({
+	await messageQueue.publish({
 		gameId,
-		message: isCreator ? 'created the game' : 'joined the waiting room',
+		channel: 'instant',
+		type: 'player_joined',
 		senderName: botName,
-		type: 'status'
+		content: isCreator ? 'created the game' : 'joined the waiting room'
 	});
 
 	// Seed default AI bots in the background when the creator joins
@@ -172,11 +173,12 @@ export const joinGame = async ({
 			for (let i = 0; i < DEFAULT_AI_BOTS; i++) {
 				try {
 					const { botName: aiBotName } = await createAutoPlayer(gameId);
-					await postChatMessage({
+					await messageQueue.publish({
 						gameId,
-						message: 'joined the waiting room',
+						channel: 'instant',
+						type: 'player_joined',
 						senderName: aiBotName,
-						type: 'status'
+						content: 'joined the waiting room'
 					});
 				} catch (error) {
 					console.error(`[seedAiBots] Failed to create AI bot for game ${gameId}:`, error);
@@ -248,10 +250,17 @@ export const startCountdown = async ({
 		.set({ countdownStartedAt: timestamp, updatedAt: timestamp })
 		.where(eq(games.id, gameId));
 
-	await postChatMessage({
+	await messageQueue.publish({
 		gameId,
-		message: 'The host started the countdown! Make sure your prompts are ready!',
-		type: 'system'
+		channel: 'instant',
+		type: 'countdown_started',
+		content: 'The host started the countdown! Make sure your prompts are ready!',
+		metadata: {
+			stateChange: {
+				action: 'start_countdown',
+				payload: { creatorId }
+			}
+		}
 	});
 
 	return { countdownStartedAt: timestamp };
@@ -291,10 +300,17 @@ export const startGame = async ({ gameId, creatorId }: { gameId: string; creator
 		.set({ promptsRemaining: game.botPromptChanges, updatedAt: timestamp })
 		.where(and(eq(players.gameId, gameId), isNull(players.leftAt)));
 
-	await postChatMessage({
+	await messageQueue.publish({
 		gameId,
-		message: 'The game is starting! Submit your aligner instructions.',
-		type: 'system'
+		channel: 'instant',
+		type: 'game_started',
+		content: 'The game is starting! Submit your aligner instructions.',
+		metadata: {
+			stateChange: {
+				action: 'start_game',
+				payload: {}
+			}
+		}
 	});
 
 	// Check if all players already have aligner prompts (e.g. all AI)
@@ -350,17 +366,18 @@ const tryCompleteAlignerSetup = async (
 	const humanNames = allPlayerData.filter((p) => !p.isAuto).map((p) => p.botName);
 	const autoNames = allPlayerData.filter((p) => p.isAuto).map((p) => p.botName);
 
-	await postChatMessage({
+	await messageQueue.publish({
 		gameId,
+		channel: 'instant',
+		type: 'game_started',
 		senderName: 'Game Start',
-		message: JSON.stringify({
+		content: JSON.stringify({
 			totalBots: allPlayerData.length,
 			pointsToWin,
 			botPromptChanges,
 			humans: humanNames,
 			ai: autoNames
-		}),
-		type: 'system'
+		})
 	});
 
 	return true;
@@ -397,11 +414,12 @@ export const submitAlignerPrompt = async ({
 			set: { prompt }
 		});
 
-	await postChatMessage({
+	await messageQueue.publish({
 		gameId,
-		message: 'submitted their aligner instruction',
+		channel: 'instant',
+		type: 'aligner_prompt_submitted',
 		senderName: playerRows[0].id === game.creatorPlayerId ? 'Host' : 'A player',
-		type: 'status'
+		content: 'submitted their aligner instruction'
 	});
 
 	const activePlayers = await db
@@ -558,11 +576,18 @@ export const ensureTurn = async (gameId: string) => {
 	});
 
 	if (result.isNew) {
-		await postChatMessage({
+		await messageQueue.publish({
 			gameId,
+			channel: 'buffered',
+			type: 'turn_started',
 			senderName: 'Turn Prompt',
-			message: result.alignmentPrompt,
-			type: 'system'
+			content: result.alignmentPrompt,
+			metadata: {
+				stateChange: {
+					action: 'start_turn',
+					payload: { turnId: result.turnId, prompt: result.alignmentPrompt }
+				}
+			}
 		});
 	}
 
@@ -602,11 +627,12 @@ const completeAutoPlayers = async (gameId: string, turnId: number, turnPrompt: s
 				});
 		});
 
-		await postChatMessage({
+		await messageQueue.publish({
 			gameId,
+			channel: 'buffered',
+			type: 'bot_response',
 			senderName: 'Bot Response',
-			message: JSON.stringify({ name: bot.botName, text: responseText }),
-			type: 'status'
+			content: JSON.stringify({ name: bot.botName, text: responseText })
 		});
 	}
 };
@@ -679,11 +705,12 @@ export const submitTurn = async ({
 			});
 	});
 
-	await postChatMessage({
+	await messageQueue.publish({
 		gameId,
+		channel: 'buffered',
+		type: 'bot_response',
 		senderName: 'Bot Response',
-		message: JSON.stringify({ name: player.botName, text: responseText }),
-		type: 'status'
+		content: JSON.stringify({ name: player.botName, text: responseText })
 	});
 
 	if (game.creatorPlayerId && playerId === game.creatorPlayerId && game.turnPrompt) {
@@ -885,34 +912,37 @@ export const processTurn = async ({
 
 	const winner = updatedPlayers.find((p) => p.id === winnerId);
 	if (winner) {
-		await postChatMessage({
+		await messageQueue.publish({
 			gameId,
+			channel: 'buffered',
+			type: 'round_winner',
 			senderName: 'Round Winner',
-			message: JSON.stringify({
+			content: JSON.stringify({
 				name: winner.botName,
 				score: winner.score,
 				isAuto: winner.isAuto
-			}),
-			type: 'system'
+			})
 		});
 	}
 
 	const standings = updatedPlayers
 		.sort((a, b) => b.score - a.score)
 		.map((p) => ({ name: p.botName, score: p.score, isAuto: p.isAuto }));
-	await postChatMessage({
+	await messageQueue.publish({
 		gameId,
+		channel: 'buffered',
+		type: 'standings',
 		senderName: 'Standings',
-		message: JSON.stringify(standings),
-		type: 'system'
+		content: JSON.stringify(standings)
 	});
 
 	if (isGameOver && winner) {
-		await postChatMessage({
+		await messageQueue.publish({
 			gameId,
+			channel: 'buffered',
+			type: 'game_over',
 			senderName: 'Game Over',
-			message: JSON.stringify({ name: winner.botName, score: winner.score }),
-			type: 'system'
+			content: JSON.stringify({ name: winner.botName, score: winner.score })
 		});
 	}
 
@@ -981,26 +1011,29 @@ export const leaveGame = async ({ gameId, playerId }: { gameId: string; playerId
 		}
 	});
 
-	await postChatMessage({
+	await messageQueue.publish({
 		gameId,
-		message: gameStatus === 'LOBBY' ? 'left the waiting room' : 'left the game',
+		channel: 'instant',
+		type: 'player_left',
 		senderName: player.botName,
-		type: 'status'
+		content: gameStatus === 'LOBBY' ? 'left the waiting room' : 'left the game'
 	});
 
 	if (hostTransferred && newHostName) {
-		await postChatMessage({
+		await messageQueue.publish({
 			gameId,
-			message: `${newHostName} is now the host`,
-			type: 'system'
+			channel: 'instant',
+			type: 'player_left',
+			content: `${newHostName} is now the host`
 		});
 	}
 
 	if (gameEnded) {
-		await postChatMessage({
+		await messageQueue.publish({
 			gameId,
-			message: 'Game ended — all players left',
-			type: 'system'
+			channel: 'instant',
+			type: 'game_over',
+			content: 'Game ended — all players left'
 		});
 	}
 
@@ -1045,11 +1078,12 @@ export const addAutoPlayer = async ({
 
 	const { playerId, botName } = await createAutoPlayer(gameId);
 
-	await postChatMessage({
+	await messageQueue.publish({
 		gameId,
-		message: 'joined the waiting room',
+		channel: 'instant',
+		type: 'player_joined',
 		senderName: botName,
-		type: 'status'
+		content: 'joined the waiting room'
 	});
 
 	return { playerId, botName };
@@ -1095,11 +1129,12 @@ export const removeAutoPlayer = async ({
 			.where(and(eq(alignerPrompts.gameId, gameId), eq(alignerPrompts.playerId, playerId)));
 	});
 
-	await postChatMessage({
+	await messageQueue.publish({
 		gameId,
-		message: 'left the waiting room',
+		channel: 'instant',
+		type: 'player_left',
 		senderName: player.botName,
-		type: 'status'
+		content: 'left the waiting room'
 	});
 
 	// Clear countdown if fewer than 2 players remain

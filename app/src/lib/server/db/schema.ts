@@ -93,16 +93,36 @@ export const turnResponses = sqliteTable(
 	})
 );
 
-export const chatMessages = sqliteTable('chat_messages', {
+export const gameMessages = sqliteTable('game_messages', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
 	gameId: text('game_id')
 		.notNull()
 		.references(() => games.id, { onDelete: 'cascade' }),
-	senderName: text('sender_name'),
-	message: text('message').notNull(),
-	type: text('type', { enum: ['chat', 'status', 'system'] })
+	channel: text('channel', { enum: ['instant', 'buffered'] })
 		.notNull()
-		.default('chat'),
+		.default('instant'),
+	type: text('type', {
+		enum: [
+			'player_joined',
+			'player_left',
+			'countdown_started',
+			'game_started',
+			'aligner_prompt_submitted',
+			'chat',
+			'turn_started',
+			'bot_response',
+			'aligner_deliberation',
+			'round_winner',
+			'standings',
+			'game_over'
+		]
+	}).notNull(),
+	senderName: text('sender_name'),
+	content: text('content').notNull(),
+	metadata: text('metadata'), // JSON string
+	bufferDuration: integer('buffer_duration'), // milliseconds
+	publishedAt: integer('published_at'), // When made visible to clients
+	windowEndsAt: integer('window_ends_at'), // publishedAt + bufferDuration
 	createdAt: integer('created_at').notNull()
 });
 

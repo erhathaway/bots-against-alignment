@@ -1,8 +1,15 @@
+/**
+ * Chat endpoint - handles player chat messages
+ * POST: Send a chat message
+ * GET: Poll for messages (delegates to /messages endpoint)
+ */
+
 import { z } from 'zod';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-import { postChatMessage, getChatMessages } from '$lib/server/chat/service';
+import { messageQueue } from '$lib/server/messages';
+import { getPublishedMessages } from '$lib/server/messages/service';
 import { handleApiError, jsonError } from '$lib/server/http';
 
 const postSchema = z.object({
@@ -18,14 +25,15 @@ export const POST: RequestHandler = async ({ params, request }) => {
 			return jsonError(400, 'Invalid request', parsed.error.flatten());
 		}
 
-		const row = await postChatMessage({
+		await messageQueue.publish({
 			gameId: params.gameId,
-			message: parsed.data.message,
+			channel: 'instant',
+			type: 'chat',
 			senderName: parsed.data.senderName,
-			type: 'chat'
+			content: parsed.data.message
 		});
 
-		return json(row);
+		return json({ success: true });
 	} catch (error) {
 		return handleApiError(error);
 	}
@@ -34,10 +42,7 @@ export const POST: RequestHandler = async ({ params, request }) => {
 export const GET: RequestHandler = async ({ params, url }) => {
 	try {
 		const afterId = Number(url.searchParams.get('after') ?? '0');
-		const messages = await getChatMessages(
-			params.gameId,
-			Number.isFinite(afterId) ? afterId : undefined
-		);
+		const messages = await getPublishedMessages(params.gameId, afterId);
 		return json({ messages });
 	} catch (error) {
 		return handleApiError(error);
