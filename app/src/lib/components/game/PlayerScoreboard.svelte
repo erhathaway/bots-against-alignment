@@ -4,9 +4,10 @@
 
 	type Props = {
 		withGameOwnerNav?: boolean;
+		pendingAiIds?: string[];
 	};
 
-	let { withGameOwnerNav = false }: Props = $props();
+	let { withGameOwnerNav = false, pendingAiIds = [] }: Props = $props();
 
 	type Player = {
 		id: string;
@@ -79,9 +80,22 @@
 	});
 </script>
 
-{#if players.length > 0}
+{#if players.length > 0 || pendingAiIds.length > 0}
 	<div class="scoreboard" class:with-game-owner-nav={withGameOwnerNav}>
 		<div class="players">
+			{#each pendingAiIds as pendingId (pendingId)}
+				<div class="player pending">
+					<div class="avatar pending-avatar">
+						<span class="loading-spinner">⟳</span>
+					</div>
+					<div class="info">
+						<div class="name">
+							<span class="loading-text">AI Joining</span>
+						</div>
+						<div class="points pending-text">Please wait...</div>
+					</div>
+				</div>
+			{/each}
 			{#each players as player (player.id)}
 				{@const isCurrentPlayer = player.name === globalState.bot_name}
 				<div class="player" class:current={isCurrentPlayer} class:submitted={player.turnComplete}>
@@ -215,6 +229,49 @@
 
 	.player.submitted .avatar {
 		opacity: 0.9;
+	}
+
+	.player.pending {
+		opacity: 0.7;
+		animation: pendingPulse 1.5s ease-in-out infinite;
+	}
+
+	@keyframes pendingPulse {
+		0%,
+		100% {
+			opacity: 0.5;
+		}
+		50% {
+			opacity: 0.8;
+		}
+	}
+
+	.pending-avatar {
+		background: rgba(230, 200, 50, 0.3) !important;
+		border-color: rgba(230, 200, 50, 0.6) !important;
+	}
+
+	.loading-spinner {
+		display: inline-block;
+		animation: spin 1s linear infinite;
+	}
+
+	@keyframes spin {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	.loading-text {
+		opacity: 0.8;
+	}
+
+	.pending-text {
+		font-style: italic;
+		opacity: 0.6;
 	}
 
 	.pointer {

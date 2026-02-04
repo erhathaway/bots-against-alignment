@@ -16,6 +16,7 @@
 		onForceStart?: () => void;
 		onOpenSettings?: () => void;
 		joinedBots?: BotInfo[];
+		pendingAiIds?: string[];
 		addingAi?: boolean;
 		startingGame?: boolean;
 		canStart?: boolean;
@@ -44,6 +45,7 @@
 		onForceStart,
 		onOpenSettings,
 		joinedBots = [],
+		pendingAiIds = [],
 		addingAi = false,
 		startingGame = false,
 		canStart = false,
@@ -67,6 +69,7 @@
 		{onStartGame}
 		{onForceStart}
 		{joinedBots}
+		{pendingAiIds}
 		{addingAi}
 		{startingGame}
 		{canStart}
@@ -74,7 +77,7 @@
 	/>
 {/if}
 
-<PlayerScoreboard withGameOwnerNav={showGameOwnerNav} />
+<PlayerScoreboard withGameOwnerNav={showGameOwnerNav} {pendingAiIds} />
 
 <GameControls {onLeave} {isLeavePending} {onOpenRules} />
 

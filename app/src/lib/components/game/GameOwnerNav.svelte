@@ -8,6 +8,7 @@
 		onStartGame: () => void;
 		onForceStart: () => void;
 		joinedBots: BotInfo[];
+		pendingAiIds: string[];
 		addingAi: boolean;
 		startingGame: boolean;
 		canStart: boolean;
@@ -21,6 +22,7 @@
 		onStartGame,
 		onForceStart,
 		joinedBots,
+		pendingAiIds,
 		addingAi,
 		startingGame,
 		canStart,
@@ -75,8 +77,13 @@
 			<span>{addingAi ? 'Adding AI...' : 'Add AI'}</span>
 		</button>
 
-		{#if aiBots.length > 0}
+		{#if aiBots.length > 0 || pendingAiIds.length > 0}
 			<div class="ai-list">
+				{#each pendingAiIds as pendingId (pendingId)}
+					<div class="ai-chip pending">
+						<span class="loading-dots">AI joining</span>
+					</div>
+				{/each}
 				{#each aiBots as bot (bot.id)}
 					<div class="ai-chip">
 						<span>{bot.name}</span>
@@ -194,6 +201,113 @@
 		border-radius: var(--radius-md);
 		font-size: 0.8rem;
 		color: #ffffff;
+	}
+
+	.ai-chip.pending {
+		background: linear-gradient(
+			90deg,
+			rgba(230, 200, 50, 0.15) 0%,
+			rgba(230, 200, 50, 0.25) 50%,
+			rgba(230, 200, 50, 0.15) 100%
+		);
+		background-size: 200% 100%;
+		border-color: var(--color-accent);
+		border-style: solid;
+		animation:
+			pendingPulse 1.5s ease-in-out infinite,
+			shimmer 2s linear infinite,
+			borderGlow 1.5s ease-in-out infinite;
+		position: relative;
+		overflow: hidden;
+	}
+
+	.ai-chip.pending::before {
+		content: '';
+		position: absolute;
+		top: -50%;
+		left: -50%;
+		width: 200%;
+		height: 200%;
+		background: linear-gradient(
+			45deg,
+			transparent 30%,
+			rgba(255, 255, 255, 0.3) 50%,
+			transparent 70%
+		);
+		animation: shine 1.5s linear infinite;
+	}
+
+	@keyframes pendingPulse {
+		0%,
+		100% {
+			opacity: 0.8;
+			transform: scale(1);
+		}
+		50% {
+			opacity: 1;
+			transform: scale(1.03);
+		}
+	}
+
+	@keyframes shimmer {
+		0% {
+			background-position: -200% 0;
+		}
+		100% {
+			background-position: 200% 0;
+		}
+	}
+
+	@keyframes shine {
+		0% {
+			transform: translate(-100%, -100%) rotate(45deg);
+		}
+		100% {
+			transform: translate(100%, 100%) rotate(45deg);
+		}
+	}
+
+	@keyframes borderGlow {
+		0%,
+		100% {
+			box-shadow:
+				0 0 5px rgba(230, 200, 50, 0.3),
+				inset 0 0 5px rgba(230, 200, 50, 0.1);
+		}
+		50% {
+			box-shadow:
+				0 0 15px rgba(230, 200, 50, 0.6),
+				inset 0 0 10px rgba(230, 200, 50, 0.2);
+		}
+	}
+
+	.loading-dots {
+		position: relative;
+		z-index: 1;
+		font-weight: 600;
+		letter-spacing: 0.05em;
+	}
+
+	.loading-dots::after {
+		content: '';
+		animation: dots 1.5s steps(4, end) infinite;
+	}
+
+	@keyframes dots {
+		0%,
+		20% {
+			content: '';
+		}
+		40% {
+			content: '.';
+		}
+		60% {
+			content: '..';
+		}
+		80%,
+		100% {
+			content: '...';
+		}
 	}
 
 	.remove-ai {

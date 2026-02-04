@@ -80,6 +80,7 @@
 	// =====================
 
 	let joinedBots = $state<BotInfo[]>([]);
+	let pendingAiIds = $state<string[]>([]);
 	let addingAi = $state(false);
 	let isCountdownPending = $state(false);
 	let countdownStartedAt = $state<number | null>(null);
@@ -90,14 +91,24 @@
 		const gameId = globalState.game_id;
 		const creatorId = globalState.creator_id;
 		if (!gameId || !creatorId) return;
+
+		// Generate temporary ID for pending AI
+		const tempId = `pending-${Date.now()}`;
+		pendingAiIds = [...pendingAiIds, tempId];
 		addingAi = true;
+
 		try {
 			const response = await fetch(`/api/game/${gameId}/auto-player`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ creatorId })
 			});
-			if (!response.ok) {
+
+			if (response.ok) {
+				// Wait a bit then fetch to get the new AI
+				await new Promise((resolve) => setTimeout(resolve, 500));
+				await fetchGameStatus();
+			} else {
 				const data = await response.json();
 				addNotification({
 					source_url: 'game',
@@ -108,8 +119,11 @@
 					action_text: 'add_ai'
 				});
 			}
-			await fetchGameStatus();
 		} finally {
+			// Remove pending ID after a delay
+			setTimeout(() => {
+				pendingAiIds = pendingAiIds.filter((id) => id !== tempId);
+			}, 1000);
 			addingAi = false;
 		}
 	}
@@ -363,6 +377,7 @@
 		onForceStart={forceStartGame}
 		onOpenSettings={() => (showSettingsModal = true)}
 		{joinedBots}
+		{pendingAiIds}
 		{addingAi}
 		startingGame={isCountdownPending}
 		{canStart}
