@@ -36,6 +36,8 @@
 		hasJoined: boolean;
 		onSendMessage: (text: string) => void;
 		turnPrompt?: string;
+		onShowBotModal?: () => void;
+		hasSubmittedTurn?: boolean;
 	};
 
 	let {
@@ -59,7 +61,9 @@
 		showAlignerTyping,
 		hasJoined,
 		onSendMessage,
-		turnPrompt = ''
+		turnPrompt = '',
+		onShowBotModal,
+		hasSubmittedTurn = false
 	}: Props = $props();
 </script>
 
@@ -84,7 +88,14 @@
 <GameControls {onLeave} {isLeavePending} {onOpenRules} />
 
 <div class="chat-container" class:with-game-owner-nav={showGameOwnerNav}>
-	<MessageFeed {messages} {currentBotName} {showAlignerTyping} {turnPrompt} />
+	<MessageFeed
+		{messages}
+		{currentBotName}
+		{showAlignerTyping}
+		{turnPrompt}
+		{onShowBotModal}
+		{hasSubmittedTurn}
+	/>
 </div>
 
 <div class="chat-input-wrapper">

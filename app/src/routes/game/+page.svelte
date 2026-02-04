@@ -82,6 +82,7 @@
 		if (turnId !== null && turnId !== currentTrackedTurnId) {
 			currentTrackedTurnId = turnId;
 			hasSubmittedBotResponse = false;
+			showBotResponseModal = false; // Reset modal visibility on new turn
 		}
 	});
 
@@ -140,7 +141,11 @@
 		return () => clearInterval(interval);
 	});
 
-	let showBotResponseModal = $derived(
+	// Modal should only show when user clicks card or timer expires
+	let showBotResponseModal = $state(false);
+
+	// Check if we should allow showing the modal (all conditions met except user action)
+	let canShowBotResponseModal = $derived(
 		globalState.is_game_started &&
 			!globalState.is_collecting_aligner_prompts &&
 			!globalState.is_game_over &&
@@ -149,8 +154,15 @@
 			currentTurnPrompt !== ''
 	);
 
+	function handleShowBotResponseModal() {
+		if (canShowBotResponseModal) {
+			showBotResponseModal = true;
+		}
+	}
+
 	function handleBotResponseSubmitted() {
 		hasSubmittedBotResponse = true;
+		showBotResponseModal = false;
 	}
 
 	async function submitAlignerPrompt(alignerPrompt: string) {
@@ -590,5 +602,7 @@
 		turnPrompt={currentTurnPrompt}
 		{hasJoined}
 		onSendMessage={handleSendMessage}
+		onShowBotModal={handleShowBotResponseModal}
+		hasSubmittedTurn={hasSubmittedBotResponse}
 	/>
 {/if}

@@ -24,14 +24,28 @@
 		currentBotName?: string | null;
 		showAlignerTyping?: boolean;
 		turnPrompt?: string;
+		onShowBotModal?: () => void;
+		hasSubmittedTurn?: boolean;
 	};
 
 	let {
 		messages,
 		currentBotName = null,
 		showAlignerTyping = false,
-		turnPrompt = ''
+		turnPrompt = '',
+		onShowBotModal,
+		hasSubmittedTurn = false
 	}: Props = $props();
+
+	// Find the last Turn Prompt message to determine which is the current turn
+	const lastTurnPromptId = $derived(() => {
+		for (let i = messages.length - 1; i >= 0; i--) {
+			if (messages[i].type === 'system' && messages[i].senderName === 'Turn Prompt') {
+				return messages[i].id;
+			}
+		}
+		return null;
+	});
 
 	let container: HTMLElement | null = null;
 
@@ -70,7 +84,12 @@
 				/>
 			{/if}
 		{:else if message.type === 'system' && message.senderName === 'Turn Prompt'}
-			<TurnPromptMessage prompt={message.message} />
+			<TurnPromptMessage
+				prompt={message.message}
+				isCurrentTurn={message.id === lastTurnPromptId()}
+				hasSubmitted={hasSubmittedTurn}
+				onShowModal={onShowBotModal}
+			/>
 		{:else if message.type === 'system' && message.senderName === 'Round Winner'}
 			{@const win = tryParseJSON(message.message)}
 			{#if win}

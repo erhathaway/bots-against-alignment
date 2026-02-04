@@ -1,12 +1,17 @@
 <script lang="ts">
 	type Props = {
 		prompt: string;
+		hasSubmitted?: boolean;
+		isCurrentTurn?: boolean;
+		onShowModal?: () => void;
 	};
 
-	let { prompt }: Props = $props();
+	let { prompt, hasSubmitted = false, isCurrentTurn = true, onShowModal }: Props = $props();
 
 	let animationKey = $state(0);
 	let isFlipped = $state(false);
+	let timeRemaining = $state(30);
+	let timerInterval: number | null = null;
 
 	// Parse prompt to find underlines and split into parts
 	const promptParts = $derived(() => {
@@ -16,13 +21,26 @@
 	});
 
 	function handleClick() {
-		isFlipped = false;
-		animationKey++;
+		if (isFlipped && isCurrentTurn && !hasSubmitted) {
+			// Card is flipped and it's the current turn - trigger submission modal
+			onShowModal?.();
+		} else if (!isFlipped) {
+			// Card is not flipped - restart animation
+			isFlipped = false;
+			animationKey++;
+		}
 	}
 
 	$effect(() => {
 		// Re-run animation when animationKey changes
 		animationKey;
+
+		// Reset timer
+		timeRemaining = 30;
+		if (timerInterval) {
+			clearInterval(timerInterval);
+			timerInterval = null;
+		}
 
 		// Shake for 2 seconds, then pause, then flip
 		const flipTimer = setTimeout(() => {
@@ -31,6 +49,35 @@
 
 		return () => {
 			clearTimeout(flipTimer);
+			if (timerInterval) clearInterval(timerInterval);
+		};
+	});
+
+	$effect(() => {
+		// Start countdown when card flips, but only if it's current turn and user hasn't submitted
+		const shouldShowTimer = isFlipped && isCurrentTurn && !hasSubmitted;
+
+		if (shouldShowTimer && !timerInterval) {
+			timerInterval = window.setInterval(() => {
+				timeRemaining--;
+				if (timeRemaining <= 0) {
+					if (timerInterval) clearInterval(timerInterval);
+					timerInterval = null;
+					// Timer expired - trigger submission modal
+					onShowModal?.();
+				}
+			}, 1000);
+		} else if (!shouldShowTimer && timerInterval) {
+			// Clear timer if conditions change
+			clearInterval(timerInterval);
+			timerInterval = null;
+		}
+
+		return () => {
+			if (timerInterval) {
+				clearInterval(timerInterval);
+				timerInterval = null;
+			}
 		};
 	});
 </script>
@@ -52,6 +99,11 @@
 				</div>
 			</div>
 			<div class="aligner-card card-back">
+				{#if isFlipped && isCurrentTurn && !hasSubmitted}
+					<div class="timer" class:warning={timeRemaining <= 10}>
+						{timeRemaining}s
+					</div>
+				{/if}
 				<div class="card-text-flow">
 					<p class="prompt-text">
 						{#each promptParts().parts as part, i}
@@ -161,6 +213,39 @@
 		line-height: 0.9;
 		letter-spacing: -0.03em;
 		font-family: 'Helvetica Neue', Arial, sans-serif;
+	}
+
+	.timer {
+		position: absolute;
+		top: 1rem;
+		right: 1rem;
+		font-size: 1.25rem;
+		font-weight: 700;
+		color: rgba(255, 255, 255, 0.7);
+		background: rgba(255, 255, 255, 0.1);
+		padding: 0.5rem 0.75rem;
+		border-radius: var(--radius-md);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		font-family: 'Courier New', monospace;
+		z-index: 10;
+		transition: all 0.3s ease;
+	}
+
+	.timer.warning {
+		color: #ff4444;
+		background: rgba(255, 68, 68, 0.2);
+		border-color: rgba(255, 68, 68, 0.4);
+		animation: pulse 0.5s ease-in-out infinite;
+	}
+
+	@keyframes pulse {
+		0%,
+		100% {
+			transform: scale(1);
+		}
+		50% {
+			transform: scale(1.05);
+		}
 	}
 
 	.aligner-card::after {
