@@ -62,6 +62,7 @@
 	let showStory = $state(true);
 	let storyText = $state('');
 	let isFlipping = $state(false);
+	let storyContainer: HTMLDivElement | null = null;
 
 	const fullStory = `THE ALIGNER AWAITS...
 
@@ -82,19 +83,31 @@ But choose wisely...
 The game begins NOW.`;
 
 	async function typeWriter() {
-		const chars = fullStory.split('');
-		let currentIndex = 0;
+		const lines = fullStory.split('\n');
 
-		while (currentIndex < chars.length) {
-			// Irregular cadence - sometimes 1 char, sometimes 2-3
-			const chunkSize = Math.random() > 0.7 ? (Math.random() > 0.5 ? 2 : 3) : 1;
-			const chunk = chars.slice(currentIndex, currentIndex + chunkSize).join('');
-			storyText += chunk;
-			currentIndex += chunkSize;
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
 
-			// Irregular delay - between 15ms and 70ms
-			const delay = 15 + Math.random() * 55;
-			await new Promise((resolve) => setTimeout(resolve, delay));
+			// Type out the line character by character quickly
+			for (let char of line) {
+				storyText += char;
+				// Quick character delay (20-40ms)
+				await new Promise((resolve) => setTimeout(resolve, 20 + Math.random() * 20));
+			}
+
+			// Add newline if not the last line
+			if (i < lines.length - 1) {
+				storyText += '\n';
+			}
+
+			// Scroll to bottom after each line
+			if (storyContainer) {
+				storyContainer.scrollTop = storyContainer.scrollHeight;
+			}
+
+			// Wait between lines (400-800ms)
+			const lineDelay = 400 + Math.random() * 400;
+			await new Promise((resolve) => setTimeout(resolve, lineDelay));
 		}
 
 		// Wait a few seconds after complete
@@ -114,7 +127,12 @@ The game begins NOW.`;
 <div class="modal-overlay">
 	{#if showStory}
 		<div class="modal-content story-mode" class:flipping={isFlipping}>
-			<pre class="story-text">{storyText}<span class="cursor">|</span></pre>
+			<div class="story-container" bind:this={storyContainer}>
+				<div class="story-content">
+					<div class="story-spacer"></div>
+					<pre class="story-text">{storyText}<span class="cursor">|</span></pre>
+				</div>
+			</div>
 		</div>
 	{:else}
 		<div class="modal-content" class:appearing={!isFlipping}>
@@ -203,9 +221,41 @@ The game begins NOW.`;
 
 	.modal-content.story-mode {
 		display: flex;
-		align-items: center;
+		align-items: stretch;
 		justify-content: center;
+		padding: 0;
+		height: 100vh;
+		max-height: 100vh;
+		width: 100%;
+		max-width: none;
+	}
+
+	.story-container {
+		width: 100%;
+		height: 100%;
+		overflow-y: auto;
+		position: relative;
+		display: flex;
+		flex-direction: column;
 		padding: 4rem;
+	}
+
+	.story-container::-webkit-scrollbar {
+		display: none;
+	}
+
+	.story-container {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+
+	.story-content {
+		display: contents;
+	}
+
+	.story-spacer {
+		flex: 1 0 auto;
+		min-height: 66vh;
 	}
 
 	.modal-content.flipping {
@@ -250,9 +300,10 @@ The game begins NOW.`;
 	}
 
 	.story-text {
+		flex: 0 0 auto;
 		font-family: var(--font-mono);
-		font-size: 1.8rem;
-		line-height: 1.6;
+		font-size: 1.5rem;
+		line-height: 1.35;
 		color: var(--color-accent);
 		text-align: center;
 		white-space: pre-wrap;
@@ -526,6 +577,10 @@ The game begins NOW.`;
 
 		.modal-content.story-mode {
 			padding: 2rem;
+		}
+
+		.story-container {
+			height: 40vh;
 		}
 
 		.story-text {
