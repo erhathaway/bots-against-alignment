@@ -23,9 +23,15 @@
 		messages: FeedMessage[];
 		currentBotName?: string | null;
 		showAlignerTyping?: boolean;
+		turnPrompt?: string;
 	};
 
-	let { messages, currentBotName = null, showAlignerTyping = false }: Props = $props();
+	let {
+		messages,
+		currentBotName = null,
+		showAlignerTyping = false,
+		turnPrompt = ''
+	}: Props = $props();
 
 	let container: HTMLElement | null = null;
 
@@ -87,7 +93,12 @@
 		{:else if message.type === 'status' && message.senderName === 'Bot Response'}
 			{@const bot = tryParseJSON(message.message)}
 			{#if bot}
-				<BotResponseMessage name={bot.name} text={bot.text} mine={isMe(bot.name)} />
+				<BotResponseMessage
+					name={bot.name}
+					text={bot.text}
+					prompt={turnPrompt}
+					mine={isMe(bot.name)}
+				/>
 			{/if}
 		{:else if message.type === 'status'}
 			<StatusMessage

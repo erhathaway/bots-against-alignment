@@ -44,10 +44,10 @@
 		border-radius: 12px;
 		padding: 1.5rem 1.25rem;
 		box-shadow:
-			0 4px 12px rgba(0, 0, 0, 0.4),
-			0 8px 24px rgba(0, 0, 0, 0.35),
-			0 16px 48px rgba(0, 0, 0, 0.3),
-			0 24px 64px rgba(0, 0, 0, 0.25);
+			0 4px 20px rgba(0, 0, 0, 0.3),
+			0 8px 40px rgba(0, 0, 0, 0.25),
+			0 16px 60px rgba(0, 0, 0, 0.2),
+			0 24px 80px rgba(0, 0, 0, 0.15);
 		position: relative;
 		width: 100%;
 		max-width: 320px;

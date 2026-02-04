@@ -587,6 +587,7 @@
 		{messages}
 		currentBotName={globalState.bot_name}
 		showAlignerTyping={alignerTyping}
+		turnPrompt={currentTurnPrompt}
 		{hasJoined}
 		onSendMessage={handleSendMessage}
 	/>

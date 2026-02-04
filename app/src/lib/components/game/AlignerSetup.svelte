@@ -310,24 +310,27 @@
 		align-items: center;
 		justify-content: center;
 		opacity: 0.5;
-		fill: var(--color-text);
 		box-shadow: none;
 		transition:
 			opacity 200ms var(--ease),
 			border-color 200ms var(--ease),
-			box-shadow 200ms var(--ease),
-			fill 200ms var(--ease);
+			box-shadow 200ms var(--ease);
 	}
 
 	.embeded-button svg {
 		width: 14px;
 		height: 14px;
+		fill: var(--color-text);
+		transition: fill 200ms var(--ease);
 	}
 
 	.embeded-button:hover {
 		opacity: 1;
 		border-color: var(--color-accent);
 		box-shadow: var(--glow-accent-soft);
+	}
+
+	.embeded-button:hover svg {
 		fill: var(--color-accent);
 	}
 

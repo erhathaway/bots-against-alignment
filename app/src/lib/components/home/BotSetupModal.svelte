@@ -423,8 +423,8 @@
 		width: 44px;
 		height: 44px;
 		border-radius: 50%;
-		border: 1.5px solid rgba(230, 200, 50, 0.3);
-		background: rgba(0, 0, 0, 0.8);
+		border: 2px solid rgba(230, 200, 50, 0.5);
+		background: rgba(255, 255, 255, 0.1);
 		backdrop-filter: blur(10px);
 		padding: 0;
 		margin: 0;
@@ -432,27 +432,29 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		opacity: 0.6;
-		fill: rgba(230, 200, 50, 0.6);
-		box-shadow: 0 0 10px rgba(230, 200, 50, 0.1);
+		box-shadow: 0 0 15px rgba(230, 200, 50, 0.2);
 		transition:
-			opacity 200ms var(--ease),
 			border-color 200ms var(--ease),
 			box-shadow 200ms var(--ease),
-			fill 200ms var(--ease);
+			background 200ms var(--ease);
 	}
 
 	.embeded-button svg {
 		width: 18px;
 		height: 18px;
+		fill: rgba(230, 200, 50, 0.9);
+		transition: fill 200ms var(--ease);
 	}
 
 	.embeded-button:hover {
-		opacity: 1;
 		border-color: var(--color-accent);
+		background: rgba(255, 255, 255, 0.15);
 		box-shadow:
-			0 0 20px rgba(230, 200, 50, 0.4),
+			0 0 25px rgba(230, 200, 50, 0.5),
 			inset 0 0 20px rgba(230, 200, 50, 0.1);
+	}
+
+	.embeded-button:hover svg {
 		fill: var(--color-accent);
 	}
 
