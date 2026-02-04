@@ -7,6 +7,7 @@
 	import GameLayout from '$lib/components/game/GameLayout.svelte';
 	import GameSettingsModal from '$lib/components/game/GameSettingsModal.svelte';
 	import RulesModal from '$lib/components/game/RulesModal.svelte';
+	import AlignerPromptModal from '$lib/components/game/AlignerPromptModal.svelte';
 	import type { PageData } from './$types';
 	import type { FeedMessage } from '$lib/components/messages/MessageFeed.svelte';
 	import type { BotInfo } from '$lib/components/game/Lobby.svelte';
@@ -55,6 +56,52 @@
 	let showSettingsModal = $state(false);
 	let showRulesModal = $state(false);
 	let isCreator = $derived(globalState.creator_id != null);
+
+	// =====================
+	// Aligner prompt modal
+	// =====================
+
+	let hasSubmittedAlignerPrompt = $state(false);
+	let showAlignerPromptModal = $derived(
+		globalState.is_game_started && !hasSubmittedAlignerPrompt
+	);
+
+	async function submitAlignerPrompt(alignerPrompt: string) {
+		const gameId = globalState.game_id;
+		const playerId = globalState.user_id;
+		if (!gameId || !playerId) return;
+
+		try {
+			const response = await fetch(`/api/game/${gameId}/aligner-prompt`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ playerId, alignerPrompt })
+			});
+
+			if (response.ok) {
+				hasSubmittedAlignerPrompt = true;
+			} else {
+				const data = await response.json();
+				addNotification({
+					source_url: 'aligner-prompt',
+					title: 'Error submitting aligner prompt',
+					body: data.message || data.error || 'Failed to submit aligner prompt',
+					kind: NotificationKind.ERROR,
+					action_url: null,
+					action_text: 'submit_aligner_prompt'
+				});
+			}
+		} catch (error) {
+			addNotification({
+				source_url: 'aligner-prompt',
+				title: 'Error submitting aligner prompt',
+				body: 'Network error',
+				kind: NotificationKind.ERROR,
+				action_url: null,
+				action_text: 'submit_aligner_prompt'
+			});
+		}
+	}
 
 	// =====================
 	// Leave game
