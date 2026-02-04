@@ -155,7 +155,7 @@
 <style>
 	.scoreboard {
 		position: fixed;
-		top: 1.5rem;
+		top: 1rem;
 		left: 50%;
 		transform: translateX(-50%);
 		width: calc(100% - 4rem);
@@ -167,12 +167,12 @@
 	}
 
 	.scoreboard.with-game-owner-nav {
-		top: 5.5rem;
+		top: 5rem;
 	}
 
 	.players {
 		display: flex;
-		gap: 1rem;
+		gap: 0.75rem;
 		flex-wrap: wrap;
 		justify-content: center;
 		align-items: center;
@@ -194,6 +194,7 @@
 		);
 		backdrop-filter: blur(12px);
 		border: 1px solid rgba(0, 0, 0, 0.4);
+		border-bottom: 3px solid #000000;
 		box-shadow:
 			0 8px 32px rgba(0, 0, 0, 0.15),
 			0 4px 12px rgba(0, 0, 0, 0.12),
@@ -243,6 +244,7 @@
 
 	.player.current {
 		border-color: rgba(0, 0, 0, 0.5);
+		border-bottom-color: #000000;
 		box-shadow:
 			0 12px 48px rgba(0, 0, 0, 0.2),
 			0 6px 16px rgba(0, 0, 0, 0.15),
