@@ -17,6 +17,7 @@
 		promptsRemaining: number;
 		isHost: boolean;
 		isAuto: boolean;
+		isRoundWinner?: boolean;
 	};
 
 	let players = $state<Player[]>([]);
@@ -105,32 +106,45 @@
 							<span class="waiting-text">Waiting...</span>
 						</div>
 					{/if}
-					<div class="avatar" style="background-color: {getPlayerColor(player.name)}">
-						{getInitials(player.name)}
-					</div>
-					<div class="info">
-						<div class="name">
-							{player.name}
-							{#if player.isAuto}
-								<span class="badge ai">AI</span>
-							{/if}
-							{#if player.isHost}
-								<span class="badge host">HOST</span>
-							{/if}
+					<div class="player-top">
+						<div class="avatar" style="background-color: {getPlayerColor(player.name)}">
+							{getInitials(player.name)}
 						</div>
-						<div class="points">
-							{player.points}/{pointsToWin}
-							{#if player.promptsRemaining > 0}
-								<span class="prompts"
-									>· {player.promptsRemaining} change{player.promptsRemaining === 1
-										? ''
-										: 's'}</span
-								>
-							{/if}
+						<div class="info">
+							<div class="name">
+								{player.name}
+								{#if player.isAuto}
+									<span class="badge ai">AI</span>
+								{/if}
+								{#if player.isHost}
+									<span class="badge host">HOST</span>
+								{/if}
+							</div>
 						</div>
+						{#if player.turnComplete}
+							<div class="check">✓</div>
+						{/if}
 					</div>
-					{#if player.turnComplete}
-						<div class="check">✓</div>
+					{#if player.points > 0}
+						<div class="medals-pill">
+							{#each Array(player.points) as _, i}
+								<span class="medal">🏅</span>
+							{/each}
+						</div>
+					{/if}
+					{#if player.promptsRemaining > 0}
+						<div class="robots-pill">
+							{#each Array(player.promptsRemaining) as _, i}
+								<span class="robot">🤖</span>
+							{/each}
+						</div>
+					{/if}
+					{#if player.isRoundWinner}
+						<div class="winner-badge">
+							<span class="trophy">🏆</span>
+							<span class="winner-text">{player.name}</span>
+							<span class="points-earned">+1</span>
+						</div>
 					{/if}
 				</div>
 			{/each}
@@ -171,55 +185,60 @@
 		padding: 0.75rem 1rem;
 		border-radius: var(--radius-lg);
 		transition: all 220ms var(--ease);
-		background: #ffffff;
-		border: 1px solid rgba(0, 0, 0, 0.08);
+		background: radial-gradient(
+			ellipse at center,
+			rgba(255, 255, 255, 0.7) 0%,
+			rgba(255, 255, 255, 0.4) 50%,
+			rgba(255, 255, 255, 0) 100%
+		);
+		backdrop-filter: blur(12px);
+		border: 1px solid rgba(0, 0, 0, 0.4);
 		box-shadow:
-			0 8px 32px rgba(0, 0, 0, 0.12),
-			0 2px 8px rgba(0, 0, 0, 0.08),
-			0 0 0 1px rgba(230, 200, 50, 0.4),
-			0 0 20px rgba(230, 200, 50, 0.15);
+			0 8px 32px rgba(0, 0, 0, 0.15),
+			0 4px 12px rgba(0, 0, 0, 0.12),
+			0 2px 4px rgba(0, 0, 0, 0.08);
 		pointer-events: auto;
 		position: relative;
 	}
 
-	/* Subtle yellow signal trace at bottom edge */
-	.player::before {
-		content: '';
+	.player-top {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		flex: 1;
+	}
+
+	.medals-pill,
+	.robots-pill {
 		position: absolute;
-		bottom: -1px;
-		left: 15%;
-		right: 15%;
-		height: 1px;
-		background: linear-gradient(
-			90deg,
-			transparent 0%,
-			rgba(230, 200, 50, 0.4) 20%,
-			rgba(230, 200, 50, 0.6) 50%,
-			rgba(230, 200, 50, 0.4) 80%,
-			transparent 100%
-		);
+		bottom: -0.5rem;
+		display: flex;
+		gap: 0.25rem;
+		align-items: center;
 		pointer-events: none;
-		border-radius: var(--radius-lg);
+		background: #ffffff;
+		border: 1px solid rgba(0, 0, 0, 0.4);
+		border-radius: 999px;
+		padding: 0.25rem 0.5rem;
+		box-shadow:
+			0 4px 12px rgba(0, 0, 0, 0.12),
+			0 2px 4px rgba(0, 0, 0, 0.08);
+	}
+
+	.medals-pill {
+		left: 0.75rem;
+	}
+
+	.robots-pill {
+		right: 0.75rem;
 	}
 
 	.player.current {
-		border-color: rgba(230, 200, 50, 0.6);
+		border-color: rgba(0, 0, 0, 0.5);
 		box-shadow:
-			0 8px 32px rgba(0, 0, 0, 0.12),
-			0 2px 8px rgba(0, 0, 0, 0.08),
-			0 0 0 1.5px rgba(230, 200, 50, 0.6),
-			0 0 24px rgba(230, 200, 50, 0.25);
-	}
-
-	.player.current::before {
-		background: linear-gradient(
-			90deg,
-			transparent 0%,
-			rgba(230, 200, 50, 0.5) 20%,
-			rgba(230, 200, 50, 0.8) 50%,
-			rgba(230, 200, 50, 0.5) 80%,
-			transparent 100%
-		);
+			0 12px 48px rgba(0, 0, 0, 0.2),
+			0 6px 16px rgba(0, 0, 0, 0.15),
+			0 2px 6px rgba(0, 0, 0, 0.1);
 	}
 
 	.player.submitted {
@@ -349,8 +368,72 @@
 
 	.info {
 		display: flex;
-		flex-direction: column;
-		gap: 0.125rem;
+		align-items: center;
+		flex: 1;
+	}
+
+	.medal {
+		font-size: 1rem;
+		line-height: 1;
+	}
+
+	.robot {
+		font-size: 0.875rem;
+		line-height: 1;
+	}
+
+	.winner-badge {
+		position: absolute;
+		bottom: -1.5rem;
+		left: 50%;
+		transform: translateX(-50%);
+		display: flex;
+		gap: 0.5rem;
+		align-items: center;
+		background: #ffffff;
+		border: 2px solid rgba(0, 0, 0, 0.5);
+		border-radius: 999px;
+		padding: 0.5rem 1rem;
+		box-shadow:
+			0 8px 24px rgba(0, 0, 0, 0.2),
+			0 4px 8px rgba(0, 0, 0, 0.15);
+		animation: floatAndRotate 3s ease-in-out infinite;
+		z-index: 10;
+	}
+
+	@keyframes floatAndRotate {
+		0%,
+		100% {
+			transform: translateX(-50%) translateY(0) rotate(0deg);
+		}
+		25% {
+			transform: translateX(-50%) translateY(-8px) rotate(2deg);
+		}
+		50% {
+			transform: translateX(-50%) translateY(0) rotate(0deg);
+		}
+		75% {
+			transform: translateX(-50%) translateY(-8px) rotate(-2deg);
+		}
+	}
+
+	.trophy {
+		font-size: 1.5rem;
+		line-height: 1;
+	}
+
+	.winner-text {
+		font-size: 0.875rem;
+		font-weight: 700;
+		color: var(--color-text);
+		letter-spacing: 0.02em;
+	}
+
+	.points-earned {
+		font-size: 0.875rem;
+		font-weight: 700;
+		color: #10b981;
+		letter-spacing: 0.02em;
 	}
 
 	.name {
@@ -383,22 +466,6 @@
 		border: 1px solid #000000;
 	}
 
-	.points {
-		font-size: 0.75rem;
-		font-weight: 600;
-		color: var(--color-text-secondary);
-		font-variant-numeric: tabular-nums;
-		letter-spacing: 0.02em;
-		display: flex;
-		align-items: center;
-		gap: 0.25rem;
-	}
-
-	.prompts {
-		font-size: 0.7rem;
-		font-weight: 500;
-		color: var(--color-text-muted);
-	}
 
 	@media (max-width: 768px) {
 		.scoreboard {
@@ -423,10 +490,6 @@
 
 		.name {
 			font-size: 0.8rem;
-		}
-
-		.points {
-			font-size: 0.7rem;
 		}
 	}
 </style>

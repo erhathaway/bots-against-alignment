@@ -49,47 +49,31 @@
 		display: flex;
 		padding: 1.25rem 1.5rem;
 		gap: 1rem;
-		background: #ffffff;
-		border: 1px solid rgba(0, 0, 0, 0.08);
+		background: radial-gradient(
+			ellipse at center,
+			rgba(255, 255, 255, 0.7) 0%,
+			rgba(255, 255, 255, 0.4) 50%,
+			rgba(255, 255, 255, 0) 100%
+		);
+		backdrop-filter: blur(12px);
 		border-radius: var(--radius-lg);
-		box-shadow:
-			0 8px 32px rgba(0, 0, 0, 0.12),
-			0 2px 8px rgba(0, 0, 0, 0.08),
-			0 0 0 1px rgba(230, 200, 50, 0.4),
-			0 0 20px rgba(230, 200, 50, 0.15);
 		z-index: 120;
 	}
 
-	/* Subtle yellow signal trace at top edge */
-	.input-container::before {
-		content: '';
-		position: absolute;
-		top: -1px;
-		left: 15%;
-		right: 15%;
-		height: 1px;
-		background: linear-gradient(
-			90deg,
-			transparent 0%,
-			rgba(230, 200, 50, 0.4) 20%,
-			rgba(230, 200, 50, 0.6) 50%,
-			rgba(230, 200, 50, 0.4) 80%,
-			transparent 100%
-		);
-		pointer-events: none;
-		border-radius: var(--radius-lg);
-	}
 
 	.message-input {
 		flex: 1;
 		padding: 0.875rem 1.25rem;
-		border: 2.5px solid #000000;
+		border: 1px solid rgba(0, 0, 0, 0.4);
 		border-radius: var(--radius-lg);
 		font-size: 1rem;
 		background: #ffffff;
 		outline: none;
 		transition: all 220ms var(--ease);
-		box-shadow: var(--shadow-sm);
+		box-shadow:
+			0 8px 32px rgba(0, 0, 0, 0.15),
+			0 4px 12px rgba(0, 0, 0, 0.12),
+			0 2px 4px rgba(0, 0, 0, 0.08);
 	}
 
 	.message-input:focus {
@@ -107,13 +91,16 @@
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
 		padding: 0.875rem 2rem;
-		border: 2.5px solid #000000;
+		border: 1px solid rgba(0, 0, 0, 0.5);
 		background: #000000;
 		color: #ffffff;
 		border-radius: var(--radius-lg);
 		cursor: pointer;
 		transition: all 220ms var(--ease);
-		box-shadow: var(--shadow-md);
+		box-shadow:
+			0 12px 48px rgba(0, 0, 0, 0.2),
+			0 6px 16px rgba(0, 0, 0, 0.15),
+			0 2px 6px rgba(0, 0, 0, 0.1);
 		position: relative;
 		display: flex;
 		align-items: center;
