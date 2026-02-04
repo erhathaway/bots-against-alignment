@@ -100,12 +100,6 @@
 			{#each players as player (player.id)}
 				{@const isCurrentPlayer = player.name === globalState.bot_name}
 				<div class="player" class:current={isCurrentPlayer} class:submitted={player.turnComplete}>
-					{#if !player.turnComplete}
-						<div class="pointer">
-							<span class="finger">👆</span>
-							<span class="waiting-text">Waiting...</span>
-						</div>
-					{/if}
 					<div class="player-top">
 						<div class="avatar" style="background-color: {getPlayerColor(player.name)}">
 							{getInitials(player.name)}
@@ -303,55 +297,6 @@
 		opacity: 0.6;
 	}
 
-	.pointer {
-		position: absolute;
-		bottom: -3.5rem;
-		left: 50%;
-		transform: translateX(-50%);
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.25rem;
-	}
-
-	.finger {
-		font-size: 1.75rem;
-		animation: bounce 1s ease-in-out infinite;
-		display: inline-block;
-	}
-
-	@keyframes bounce {
-		0%,
-		100% {
-			transform: translateY(0);
-		}
-		50% {
-			transform: translateY(-0.5rem);
-		}
-	}
-
-	.waiting-text {
-		font-size: 0.7rem;
-		font-weight: 600;
-		color: var(--color-text-secondary);
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		white-space: nowrap;
-		overflow: hidden;
-		width: 4.5rem;
-		animation: typing 2s steps(10, end) infinite;
-	}
-
-	@keyframes typing {
-		0%,
-		100% {
-			width: 0;
-		}
-		50%,
-		90% {
-			width: 4.5rem;
-		}
-	}
 
 	.check {
 		font-size: 1.25rem;
