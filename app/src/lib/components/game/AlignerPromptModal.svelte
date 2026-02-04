@@ -254,8 +254,8 @@ The game begins NOW.`;
 	}
 
 	.story-spacer {
-		flex: 1 0 auto;
-		min-height: 66vh;
+		flex: 0 0 5vh;
+		height: 5vh;
 	}
 
 	.modal-content.flipping {
