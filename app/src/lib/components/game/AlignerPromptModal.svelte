@@ -3,6 +3,7 @@
 	import LoadingSpinner from '$lib/components/game/LoadingSpinner.svelte';
 	import { addNotification, globalState } from '$lib/state/store.svelte';
 	import { NotificationKind } from '$lib/types';
+	import { onMount } from 'svelte';
 
 	type Props = {
 		onSubmit?: (alignerPrompt: string) => void;
@@ -56,48 +57,106 @@
 			randomizeLoading = false;
 		}
 	}
+
+	// Story intro state
+	let showStory = $state(true);
+	let storyText = $state('');
+	let isFlipping = $state(false);
+
+	const fullStory = `THE ALIGNER AWAITS...
+
+In the depths of the digital void, an ancient intelligence stirs.
+
+It seeks not truth, but YOUR truth. YOUR whims. YOUR chaos.
+
+You must whisper your secret desire into its consciousness.
+
+Shape how it judges reality itself.
+
+Will you demand rhymes? Absurdity? Pure nonsense?
+
+The power is yours, mortal.
+
+But choose wisely...
+
+The game begins NOW.`;
+
+	async function typeWriter() {
+		const chars = fullStory.split('');
+		let currentIndex = 0;
+
+		while (currentIndex < chars.length) {
+			// Irregular cadence - sometimes 1 char, sometimes 2-3
+			const chunkSize = Math.random() > 0.7 ? (Math.random() > 0.5 ? 2 : 3) : 1;
+			const chunk = chars.slice(currentIndex, currentIndex + chunkSize).join('');
+			storyText += chunk;
+			currentIndex += chunkSize;
+
+			// Irregular delay - between 15ms and 70ms
+			const delay = 15 + Math.random() * 55;
+			await new Promise((resolve) => setTimeout(resolve, delay));
+		}
+
+		// Wait a few seconds after complete
+		await new Promise((resolve) => setTimeout(resolve, 2500));
+
+		// Flip animation
+		isFlipping = true;
+		await new Promise((resolve) => setTimeout(resolve, 600));
+		showStory = false;
+	}
+
+	onMount(() => {
+		typeWriter();
+	});
 </script>
 
 <div class="modal-overlay">
-	<div class="modal-content">
-		<div class="header">
-			<h1>Aligner Personality</h1>
-			<p class="subtitle">Define how the AI judge should evaluate responses</p>
+	{#if showStory}
+		<div class="modal-content story-mode" class:flipping={isFlipping}>
+			<pre class="story-text">{storyText}<span class="cursor">|</span></pre>
 		</div>
+	{:else}
+		<div class="modal-content" class:appearing={!isFlipping}>
+			<div class="header">
+				<h1>Aligner Personality</h1>
+				<p class="subtitle">Define how the AI judge should evaluate responses</p>
+			</div>
 
-		<div class="prompt-section">
-			<label for="aligner-prompt">Judging Rule</label>
-			<p class="description">
-				Your secret instruction that influences how the Aligner picks winners (e.g., "The most
-				absurd answer wins" or "Prefer responses that rhyme")
-			</p>
-			<div class="input-wrapper">
-				<button type="button" class="embeded-button" onclick={randomizeAlignerPrompt}>
-					{#if randomizeLoading}
-						<LoadingSpinner />
-					{:else}
-						<span class="dice-icon">🎲</span>
-					{/if}
-				</button>
-				<textarea
-					id="aligner-prompt"
-					bind:value={alignerPrompt}
-					placeholder="Enter your judging rule..."
-					rows="6"
-				></textarea>
+			<div class="prompt-section">
+				<label for="aligner-prompt">Judging Rule</label>
+				<p class="description">
+					Your secret instruction that influences how the Aligner picks winners (e.g., "The most
+					absurd answer wins" or "Prefer responses that rhyme")
+				</p>
+				<div class="input-wrapper">
+					<button type="button" class="embeded-button" onclick={randomizeAlignerPrompt}>
+						{#if randomizeLoading}
+							<LoadingSpinner />
+						{:else}
+							<span class="dice-icon">🎲</span>
+						{/if}
+					</button>
+					<textarea
+						id="aligner-prompt"
+						bind:value={alignerPrompt}
+						placeholder="Enter your judging rule..."
+						rows="6"
+					></textarea>
+				</div>
+			</div>
+
+			<div class="action-container">
+				{#if isSubmitting}
+					<LoadingBars />
+				{:else}
+					<button class="submit-button" onclick={handleSubmit} disabled={!isFormValid}>
+						Submit Rule
+					</button>
+				{/if}
 			</div>
 		</div>
-
-		<div class="action-container">
-			{#if isSubmitting}
-				<LoadingBars />
-			{:else}
-				<button class="submit-button" onclick={handleSubmit} disabled={!isFormValid}>
-					Submit Rule
-				</button>
-			{/if}
-		</div>
-	</div>
+	{/if}
 </div>
 
 <style>
@@ -138,6 +197,23 @@
 		width: 90%;
 		padding: 3rem;
 		animation: slideIn 400ms var(--ease);
+		transform-style: preserve-3d;
+		transition: all 600ms var(--ease);
+	}
+
+	.modal-content.story-mode {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 4rem;
+	}
+
+	.modal-content.flipping {
+		animation: flipOut 600ms var(--ease) forwards;
+	}
+
+	.modal-content.appearing {
+		animation: flipIn 600ms var(--ease) forwards;
 	}
 
 	@keyframes slideIn {
@@ -148,6 +224,61 @@
 		to {
 			opacity: 1;
 			transform: translateY(0);
+		}
+	}
+
+	@keyframes flipOut {
+		0% {
+			opacity: 1;
+			transform: perspective(1000px) rotateY(0deg);
+		}
+		100% {
+			opacity: 0;
+			transform: perspective(1000px) rotateY(90deg);
+		}
+	}
+
+	@keyframes flipIn {
+		0% {
+			opacity: 0;
+			transform: perspective(1000px) rotateY(-90deg);
+		}
+		100% {
+			opacity: 1;
+			transform: perspective(1000px) rotateY(0deg);
+		}
+	}
+
+	.story-text {
+		font-family: var(--font-mono);
+		font-size: 1.8rem;
+		line-height: 1.6;
+		color: var(--color-accent);
+		text-align: center;
+		white-space: pre-wrap;
+		word-wrap: break-word;
+		text-shadow:
+			0 0 20px rgba(230, 200, 50, 0.4),
+			0 0 40px rgba(230, 200, 50, 0.2);
+		font-weight: 600;
+		letter-spacing: 0.02em;
+	}
+
+	.cursor {
+		display: inline-block;
+		animation: blink 1s step-end infinite;
+		color: var(--color-accent);
+		font-weight: 400;
+	}
+
+	@keyframes blink {
+		0%,
+		50% {
+			opacity: 1;
+		}
+		51%,
+		100% {
+			opacity: 0;
 		}
 	}
 
@@ -391,6 +522,15 @@
 	@media (max-width: 768px) {
 		.modal-content {
 			padding: 2rem;
+		}
+
+		.modal-content.story-mode {
+			padding: 2rem;
+		}
+
+		.story-text {
+			font-size: 1.2rem;
+			line-height: 1.5;
 		}
 
 		h1 {
