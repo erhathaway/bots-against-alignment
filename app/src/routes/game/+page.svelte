@@ -270,42 +270,52 @@
 			if (!initialLoadComplete) {
 				initialLoadComplete = true;
 			}
+			if (!hasInitialLoadHappened) {
+				hasInitialLoadHappened = true;
+			}
 		} catch {
 			// silently ignore polling errors
 		}
 	}
 
+	// Show initial pending AIs based on expected count
+	let expectedInitialAiCount = $state(2); // Server seeds 2 AIs by default
+	let hasInitialLoadHappened = $state(false);
+
 	$effect(() => {
 		const gameId = globalState.game_id;
 		if (!gameId) return;
 
-		// Show pending AI indicator during initial load if no players seen yet
-		if (!hasSeenPlayers) {
-			pendingAiIds = ['initial-ai-loading'];
-
-			// Remove pending indicator after 5 seconds even if no players load
-			setTimeout(() => {
-				if (!hasSeenPlayers) {
-					pendingAiIds = pendingAiIds.filter((id) => id !== 'initial-ai-loading');
-				}
-			}, 5000);
-		}
+		// Reset for new game
+		hasSeenPlayers = false;
+		hasInitialLoadHappened = false;
+		expectedInitialAiCount = 2;
 
 		untrack(() => fetchGameStatus());
 		const intervalId = setInterval(fetchGameStatus, 3000);
-		return () => {
-			clearInterval(intervalId);
-			// Clear initial pending state when unmounting
-			if (pendingAiIds.includes('initial-ai-loading')) {
-				pendingAiIds = pendingAiIds.filter((id) => id !== 'initial-ai-loading');
-			}
-		};
+		return () => clearInterval(intervalId);
 	});
 
-	// Clear initial pending AI when we see actual players
+	// Update pending indicators based on actual AI count vs expected
 	$effect(() => {
-		if (hasSeenPlayers && pendingAiIds.includes('initial-ai-loading')) {
-			pendingAiIds = pendingAiIds.filter((id) => id !== 'initial-ai-loading');
+		if (!hasInitialLoadHappened) return;
+
+		const currentAiCount = joinedBots.filter((b) => b.isAuto).length;
+		const pendingCount = Math.max(0, expectedInitialAiCount - currentAiCount);
+
+		// Generate pending IDs for each expected AI that hasn't loaded yet
+		const newPendingIds = Array.from({ length: pendingCount }, (_, i) => `initial-ai-${i}`);
+
+		// Only update if changed to avoid infinite loops
+		const currentIds = JSON.stringify(pendingAiIds.filter((id) => id.startsWith('initial-ai-')));
+		const newIds = JSON.stringify(newPendingIds);
+
+		if (currentIds !== newIds) {
+			// Keep manually added pending IDs, update initial ones
+			pendingAiIds = [
+				...pendingAiIds.filter((id) => !id.startsWith('initial-ai-')),
+				...newPendingIds
+			];
 		}
 	});
 
