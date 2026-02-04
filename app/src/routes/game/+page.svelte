@@ -85,6 +85,8 @@
 	let isCountdownPending = $state(false);
 	let countdownStartedAt = $state<number | null>(null);
 	let countdownRemaining = $state<number | null>(null);
+	let initialLoadComplete = $state(false);
+	let hasSeenPlayers = $state(false);
 
 	async function addAiPlayer() {
 		if (addingAi) return;
@@ -241,7 +243,14 @@
 			const data = await response.json();
 
 			if (data.bots && Array.isArray(data.bots)) {
-				joinedBots = data.bots as BotInfo[];
+				const newBots = data.bots as BotInfo[];
+
+				// On initial load, if we have players, mark as seen
+				if (!hasSeenPlayers && newBots.length > 0) {
+					hasSeenPlayers = true;
+				}
+
+				joinedBots = newBots;
 			}
 
 			if (data.countdownStartedAt !== undefined) {
@@ -256,6 +265,11 @@
 				globalState.is_game_started = true;
 				globalState.is_collecting_aligner_prompts = false;
 			}
+
+			// Mark initial load complete after first successful fetch
+			if (!initialLoadComplete) {
+				initialLoadComplete = true;
+			}
 		} catch {
 			// silently ignore polling errors
 		}
@@ -265,9 +279,34 @@
 		const gameId = globalState.game_id;
 		if (!gameId) return;
 
+		// Show pending AI indicator during initial load if no players seen yet
+		if (!hasSeenPlayers) {
+			pendingAiIds = ['initial-ai-loading'];
+
+			// Remove pending indicator after 5 seconds even if no players load
+			setTimeout(() => {
+				if (!hasSeenPlayers) {
+					pendingAiIds = pendingAiIds.filter((id) => id !== 'initial-ai-loading');
+				}
+			}, 5000);
+		}
+
 		untrack(() => fetchGameStatus());
 		const intervalId = setInterval(fetchGameStatus, 3000);
-		return () => clearInterval(intervalId);
+		return () => {
+			clearInterval(intervalId);
+			// Clear initial pending state when unmounting
+			if (pendingAiIds.includes('initial-ai-loading')) {
+				pendingAiIds = pendingAiIds.filter((id) => id !== 'initial-ai-loading');
+			}
+		};
+	});
+
+	// Clear initial pending AI when we see actual players
+	$effect(() => {
+		if (hasSeenPlayers && pendingAiIds.includes('initial-ai-loading')) {
+			pendingAiIds = pendingAiIds.filter((id) => id !== 'initial-ai-loading');
+		}
 	});
 
 	// Countdown timer — ticks every second when active
