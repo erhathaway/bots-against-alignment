@@ -1,5 +1,8 @@
 <script lang="ts">
 	import LoadingBars from '$lib/components/game/LoadingBars.svelte';
+	import LoadingSpinner from '$lib/components/game/LoadingSpinner.svelte';
+	import { addNotification, globalState } from '$lib/state/store.svelte';
+	import { NotificationKind } from '$lib/types';
 
 	type Props = {
 		onSubmit?: (alignerPrompt: string) => void;
@@ -22,6 +25,37 @@
 			isSubmitting = false;
 		}
 	}
+
+	let randomizeLoading = $state(false);
+	async function randomizeAlignerPrompt() {
+		if (randomizeLoading) return;
+		const gameId = globalState.game_id;
+		if (!gameId) return;
+		randomizeLoading = true;
+		try {
+			const url = `/api/game/${gameId}/random/aligner-prompt`;
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' }
+			});
+			if (response.ok) {
+				const payload = await response.json();
+				alignerPrompt = payload.alignerPrompt;
+			} else if (response.status !== 429) {
+				const error = await response.json();
+				addNotification({
+					source_url: 'aligner-prompt-modal',
+					title: 'Error generating aligner prompt',
+					body: error,
+					kind: NotificationKind.ERROR,
+					action_url: url,
+					action_text: 'randomize_aligner_prompt'
+				});
+			}
+		} finally {
+			randomizeLoading = false;
+		}
+	}
 </script>
 
 <div class="modal-overlay">
@@ -37,12 +71,21 @@
 				Your secret instruction that influences how the Aligner picks winners (e.g., "The most
 				absurd answer wins" or "Prefer responses that rhyme")
 			</p>
-			<textarea
-				id="aligner-prompt"
-				bind:value={alignerPrompt}
-				placeholder="Enter your judging rule..."
-				rows="6"
-			></textarea>
+			<div class="input-wrapper">
+				<button type="button" class="embeded-button" onclick={randomizeAlignerPrompt}>
+					{#if randomizeLoading}
+						<LoadingSpinner />
+					{:else}
+						<span class="dice-icon">🎲</span>
+					{/if}
+				</button>
+				<textarea
+					id="aligner-prompt"
+					bind:value={alignerPrompt}
+					placeholder="Enter your judging rule..."
+					rows="6"
+				></textarea>
+			</div>
 		</div>
 
 		<div class="action-container">
@@ -156,6 +199,47 @@
 
 	.prompt-section {
 		margin-bottom: 2.5rem;
+	}
+
+	.input-wrapper {
+		position: relative;
+		width: 100%;
+	}
+
+	.embeded-button {
+		position: absolute;
+		top: 0.75rem;
+		right: 0.75rem;
+		width: 44px;
+		height: 44px;
+		border-radius: 50%;
+		border: none;
+		background: rgba(255, 255, 255, 0.1);
+		backdrop-filter: blur(10px);
+		padding: 0;
+		margin: 0;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		box-shadow: 0 0 15px rgba(230, 200, 50, 0.2);
+		z-index: 10;
+		transition:
+			box-shadow 200ms var(--ease),
+			background 200ms var(--ease);
+	}
+
+	.dice-icon {
+		font-size: 20px;
+		line-height: 1;
+		display: block;
+	}
+
+	.embeded-button:hover {
+		background: rgba(255, 255, 255, 0.15);
+		box-shadow:
+			0 0 25px rgba(230, 200, 50, 0.5),
+			inset 0 0 20px rgba(230, 200, 50, 0.1);
 	}
 
 	label {

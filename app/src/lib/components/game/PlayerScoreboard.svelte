@@ -182,7 +182,8 @@
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
-		padding: 0.75rem 1rem;
+		padding: 0.625rem 1rem;
+		padding-left: 3.25rem;
 		border-radius: var(--radius-lg);
 		transition: all 220ms var(--ease);
 		background: radial-gradient(
@@ -208,10 +209,17 @@
 		flex: 1;
 	}
 
+	.avatar {
+		position: absolute;
+		left: 0.5rem;
+		top: 50%;
+		transform: translateY(-50%);
+	}
+
 	.medals-pill,
 	.robots-pill {
 		position: absolute;
-		bottom: -0.5rem;
+		bottom: -1.25rem;
 		display: flex;
 		gap: 0.25rem;
 		align-items: center;

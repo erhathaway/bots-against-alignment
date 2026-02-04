@@ -18,7 +18,8 @@
 		left: 4px;
 		width: 8px;
 		border-radius: 2px;
-		background: var(--color-text);
+		background: var(--color-accent);
+		box-shadow: 0 0 8px rgba(230, 200, 50, 0.4);
 		animation: lds-anim 1.2s cubic-bezier(0, 0.5, 0.5, 1) infinite;
 	}
 

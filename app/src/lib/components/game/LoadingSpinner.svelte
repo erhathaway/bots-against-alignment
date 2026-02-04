@@ -13,10 +13,11 @@
 
 	.lds-app div {
 		position: absolute;
-		border: 2px solid var(--color-text);
+		border: 2px solid var(--color-accent);
 		opacity: 1;
 		border-radius: 50%;
 		animation: lds-app 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+		box-shadow: 0 0 8px rgba(230, 200, 50, 0.3);
 	}
 
 	.lds-app div:nth-child(2) {

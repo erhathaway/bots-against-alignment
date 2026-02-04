@@ -415,7 +415,7 @@
 		width: 44px;
 		height: 44px;
 		border-radius: 50%;
-		border: 2px solid rgba(230, 200, 50, 0.5);
+		border: none;
 		background: rgba(255, 255, 255, 0.1);
 		backdrop-filter: blur(10px);
 		padding: 0;
@@ -427,7 +427,6 @@
 		box-shadow: 0 0 15px rgba(230, 200, 50, 0.2);
 		z-index: 10;
 		transition:
-			border-color 200ms var(--ease),
 			box-shadow 200ms var(--ease),
 			background 200ms var(--ease);
 	}
@@ -446,7 +445,6 @@
 	}
 
 	.embeded-button:hover {
-		border-color: var(--color-accent);
 		background: rgba(255, 255, 255, 0.15);
 		box-shadow:
 			0 0 25px rgba(230, 200, 50, 0.5),
