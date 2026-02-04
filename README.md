@@ -40,13 +40,46 @@ Then open `http://127.0.0.1:5173/`.
 
 Server-side (`app/.env`):
 
-- `DATABASE_URL` — required, e.g. `file:./dev.db` for local SQLite
+- `DATABASE_URL` — required, `file:dev.db` for local SQLite (uses single `dev.db` file for development)
 - `OPENAI_API_KEY` — optional (required for real LLM calls)
 - `MOCK_LLM=1` — force mock LLM responses (recommended for local dev and tests)
 
 Client-side (`app/.env`):
 
 - `PUBLIC_E2E=1` — disables auto-randomization in E2E runs
+
+## Architecture Overview
+
+### Message-Driven Game Flow
+
+The game uses a **dual-channel message system** where all game events flow through a message queue:
+
+**Instant Channel**: Messages published immediately (player joins/leaves, countdown starts, chat)
+**Buffered Channel**: Messages queued with time windows for dramatic pacing (bot responses: 5s, aligner deliberation: 2s, round winner: 7s, standings: 5s, game over: 10s)
+
+Messages can carry metadata that triggers game state changes, creating a declarative event-driven architecture.
+
+#### Key Components
+
+- `app/src/lib/server/messages/` - Message system
+  - `types.ts` - Message types, channels, and state actions
+  - `service.ts` - Message CRUD operations
+  - `queue.ts` - MessageQueue orchestrator and BufferedQueue for time-windowed messages
+  - `processor.ts` - StateChangeProcessor handling game state transitions
+  - `index.ts` - Entry point with initialization
+
+#### Message Flow
+
+```
+User Action → messageQueue.publish({
+  channel: 'instant' | 'buffered',
+  type: 'player_joined' | 'bot_response' | etc.,
+  content: "...",
+  metadata: { stateChange: { action, payload } }
+})
+```
+
+See `/docs/game-flow.md` for complete specification.
 
 ## Deploying to Vercel
 

@@ -22,11 +22,14 @@ For full game rules (setup, turn flow, scoring, winning conditions), see [`RULES
 ## Architecture
 
 - **Full-stack app**: SvelteKit v2 + Svelte 5 (runes) in `app/`
-- **Database**: SQLite via LibSQL + Drizzle ORM
+- **Database**: SQLite via LibSQL + Drizzle ORM (single `dev.db` file for local development)
 - **LLM**: Vercel AI SDK (`@ai-sdk/openai`), with mock mode via `MOCK_LLM=1`
-- **Chat**: DB-backed with HTTP polling (stored in SQLite `chatMessages` table)
-  - Player messages are sent via `POST /api/game/[gameId]/chat` and polled via `GET /api/game/[gameId]/chat?after=<id>` every 1.5s.
-  - Game events (joins, turn starts, bot responses, judging results, standings, game over) are automatically posted as system/status messages from `server/game/service.ts`.
+- **Message-Driven Game Flow**: Dual-channel message queue system (stored in SQLite `gameMessages` table)
+  - **Instant Channel**: Player joins/leaves, countdown starts, chat messages - published immediately
+  - **Buffered Channel**: Bot responses (5s), aligner deliberation (2s), round winner (7s), standings (5s), game over (10s) - queued with time windows for dramatic pacing
+  - Messages carry metadata that triggers game state changes, creating a declarative event-driven architecture
+  - Player messages sent via `POST /api/game/[gameId]/chat`, polled via `GET /api/game/[gameId]/chat?after=<id>` every 1.5s
+  - Game events flow through `messageQueue.publish()` and are processed by `StateChangeProcessor`
 
 ## Repo map (high-signal)
 
@@ -44,22 +47,38 @@ For full game rules (setup, turn flow, scoring, winning conditions), see [`RULES
 
 ### Server (`app/src/lib/server/`)
 
-- `server/game/service.ts` — core game logic (create, join, start, turn management, scoring)
-- `server/game/data.ts` — random prompt generation and data pools
-- `server/chat/service.ts` — chat message persistence (post + query)
-- `server/db/schema.ts` — Drizzle schema (games, players, turns, turnResponses, alignerPrompts, chatMessages)
-- `server/db/index.ts` — database connection (LibSQL)
-- `server/llm/aligner.ts` — turn judging (picks winner via LLM)
-- `server/llm/bot.ts` — bot response generation
-- `server/llm/config.ts` — model selection and env var config
-- `server/llm/mock.ts` — mock LLM for dev/tests
-- `server/errors.ts` — error types (badRequest, forbidden, notFound)
-- `server/rate-limit.ts` — rate limiting
+**Message System:**
+- `server/messages/types.ts` — Message types, channels (instant/buffered), state actions
+- `server/messages/service.ts` — Message CRUD operations (insert, publish, query)
+- `server/messages/queue.ts` — MessageQueue orchestrator & BufferedQueue for time-windowed messages
+- `server/messages/processor.ts` — StateChangeProcessor handling all game state transitions
+- `server/messages/index.ts` — Entry point with initialization
+
+**Game Logic:**
+- `server/game/service.ts` — Core game logic (create, join, start, turn management, scoring) - uses message queue
+- `server/game/data.ts` — Random prompt generation and data pools
+
+**Database:**
+- `server/db/schema.ts` — Drizzle schema (games, players, turns, turnResponses, alignerPrompts, gameMessages)
+- `server/db/index.ts` — Database connection (LibSQL)
+
+**LLM:**
+- `server/llm/aligner.ts` — Turn judging (picks winner via LLM, streams buffered deliberation messages)
+- `server/llm/bot.ts` — Bot response generation
+- `server/llm/config.ts` — Model selection and env var config
+- `server/llm/mock.ts` — Mock LLM for dev/tests
+
+**Utilities:**
+- `server/errors.ts` — Error types (badRequest, forbidden, notFound)
+- `server/rate-limit.ts` — Rate limiting
 
 ### Client state (`app/src/lib/`)
 
 - `state/store.svelte.ts` — global game state (Svelte 5 `$state` rune, localStorage persisted)
 - `types.ts` — TypeScript types (GlobalState, AlignmentResponse, Notification, etc.)
+- `components/messages/MessageFeed.svelte` — Message rendering with `FeedMessage` type
+  - `FeedMessage` type uses `content` field (not `message`) and new message types
+  - Renders different components based on message `type` (e.g., `turn_started`, `bot_response`, `aligner_deliberation`)
 
 ### API routes (`app/src/routes/api/`)
 
@@ -71,14 +90,15 @@ Game lifecycle:
 - `GET /api/game/[gameId]/status` — poll game status
 - `GET /api/game/[gameId]/me` — get current player data
 
-Chat:
-- `POST /api/game/[gameId]/chat` — send a chat message
-- `GET /api/game/[gameId]/chat?after=<id>` — poll for new messages (incremental)
+Messages (unified message system):
+- `POST /api/game/[gameId]/chat` — send a chat message (publishes instant message)
+- `GET /api/game/[gameId]/chat?after=<id>` — poll for new messages (alias for /messages)
+- `GET /api/game/[gameId]/messages?after=<id>` — poll for published messages (incremental)
 
 Turn flow:
-- `POST /api/game/[gameId]/turn/ensure` — ensure current turn exists
-- `POST /api/game/[gameId]/turn/[turnId]/submit` — submit bot response
-- `POST /api/game/[gameId]/turn/[turnId]/process` — judge turn (LLM picks winner)
+- `POST /api/game/[gameId]/turn/ensure` — ensure current turn exists (publishes buffered turn_started message)
+- `POST /api/game/[gameId]/turn/[turnId]/submit` — submit bot response (publishes buffered bot_response message)
+- `POST /api/game/[gameId]/turn/[turnId]/process` — judge turn (triggers buffered aligner deliberation, winner, standings messages)
 - `GET /api/game/[gameId]/turn/[turnId]/finale` — get turn results
 
 Random generators (UI suggestion buttons):
@@ -125,7 +145,7 @@ Then open `http://127.0.0.1:5173/`.
 
 ### Server-side (SvelteKit, `app/.env`)
 
-- `DATABASE_URL` — required, e.g. `file:./dev.db` for local SQLite
+- `DATABASE_URL` — required, `file:dev.db` for local SQLite (uses single `dev.db` file for development)
 - `OPENAI_API_KEY` — optional (required for real LLM calls)
 - `MOCK_LLM=1` — force mock LLM responses (recommended for tests and local dev)
 
@@ -133,18 +153,72 @@ Then open `http://127.0.0.1:5173/`.
 
 - `PUBLIC_E2E=1` — disables auto-randomization in E2E runs
 
+## Message-Driven Game Flow
+
+See `/docs/game-flow.md` for complete specification.
+
+### Key Concepts
+
+**Dual-Channel System:**
+- **Instant messages**: Published immediately to database, clients see them on next poll
+- **Buffered messages**: Queued with time windows (5s for bot responses, 2s for aligner, etc.)
+  - While one buffered message is active (within its window), no other buffered messages publish
+  - Instant messages can interrupt/interleave at any time
+  - Creates dramatic pacing for turn results and aligner deliberation
+
+**Message-Driven State:**
+- Messages carry `metadata.stateChange` with an `action` and `payload`
+- `StateChangeProcessor` processes these after messages are published
+- Game state updates (turn creation, point awards, game end) happen via message metadata
+- Declarative event-driven architecture: publish message → state changes automatically
+
+### Message Types
+
+Instant: `player_joined`, `player_left`, `countdown_started`, `game_started`, `aligner_prompt_submitted`, `chat`
+
+Buffered: `turn_started` (5s), `bot_response` (5s), `aligner_deliberation` (2s), `round_winner` (7s), `standings` (5s), `game_over` (10s)
+
+### Example Flow
+
+```typescript
+// User submits bot response → publish buffered message
+await messageQueue.publish({
+  gameId,
+  channel: 'buffered',
+  type: 'bot_response',
+  senderName: 'Bot Response',
+  content: JSON.stringify({ name, text }),
+  bufferDuration: 5000,
+  metadata: {
+    stateChange: {
+      action: 'submit_bot_response',
+      payload: { playerId, turnId, responseText }
+    }
+  }
+});
+
+// After 5s: message published to DB, StateChangeProcessor runs
+// → Updates player.turnComplete = true
+// → Stores response in turnResponses
+// → Checks if all players submitted
+// → If yes, triggers turn judging
+```
+
 ## Local dev gotchas
 
 - Client state is persisted in localStorage (key `boa:state`); if the UI seems "stuck" between runs, clear site data/localStorage.
-- Chat messages are stored in SQLite alongside game data; they persist between restarts.
+- Messages are stored in SQLite `gameMessages` table and persist between restarts.
 - The `/game` route is client-only (`ssr = false` in `app/src/routes/game/+page.ts`), so debugging should focus on browser-side behavior.
-- Games are stored in SQLite; the DB file persists between restarts.
+- Games are stored in SQLite; **single `dev.db` file is used for all local development** (set via `DATABASE_URL=file:dev.db` in `app/.env`).
+- If you need to reset the database, delete `dev.db` and run `bun run dev` to recreate it with migrations.
+- All database schema changes must go through Drizzle migrations: `bunx drizzle-kit generate` then `bun run db:migrate`.
 
 ## Documentation discipline
 
 - If you add or change env vars, ports, or local dev entrypoints, update `README.md`.
-- If you change user-visible behavior (gameplay flow, chat behavior, API contracts), update docs and tests so the change stays discoverable.
+- If you change user-visible behavior (gameplay flow, message behavior, API contracts), update docs and tests so the change stays discoverable.
 - Keep the agent guide focused on stable, repo-wide guidance (avoid personal TODO lists here).
+- **Message system changes**: If modifying message types, channels, or buffer durations, update `/docs/game-flow.md` specification.
 
 ## Tests
 
