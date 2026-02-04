@@ -35,6 +35,11 @@
 
 <div class="game-over-wrapper">
 	<AnnouncementTitle title="Game Over!" {subtitle} />
+	<div class="winner-badge">
+		<span class="trophy">🏆</span>
+		<span class="winner-text">{winner.name}</span>
+		<span class="points-earned">{winner.score} point{winner.score === 1 ? '' : 's'}</span>
+	</div>
 	<button class="play-again-btn" onclick={playAgain} disabled={playAgainLoading}>
 		<svg
 			width="18"
@@ -56,7 +61,67 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 1rem;
+		gap: 1.5rem;
+	}
+
+	.winner-badge {
+		display: flex;
+		gap: 1.25rem;
+		align-items: center;
+		background: #ffffff;
+		border: 4px solid rgba(0, 0, 0, 0.5);
+		border-radius: 999px;
+		padding: 1.5rem 3rem;
+		box-shadow:
+			0 16px 48px rgba(0, 0, 0, 0.25),
+			0 8px 16px rgba(0, 0, 0, 0.2);
+		animation: floatAndRotate 3s ease-in-out infinite;
+	}
+
+	@keyframes floatAndRotate {
+		0%,
+		100% {
+			transform: translateY(0) rotate(0deg);
+		}
+		25% {
+			transform: translateY(-12px) rotate(4deg);
+		}
+		50% {
+			transform: translateY(0) rotate(0deg);
+		}
+		75% {
+			transform: translateY(-12px) rotate(-4deg);
+		}
+	}
+
+	.trophy {
+		font-size: 3.5rem;
+		line-height: 1;
+		animation: pulse 2s ease-in-out infinite;
+	}
+
+	@keyframes pulse {
+		0%,
+		100% {
+			transform: scale(1);
+		}
+		50% {
+			transform: scale(1.15);
+		}
+	}
+
+	.winner-text {
+		font-size: 1.75rem;
+		font-weight: 700;
+		color: var(--color-text);
+		letter-spacing: 0.02em;
+	}
+
+	.points-earned {
+		font-size: 1.75rem;
+		font-weight: 700;
+		color: #10b981;
+		letter-spacing: 0.02em;
 	}
 
 	.play-again-btn {
