@@ -4,7 +4,7 @@
 	import GameControls from './GameControls.svelte';
 	import MessageFeed from '$lib/components/messages/MessageFeed.svelte';
 	import ChatInput from '$lib/components/messages/ChatInput.svelte';
-	import type { BotInfo } from './Lobby.svelte';
+	import type { BotInfo } from '$lib/types';
 	import type { FeedMessage } from '$lib/components/messages/MessageFeed.svelte';
 
 	type Props = {

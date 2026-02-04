@@ -15,6 +15,15 @@ export type AlignmentResponse = {
 	isGlobalWinner: boolean;
 };
 
+export type BotInfo = {
+	id: string;
+	name: string;
+	points: number;
+	turnComplete: boolean;
+	isHost: boolean;
+	isAuto: boolean;
+};
+
 export type GlobalState = {
 	game_id: string | null;
 	user_id: string | null;

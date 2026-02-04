@@ -11,7 +11,7 @@
 	import BotResponseModal from '$lib/components/game/BotResponseModal.svelte';
 	import type { PageData } from './$types';
 	import type { FeedMessage } from '$lib/components/messages/MessageFeed.svelte';
-	import type { BotInfo } from '$lib/components/game/Lobby.svelte';
+	import type { BotInfo } from '$lib/types';
 
 	let { data }: { data: PageData } = $props();
 

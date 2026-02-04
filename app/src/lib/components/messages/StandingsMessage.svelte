@@ -84,7 +84,10 @@
 							class="bar"
 							class:zero={row.score === 0}
 							class:show={showBars}
-							style="--target-height: {row.score * 60}px; --color: {getGrayscaleColor(i, rows.length)}"
+							style="--target-height: {row.score * 60}px; --color: {getGrayscaleColor(
+								i,
+								rows.length
+							)}"
 						>
 							<div class="medals-stack">
 								{#each Array(row.score) as _, idx}

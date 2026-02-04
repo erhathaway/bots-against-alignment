@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { BotInfo } from './Lobby.svelte';
+	import type { BotInfo } from '$lib/types';
 
 	type Props = {
 		onAddAi: () => void;

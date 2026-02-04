@@ -297,7 +297,6 @@
 		opacity: 0.6;
 	}
 
-
 	.check {
 		font-size: 1.25rem;
 		color: #10b981;
@@ -420,7 +419,6 @@
 		color: #ffffff;
 		border: 1px solid #000000;
 	}
-
 
 	@media (max-width: 768px) {
 		.scoreboard {

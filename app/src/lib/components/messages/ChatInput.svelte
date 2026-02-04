@@ -60,7 +60,6 @@
 		z-index: 120;
 	}
 
-
 	.message-input {
 		flex: 1;
 		padding: 0.875rem 1.25rem;
