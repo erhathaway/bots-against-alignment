@@ -616,13 +616,13 @@ export const submitTurn = async ({
 	playerId,
 	turnId,
 	suggestion,
-	responseText: providedResponseText
+	responseText
 }: {
 	gameId: string;
 	playerId: string;
 	turnId: number;
 	suggestion: string;
-	responseText?: string;
+	responseText: string;
 }) => {
 	const game = await requireGame(gameId);
 	if (game.turnId !== turnId) {
@@ -655,21 +655,8 @@ export const submitTurn = async ({
 		promptsRemaining -= 1;
 	}
 
-	let responseText: string;
-	if (providedResponseText) {
-		// Use the pre-generated response (from /generate endpoint)
-		responseText = providedResponseText;
-	} else {
-		// Generate a new response (legacy flow)
-		const turnPrompt = game.turnPrompt;
-		if (!turnPrompt) {
-			throw badRequest('Turn not initialized');
-		}
-		responseText = await generateBotResponse({
-			botPrompt: updatedPrompt,
-			turnPrompt
-		});
-	}
+	// Response text is now always provided from the /generate endpoint preview
+	// No more generating during submission
 
 	await db.transaction(async (tx) => {
 		await tx

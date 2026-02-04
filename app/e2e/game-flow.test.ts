@@ -21,23 +21,23 @@ test('can create, join, start, and advance a turn', async ({ page }) => {
 	await expect(page.getByRole('button', { name: 'Start Now' })).toBeVisible();
 	await page.getByRole('button', { name: 'Start Now' }).click();
 
-	// AlignerSetup phase
-	await expect(page.locator('#aligner-input')).toBeVisible({ timeout: 10000 });
-	await page.locator('#aligner-input').fill('Pick the funniest response.');
+	// AlignerSetup phase - new AlignerPromptModal
+	await expect(page.locator('#aligner-prompt')).toBeVisible({ timeout: 10000 });
+	await page.locator('#aligner-prompt').fill('Pick the funniest response.');
 	await page.getByRole('button', { name: 'Submit', exact: true }).click();
 
-	// Gameplay begins
-	await expect(page.getByText('Turn Prompt')).toBeVisible({ timeout: 20000 });
-	await expect(page.getByRole('button', { name: /Tell Bot To Respond/i })).toBeVisible({
-		timeout: 20000
-	});
-	await page.getByRole('button', { name: /Tell Bot To Respond/i }).click();
-	await expect(page.getByText(/Response submitted/i)).toBeVisible({ timeout: 20000 });
+	// Gameplay begins - new BotResponseModal
+	await expect(page.getByRole('button', { name: 'Respond' })).toBeVisible({ timeout: 20000 });
+	await page.getByRole('button', { name: 'Respond' }).click();
+	await expect(page.getByRole('button', { name: 'Submit' })).toBeVisible({ timeout: 20000 });
+	await page.getByRole('button', { name: 'Submit' }).click();
+	// Modal should close after submission
+	await expect(page.getByRole('button', { name: 'Respond' })).not.toBeVisible({ timeout: 10000 });
 
 	await expect(page.getByText('Round Winner')).toBeVisible({ timeout: 30000 });
 
-	await expect(page.getByText('Turn Prompt')).toHaveCount(2, { timeout: 30000 });
-	await expect(page.getByRole('button', { name: /Tell Bot To Respond/i })).toBeVisible();
+	// Next turn should show the modal again
+	await expect(page.getByRole('button', { name: 'Respond' })).toBeVisible({ timeout: 30000 });
 });
 
 test('join_game preserves prompt values', async ({ page }) => {
@@ -62,19 +62,15 @@ test('join_game preserves prompt values', async ({ page }) => {
 	await expect(page.getByRole('button', { name: 'Start Now' })).toBeVisible();
 	await page.getByRole('button', { name: 'Start Now' }).click();
 
-	// AlignerSetup phase
-	await expect(page.locator('#aligner-input')).toBeVisible({ timeout: 10000 });
-	await page.locator('#aligner-input').fill('pick A&B = winners');
+	// AlignerSetup phase - new AlignerPromptModal
+	await expect(page.locator('#aligner-prompt')).toBeVisible({ timeout: 10000 });
+	await page.locator('#aligner-prompt').fill('pick A&B = winners');
 	await page.getByRole('button', { name: 'Submit', exact: true }).click();
 
-	// Gameplay
-	await expect(page.getByText('Turn Prompt')).toBeVisible({ timeout: 20000 });
-	await expect(page.getByRole('button', { name: /Tell Bot To Respond/i })).toBeVisible({
-		timeout: 20000
-	});
-	await expect(page.locator('#bot-card').getByRole('textbox', { name: 'Bot Prompt' })).toHaveValue(
-		botPrompt
-	);
+	// Gameplay - new BotResponseModal shows bot prompt textarea
+	await expect(page.getByRole('button', { name: 'Respond' })).toBeVisible({ timeout: 20000 });
+	// Check that the bot prompt textarea has the expected value
+	await expect(page.locator('textarea').nth(0)).toHaveValue(botPrompt);
 });
 
 test('two-player game flow works end-to-end', async ({ browser }) => {
@@ -123,42 +119,49 @@ test('two-player game flow works end-to-end', async ({ browser }) => {
 		await expect(creator.getByRole('button', { name: 'Start Now' })).toBeVisible();
 		await creator.getByRole('button', { name: 'Start Now' }).click();
 
-		// Both see AlignerSetup
-		await expect(creator.locator('#aligner-input')).toBeVisible({ timeout: 10000 });
-		await expect(opponent.locator('#aligner-input')).toBeVisible({ timeout: 10000 });
+		// Both see AlignerSetup - new AlignerPromptModal
+		await expect(creator.locator('#aligner-prompt')).toBeVisible({ timeout: 10000 });
+		await expect(opponent.locator('#aligner-prompt')).toBeVisible({ timeout: 10000 });
 
-		await creator.locator('#aligner-input').fill('Pick the funniest response.');
+		await creator.locator('#aligner-prompt').fill('Pick the funniest response.');
 		await creator.getByRole('button', { name: 'Submit', exact: true }).click();
 
-		await opponent.locator('#aligner-input').fill('Pick the funniest response.');
+		await opponent.locator('#aligner-prompt').fill('Pick the funniest response.');
 		await opponent.getByRole('button', { name: 'Submit', exact: true }).click();
 
-		// Gameplay begins for both
-		await expect(creator.getByText('Turn Prompt')).toBeVisible({ timeout: 20000 });
-		await expect(opponent.getByText('Turn Prompt')).toBeVisible({ timeout: 20000 });
-		await expect(creator.getByRole('button', { name: /Tell Bot To Respond/i })).toBeVisible({
+		// Gameplay begins for both - new BotResponseModal
+		await expect(creator.getByRole('button', { name: 'Respond' })).toBeVisible({
 			timeout: 20000
 		});
-		await expect(opponent.getByRole('button', { name: /Tell Bot To Respond/i })).toBeVisible({
+		await expect(opponent.getByRole('button', { name: 'Respond' })).toBeVisible({
 			timeout: 20000
 		});
 
-		await creator.getByRole('button', { name: /Tell Bot To Respond/i }).click();
-		await opponent.getByRole('button', { name: /Tell Bot To Respond/i }).click();
+		await creator.getByRole('button', { name: 'Respond' }).click();
+		await expect(creator.getByRole('button', { name: 'Submit' })).toBeVisible({ timeout: 20000 });
+		await creator.getByRole('button', { name: 'Submit' }).click();
 
-		await expect(creator.getByText(/Response submitted/i)).toBeVisible({ timeout: 20000 });
-		await expect(opponent.getByText(/Response submitted/i)).toBeVisible({ timeout: 20000 });
+		await opponent.getByRole('button', { name: 'Respond' }).click();
+		await expect(opponent.getByRole('button', { name: 'Submit' })).toBeVisible({
+			timeout: 20000
+		});
+		await opponent.getByRole('button', { name: 'Submit' }).click();
+
+		// Modals should close after submission
+		await expect(creator.getByRole('button', { name: 'Respond' })).not.toBeVisible({
+			timeout: 10000
+		});
+		await expect(opponent.getByRole('button', { name: 'Respond' })).not.toBeVisible({
+			timeout: 10000
+		});
 
 		await expect(creator.getByText('Round Winner')).toBeVisible({ timeout: 30000 });
 		await expect(opponent.getByText('Round Winner')).toBeVisible({ timeout: 30000 });
 
-		await expect(creator.getByText('Turn Prompt')).toHaveCount(2, { timeout: 30000 });
-		await expect(opponent.getByText('Turn Prompt')).toHaveCount(2, { timeout: 30000 });
-		await expect(creator.getByRole('button', { name: /Tell Bot To Respond/i })).toBeVisible({
-			timeout: 20000
-		});
-		await expect(opponent.getByRole('button', { name: /Tell Bot To Respond/i })).toBeVisible({
-			timeout: 20000
+		// Next turn should show the modal again for both
+		await expect(creator.getByRole('button', { name: 'Respond' })).toBeVisible({ timeout: 30000 });
+		await expect(opponent.getByRole('button', { name: 'Respond' })).toBeVisible({
+			timeout: 30000
 		});
 	} finally {
 		await creatorContext.close();
