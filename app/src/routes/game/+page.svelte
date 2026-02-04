@@ -6,6 +6,7 @@
 	import { untrack } from 'svelte';
 	import GameLayout from '$lib/components/game/GameLayout.svelte';
 	import GameSettingsModal from '$lib/components/game/GameSettingsModal.svelte';
+	import RulesModal from '$lib/components/game/RulesModal.svelte';
 	import type { PageData } from './$types';
 	import type { FeedMessage } from '$lib/components/messages/MessageFeed.svelte';
 	import type { BotInfo } from '$lib/components/game/Lobby.svelte';
@@ -52,6 +53,7 @@
 	// =====================
 
 	let showSettingsModal = $state(false);
+	let showRulesModal = $state(false);
 	let isCreator = $derived(globalState.creator_id != null);
 
 	// =====================
@@ -348,6 +350,10 @@
 	<GameSettingsModal onClose={() => (showSettingsModal = false)} {isCreator} />
 {/if}
 
+{#if showRulesModal}
+	<RulesModal onClose={() => (showRulesModal = false)} />
+{/if}
+
 {#if globalState.has_player_joined}
 	<GameLayout
 		{showGameOwnerNav}
@@ -363,6 +369,7 @@
 		{countdownRemaining}
 		onLeave={handleLeave}
 		{isLeavePending}
+		onOpenRules={() => (showRulesModal = true)}
 		{messages}
 		currentBotName={globalState.bot_name}
 		showAlignerTyping={alignerTyping}

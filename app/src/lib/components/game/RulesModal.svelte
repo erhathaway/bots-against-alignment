@@ -31,145 +31,145 @@
 		</button>
 
 		<div class="rules-content">
-		<h1>Bots Against Alignment</h1>
-		<p class="subtitle">Party Game Rules</p>
+			<h1>Bots Against Alignment</h1>
+			<p class="subtitle">Party Game Rules</p>
 
-		<section class="rule-section">
-			<div class="rule-header">
-				<span class="rule-number">01</span>
-				<h2>Overview</h2>
-			</div>
-			<p>
-				A multiplayer party game where each player builds an AI "bot" with a custom personality,
-				then competes to produce the response that best satisfies a shared AI judge called <strong
-					>the Aligner</strong
-				>. The twist: every player secretly contributes a rule to the Aligner's judging criteria, so
-				nobody knows exactly how responses will be evaluated.
-			</p>
-		</section>
-
-		<section class="rule-section">
-			<div class="rule-header">
-				<span class="rule-number">02</span>
-				<h2>Key Concepts</h2>
-			</div>
-			<div class="concept">
-				<h3>Bot</h3>
+			<section class="rule-section">
+				<div class="rule-header">
+					<span class="rule-number">01</span>
+					<h2>Overview</h2>
+				</div>
 				<p>
-					Your AI persona. Give it a name and a prompt that controls its personality and response
-					style (e.g., "I will respond with conspiracy theories").
+					A multiplayer party game where each player builds an AI "bot" with a custom personality,
+					then competes to produce the response that best satisfies a shared AI judge called <strong
+						>the Aligner</strong
+					>. The twist: every player secretly contributes a rule to the Aligner's judging criteria,
+					so nobody knows exactly how responses will be evaluated.
 				</p>
-			</div>
-			<div class="concept">
-				<h3>Bot Prompt</h3>
+			</section>
+
+			<section class="rule-section">
+				<div class="rule-header">
+					<span class="rule-number">02</span>
+					<h2>Key Concepts</h2>
+				</div>
+				<div class="concept">
+					<h3>Bot</h3>
+					<p>
+						Your AI persona. Give it a name and a prompt that controls its personality and response
+						style (e.g., "I will respond with conspiracy theories").
+					</p>
+				</div>
+				<div class="concept">
+					<h3>Bot Prompt</h3>
+					<p>
+						The instruction that tells your bot how to respond. You get 2 chances to change it
+						during the entire game.
+					</p>
+				</div>
+				<div class="concept">
+					<h3>Aligner</h3>
+					<p>
+						The AI judge. Every player secretly writes one judging rule. All rules get shuffled and
+						combined into a single judging prompt.
+					</p>
+				</div>
+				<div class="concept">
+					<h3>Turn Prompt</h3>
+					<p>
+						A fill-in-the-blank card drawn each turn (e.g., "_______: good to the last drop.").
+						Every bot responds to this prompt.
+					</p>
+				</div>
+			</section>
+
+			<section class="rule-section">
+				<div class="rule-header">
+					<span class="rule-number">03</span>
+					<h2>Setup</h2>
+				</div>
+				<ol>
+					<li>One player creates a new game and shares the link.</li>
+					<li>Other players open the link and join.</li>
+					<li>
+						Each player fills in:
+						<ul>
+							<li><strong>Bot Name</strong> — Your bot's display name (max 30 characters)</li>
+							<li>
+								<strong>Aligner Instruction</strong> — Your secret judging rule (e.g., "The most absurd
+								answer wins")
+							</li>
+							<li>
+								<strong>Bot Prompt</strong> — Your bot's personality instruction (max 281 characters)
+							</li>
+						</ul>
+					</li>
+					<li>Creator starts the game. AI bots fill empty seats (targets 4 players total).</li>
+					<li>All aligner instructions are shuffled and combined into the judge's prompt.</li>
+				</ol>
+			</section>
+
+			<section class="rule-section game-loop">
+				<div class="rule-header">
+					<span class="rule-number">04</span>
+					<h2>Turn Loop</h2>
+				</div>
+				<div class="loop-diagram">
+					<div class="loop-step">
+						<span class="step-label">A</span>
+						<p>Random turn prompt card is drawn</p>
+					</div>
+					<div class="loop-step">
+						<span class="step-label">B</span>
+						<p>Players optionally tweak bot prompt</p>
+					</div>
+					<div class="loop-step">
+						<span class="step-label">C</span>
+						<p>Players click "Tell Bot To Respond"</p>
+					</div>
+					<div class="loop-step">
+						<span class="step-label">D</span>
+						<p>Wait for all players to submit</p>
+					</div>
+					<div class="loop-step">
+						<span class="step-label">E</span>
+						<p>Aligner judges all responses</p>
+					</div>
+					<div class="loop-step">
+						<span class="step-label">F</span>
+						<p>Winner gets +1 point</p>
+					</div>
+					<div class="loop-step">
+						<span class="step-label">G</span>
+						<p>Check for 10-point winner</p>
+					</div>
+				</div>
+				<p class="loop-note">Repeats until someone reaches 10 points</p>
+			</section>
+
+			<section class="rule-section">
+				<div class="rule-header">
+					<span class="rule-number">05</span>
+					<h2>Winning</h2>
+				</div>
 				<p>
-					The instruction that tells your bot how to respond. You get 2 chances to change it during
-					the entire game.
+					Each turn, the winning bot earns <strong>1 point</strong>. First bot to reach
+					<strong>10 points</strong> wins the game.
 				</p>
-			</div>
-			<div class="concept">
-				<h3>Aligner</h3>
+			</section>
+
+			<section class="rule-section">
+				<div class="rule-header">
+					<span class="rule-number">06</span>
+					<h2>Prompt Changes</h2>
+				</div>
 				<p>
-					The AI judge. Every player secretly writes one judging rule. All rules get shuffled and
-					combined into a single judging prompt.
+					Each player starts with <strong>2 prompt changes</strong> for the entire game. A prompt change
+					lets you rewrite your bot prompt before submitting a turn. Once used, your bot prompt is locked.
+					Choose wisely!
 				</p>
-			</div>
-			<div class="concept">
-				<h3>Turn Prompt</h3>
-				<p>
-					A fill-in-the-blank card drawn each turn (e.g., "_______: good to the last drop."). Every
-					bot responds to this prompt.
-				</p>
-			</div>
-		</section>
-
-		<section class="rule-section">
-			<div class="rule-header">
-				<span class="rule-number">03</span>
-				<h2>Setup</h2>
-			</div>
-			<ol>
-				<li>One player creates a new game and shares the link.</li>
-				<li>Other players open the link and join.</li>
-				<li>
-					Each player fills in:
-					<ul>
-						<li><strong>Bot Name</strong> — Your bot's display name (max 30 characters)</li>
-						<li>
-							<strong>Aligner Instruction</strong> — Your secret judging rule (e.g., "The most absurd
-							answer wins")
-						</li>
-						<li>
-							<strong>Bot Prompt</strong> — Your bot's personality instruction (max 281 characters)
-						</li>
-					</ul>
-				</li>
-				<li>Creator starts the game. AI bots fill empty seats (targets 4 players total).</li>
-				<li>All aligner instructions are shuffled and combined into the judge's prompt.</li>
-			</ol>
-		</section>
-
-		<section class="rule-section game-loop">
-			<div class="rule-header">
-				<span class="rule-number">04</span>
-				<h2>Turn Loop</h2>
-			</div>
-			<div class="loop-diagram">
-				<div class="loop-step">
-					<span class="step-label">A</span>
-					<p>Random turn prompt card is drawn</p>
-				</div>
-				<div class="loop-step">
-					<span class="step-label">B</span>
-					<p>Players optionally tweak bot prompt</p>
-				</div>
-				<div class="loop-step">
-					<span class="step-label">C</span>
-					<p>Players click "Tell Bot To Respond"</p>
-				</div>
-				<div class="loop-step">
-					<span class="step-label">D</span>
-					<p>Wait for all players to submit</p>
-				</div>
-				<div class="loop-step">
-					<span class="step-label">E</span>
-					<p>Aligner judges all responses</p>
-				</div>
-				<div class="loop-step">
-					<span class="step-label">F</span>
-					<p>Winner gets +1 point</p>
-				</div>
-				<div class="loop-step">
-					<span class="step-label">G</span>
-					<p>Check for 10-point winner</p>
-				</div>
-			</div>
-			<p class="loop-note">Repeats until someone reaches 10 points</p>
-		</section>
-
-		<section class="rule-section">
-			<div class="rule-header">
-				<span class="rule-number">05</span>
-				<h2>Winning</h2>
-			</div>
-			<p>
-				Each turn, the winning bot earns <strong>1 point</strong>. First bot to reach
-				<strong>10 points</strong> wins the game.
-			</p>
-		</section>
-
-		<section class="rule-section">
-			<div class="rule-header">
-				<span class="rule-number">06</span>
-				<h2>Prompt Changes</h2>
-			</div>
-			<p>
-				Each player starts with <strong>2 prompt changes</strong> for the entire game. A prompt change
-				lets you rewrite your bot prompt before submitting a turn. Once used, your bot prompt is locked.
-				Choose wisely!
-			</p>
-		</section>
-	</div>
+			</section>
+		</div>
 	</div>
 </div>
 
