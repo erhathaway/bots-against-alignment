@@ -178,7 +178,7 @@
 					action_text: 'submit_aligner_prompt'
 				});
 			}
-		} catch (error) {
+		} catch {
 			addNotification({
 				source_url: 'aligner-prompt',
 				title: 'Error submitting aligner prompt',

@@ -10,6 +10,7 @@
 	import BotResponseMessage from './BotResponseMessage.svelte';
 	import StatusMessage from './StatusMessage.svelte';
 	import ChatBubble from './ChatBubble.svelte';
+	import GameOverMessage from './GameOverMessage.svelte';
 
 	export type FeedMessage = {
 		id: number;
@@ -76,6 +77,11 @@
 			{/if}
 		{:else if message.type === 'system' && message.senderName === 'The Aligner'}
 			<AlignerMessage message={message.message} />
+		{:else if message.type === 'system' && message.senderName === 'Game Over'}
+			{@const winner = tryParseJSON(message.message)}
+			{#if winner}
+				<GameOverMessage {winner} />
+			{/if}
 		{:else if message.type === 'system'}
 			<SystemMessage message={message.message} />
 		{:else if message.type === 'status' && message.senderName === 'Bot Response'}

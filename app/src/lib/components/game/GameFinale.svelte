@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { globalState } from '$lib/state/store.svelte';
 	import confetti from 'canvas-confetti';
 
@@ -65,29 +64,6 @@
 		}
 	}
 
-	let playAgainLoading = $state(false);
-
-	async function playAgain() {
-		const gameId = globalState.game_id;
-		if (!gameId || playAgainLoading) return;
-		playAgainLoading = true;
-		try {
-			const response = await fetch(`/api/game/${gameId}/play-again`, { method: 'POST' });
-			const data = await response.json();
-			if (response.ok && data.gameId) {
-				goto(`/?join=${data.gameId}`);
-			} else {
-				goto('/');
-			}
-		} catch {
-			goto('/');
-		}
-	}
-
-	function endGame() {
-		goto('/');
-	}
-
 	$effect(() => {
 		fetchStandings();
 	});
@@ -131,11 +107,6 @@
 			{/each}
 		</div>
 	{/if}
-
-	<div class="button-container">
-		<button onclick={playAgain}>Play Again</button>
-		<button onclick={endGame}>End</button>
-	</div>
 </div>
 
 <style>
@@ -230,41 +201,6 @@
 	.score {
 		font-weight: 600;
 		font-variant-numeric: tabular-nums;
-	}
-
-	.button-container {
-		display: flex;
-		justify-content: center;
-		gap: 0.75rem;
-		width: 100%;
-		margin-top: auto;
-		padding: 1rem;
-	}
-
-	button {
-		font-weight: 600;
-		font-size: 0.95rem;
-		padding: 0.75rem 2rem;
-		border: 2px solid var(--color-border);
-		background: var(--color-text);
-		color: white;
-		border-radius: var(--radius-pill);
-		box-shadow: var(--shadow-md);
-		transition: all 180ms var(--ease);
-		letter-spacing: 0.02em;
-		cursor: pointer;
-		flex-grow: 1;
-		max-width: 180px;
-	}
-
-	button:hover {
-		background: white;
-		color: var(--color-text);
-		border-color: var(--color-border);
-	}
-
-	button:active {
-		transform: scale(0.97);
 	}
 
 	@keyframes winner-pulse {

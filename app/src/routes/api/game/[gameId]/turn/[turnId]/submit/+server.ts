@@ -8,7 +8,8 @@ import { rateLimit } from '$lib/server/rate-limit';
 
 const schema = z.object({
 	playerId: z.string().min(1),
-	suggestion: z.string().optional().default('')
+	suggestion: z.string().optional().default(''),
+	responseText: z.string().optional()
 });
 
 export const POST: RequestHandler = async (event) => {
@@ -39,7 +40,8 @@ export const POST: RequestHandler = async (event) => {
 			gameId: event.params.gameId,
 			playerId: parsed.data.playerId,
 			turnId,
-			suggestion: parsed.data.suggestion ?? ''
+			suggestion: parsed.data.suggestion ?? '',
+			responseText: parsed.data.responseText
 		});
 
 		return json(payload, {

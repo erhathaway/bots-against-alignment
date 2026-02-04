@@ -28,10 +28,7 @@ export const POST: RequestHandler = async (event) => {
 		}
 
 		// Verify game and turn exist
-		const gameRows = await db
-			.select({ id: games.id })
-			.from(games)
-			.where(eq(games.id, gameId));
+		const gameRows = await db.select({ id: games.id }).from(games).where(eq(games.id, gameId));
 
 		if (!gameRows.length) {
 			return jsonError(404, 'Game not found');
@@ -40,7 +37,7 @@ export const POST: RequestHandler = async (event) => {
 		const turnRows = await db
 			.select({ prompt: turns.prompt })
 			.from(turns)
-			.where(and(eq(turns.gameId, gameId), eq(turns.id, turnId)));
+			.where(and(eq(turns.gameId, gameId), eq(turns.turnId, turnId)));
 
 		if (!turnRows.length) {
 			return jsonError(404, 'Turn not found');
@@ -50,7 +47,10 @@ export const POST: RequestHandler = async (event) => {
 		const { botPrompt } = parsed.data;
 
 		// Generate bot response
-		const response = await generateBotResponse(turnPrompt, botPrompt);
+		const response = await generateBotResponse({
+			turnPrompt,
+			botPrompt
+		});
 
 		return json({ response });
 	} catch (error) {

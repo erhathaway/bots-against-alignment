@@ -91,7 +91,11 @@
 			const response = await fetch(`/api/game/${gameId}/turn/${turnId}/submit`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ playerId, suggestion: botPrompt })
+				body: JSON.stringify({
+					playerId,
+					suggestion: botPrompt,
+					responseText: botResponse
+				})
 			});
 
 			if (response.ok) {

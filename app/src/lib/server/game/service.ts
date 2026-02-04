@@ -615,12 +615,14 @@ export const submitTurn = async ({
 	gameId,
 	playerId,
 	turnId,
-	suggestion
+	suggestion,
+	responseText: providedResponseText
 }: {
 	gameId: string;
 	playerId: string;
 	turnId: number;
 	suggestion: string;
+	responseText?: string;
 }) => {
 	const game = await requireGame(gameId);
 	if (game.turnId !== turnId) {
@@ -653,14 +655,21 @@ export const submitTurn = async ({
 		promptsRemaining -= 1;
 	}
 
-	const turnPrompt = game.turnPrompt;
-	if (!turnPrompt) {
-		throw badRequest('Turn not initialized');
+	let responseText: string;
+	if (providedResponseText) {
+		// Use the pre-generated response (from /generate endpoint)
+		responseText = providedResponseText;
+	} else {
+		// Generate a new response (legacy flow)
+		const turnPrompt = game.turnPrompt;
+		if (!turnPrompt) {
+			throw badRequest('Turn not initialized');
+		}
+		responseText = await generateBotResponse({
+			botPrompt: updatedPrompt,
+			turnPrompt
+		});
 	}
-	const responseText = await generateBotResponse({
-		botPrompt: updatedPrompt,
-		turnPrompt
-	});
 
 	await db.transaction(async (tx) => {
 		await tx
@@ -690,8 +699,8 @@ export const submitTurn = async ({
 		type: 'status'
 	});
 
-	if (game.creatorPlayerId && playerId === game.creatorPlayerId) {
-		await completeAutoPlayers(gameId, turnId, turnPrompt);
+	if (game.creatorPlayerId && playerId === game.creatorPlayerId && game.turnPrompt) {
+		await completeAutoPlayers(gameId, turnId, game.turnPrompt);
 	}
 
 	// Fire-and-forget: auto-trigger judging if all players have submitted
@@ -914,7 +923,8 @@ export const processTurn = async ({
 	if (isGameOver && winner) {
 		await postChatMessage({
 			gameId,
-			message: `Game over! ${winner.botName} wins with ${winner.score} points!`,
+			senderName: 'Game Over',
+			message: JSON.stringify({ name: winner.botName, score: winner.score }),
 			type: 'system'
 		});
 	}
