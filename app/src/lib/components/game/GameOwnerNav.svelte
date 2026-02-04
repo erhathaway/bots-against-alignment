@@ -77,13 +77,8 @@
 			<span>{addingAi ? 'Adding AI...' : 'Add AI'}</span>
 		</button>
 
-		{#if aiBots.length > 0 || pendingAiIds.length > 0}
+		{#if aiBots.length > 0}
 			<div class="ai-list">
-				{#each pendingAiIds as pendingId (pendingId)}
-					<div class="ai-chip pending">
-						<span class="loading-dots">AI joining</span>
-					</div>
-				{/each}
 				{#each aiBots as bot (bot.id)}
 					<div class="ai-chip">
 						<span>{bot.name}</span>
@@ -134,12 +129,9 @@
 		left: 0;
 		right: 0;
 		height: 4rem;
-		background: #000000;
 		display: flex;
 		align-items: stretch;
 		z-index: 150;
-		border-bottom: 3px solid var(--color-accent);
-		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 	}
 
 	.nav-left {
@@ -156,7 +148,7 @@
 		align-items: center;
 		gap: 0.5rem;
 		padding: 0.625rem 1rem;
-		background: rgba(255, 255, 255, 0.1);
+		background: #000000;
 		color: #ffffff;
 		border: 1.5px solid rgba(255, 255, 255, 0.2);
 		border-radius: var(--radius-md);
@@ -196,11 +188,11 @@
 		align-items: center;
 		gap: 0.5rem;
 		padding: 0.5rem 0.75rem;
-		background: rgba(255, 255, 255, 0.08);
-		border: 1px dashed rgba(255, 255, 255, 0.3);
+		background: #e8e8e8;
+		border: 1px dashed rgba(0, 0, 0, 0.2);
 		border-radius: var(--radius-md);
 		font-size: 0.8rem;
-		color: #ffffff;
+		color: #000000;
 	}
 
 	.ai-chip.pending {
@@ -313,7 +305,7 @@
 	.remove-ai {
 		background: none;
 		border: none;
-		color: rgba(255, 255, 255, 0.6);
+		color: #000000;
 		font-size: 1.25rem;
 		line-height: 1;
 		cursor: pointer;
@@ -327,7 +319,7 @@
 	}
 
 	.remove-ai:hover {
-		color: #ffffff;
+		color: #333333;
 	}
 
 	/* Countdown Section */
@@ -379,6 +371,7 @@
 		cursor: pointer;
 		transition: all 220ms var(--ease);
 		white-space: nowrap;
+		margin-top: 1.25rem;
 	}
 
 	.force-start-btn:hover:not(:disabled) {
@@ -407,6 +400,8 @@
 		transition: all 220ms var(--ease);
 		position: relative;
 		overflow: hidden;
+		margin-top: 0.75rem;
+		margin-right: 1.5rem;
 	}
 
 	.start-btn::before {

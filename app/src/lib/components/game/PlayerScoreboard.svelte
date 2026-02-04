@@ -176,7 +176,7 @@
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
-		padding: 0.625rem 1rem;
+		padding: 0.25rem 1rem;
 		padding-left: 3.25rem;
 		border-radius: var(--radius-lg);
 		transition: all 220ms var(--ease);
@@ -187,8 +187,6 @@
 			rgba(255, 255, 255, 0) 100%
 		);
 		backdrop-filter: blur(12px);
-		border: 1px solid rgba(0, 0, 0, 0.4);
-		border-bottom: 3px solid #000000;
 		box-shadow:
 			0 8px 32px rgba(0, 0, 0, 0.15),
 			0 4px 12px rgba(0, 0, 0, 0.12),
@@ -206,7 +204,7 @@
 
 	.avatar {
 		position: absolute;
-		left: 0.5rem;
+		left: -0.25rem;
 		top: 50%;
 		transform: translateY(-50%);
 	}
@@ -220,7 +218,6 @@
 		align-items: center;
 		pointer-events: none;
 		background: #ffffff;
-		border: 1px solid rgba(0, 0, 0, 0.4);
 		border-radius: 999px;
 		padding: 0.25rem 0.5rem;
 		box-shadow:
@@ -237,8 +234,6 @@
 	}
 
 	.player.current {
-		border-color: rgba(0, 0, 0, 0.5);
-		border-bottom-color: #000000;
 		box-shadow:
 			0 12px 48px rgba(0, 0, 0, 0.2),
 			0 6px 16px rgba(0, 0, 0, 0.15),
@@ -247,7 +242,12 @@
 
 	.player.submitted {
 		opacity: 0.8;
-		background: #fafafa;
+		background: radial-gradient(
+			ellipse at center,
+			rgba(255, 255, 255, 0.6) 0%,
+			rgba(255, 255, 255, 0.3) 50%,
+			rgba(255, 255, 255, 0) 100%
+		);
 	}
 
 	.player.submitted .avatar {
