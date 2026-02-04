@@ -8,6 +8,7 @@
 	import GameSettingsModal from '$lib/components/game/GameSettingsModal.svelte';
 	import RulesModal from '$lib/components/game/RulesModal.svelte';
 	import AlignerPromptModal from '$lib/components/game/AlignerPromptModal.svelte';
+	import BotResponseModal from '$lib/components/game/BotResponseModal.svelte';
 	import type { PageData } from './$types';
 	import type { FeedMessage } from '$lib/components/messages/MessageFeed.svelte';
 	import type { BotInfo } from '$lib/components/game/Lobby.svelte';
@@ -63,8 +64,88 @@
 
 	let hasSubmittedAlignerPrompt = $state(false);
 	let showAlignerPromptModal = $derived(
-		globalState.is_game_started && !hasSubmittedAlignerPrompt
+		globalState.is_collecting_aligner_prompts && !hasSubmittedAlignerPrompt
 	);
+
+	// =====================
+	// Bot response modal
+	// =====================
+
+	let hasSubmittedBotResponse = $state(false);
+	let currentTrackedTurnId = $state<number | null>(null);
+	let promptsRemaining = $state(2);
+	let currentTurnPrompt = $state('');
+
+	// Reset submission state when turn changes
+	$effect(() => {
+		const turnId = globalState.last_turn_id;
+		if (turnId !== null && turnId !== currentTrackedTurnId) {
+			currentTrackedTurnId = turnId;
+			hasSubmittedBotResponse = false;
+		}
+	});
+
+	// Fetch user prompts remaining
+	$effect(() => {
+		const gameId = globalState.game_id;
+		const userId = globalState.user_id;
+		if (!gameId || !userId || !globalState.is_game_started) return;
+
+		const fetchPromptsRemaining = async () => {
+			try {
+				const response = await fetch(`/api/game/${gameId}/me?playerId=${userId}`);
+				if (response.ok) {
+					const data = await response.json();
+					promptsRemaining = data.promptsRemaining ?? 2;
+				}
+			} catch {
+				// ignore
+			}
+		};
+
+		fetchPromptsRemaining();
+		const interval = setInterval(fetchPromptsRemaining, 5000);
+		return () => clearInterval(interval);
+	});
+
+	// Fetch current turn prompt
+	$effect(() => {
+		const gameId = globalState.game_id;
+		const turnId = globalState.last_turn_id;
+		if (!gameId || !turnId) return;
+
+		const fetchTurnPrompt = async () => {
+			try {
+				const response = await fetch(`/api/game/${gameId}/turn/ensure`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' }
+				});
+				if (response.ok) {
+					const data = await response.json();
+					if (data.alignmentPrompt) {
+						currentTurnPrompt = data.alignmentPrompt;
+					}
+				}
+			} catch {
+				// ignore
+			}
+		};
+
+		fetchTurnPrompt();
+	});
+
+	let showBotResponseModal = $derived(
+		globalState.is_game_started &&
+			!globalState.is_collecting_aligner_prompts &&
+			!globalState.is_game_over &&
+			globalState.last_turn_id !== null &&
+			!hasSubmittedBotResponse &&
+			currentTurnPrompt !== ''
+	);
+
+	function handleBotResponseSubmitted() {
+		hasSubmittedBotResponse = true;
+	}
 
 	async function submitAlignerPrompt(alignerPrompt: string) {
 		const gameId = globalState.game_id;
@@ -75,7 +156,7 @@
 			const response = await fetch(`/api/game/${gameId}/aligner-prompt`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ playerId, alignerPrompt })
+				body: JSON.stringify({ playerId, prompt: alignerPrompt })
 			});
 
 			if (response.ok) {
@@ -455,6 +536,22 @@
 
 	let canStart = $derived(!globalState.is_game_started && joinedBots.length >= 1);
 </script>
+
+{#if showAlignerPromptModal}
+	<AlignerPromptModal onSubmit={submitAlignerPrompt} />
+{/if}
+
+{#if showBotResponseModal && globalState.last_turn_id && globalState.game_id && globalState.user_id && globalState.current_bot_prompt}
+	<BotResponseModal
+		turnPrompt={currentTurnPrompt}
+		initialBotPrompt={globalState.current_bot_prompt}
+		{promptsRemaining}
+		gameId={globalState.game_id}
+		playerId={globalState.user_id}
+		turnId={globalState.last_turn_id}
+		onSubmitted={handleBotResponseSubmitted}
+	/>
+{/if}
 
 {#if showSettingsModal}
 	<GameSettingsModal onClose={() => (showSettingsModal = false)} {isCreator} />

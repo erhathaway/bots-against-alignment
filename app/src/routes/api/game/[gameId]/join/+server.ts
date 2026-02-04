@@ -6,7 +6,6 @@ import { joinGame } from '$lib/server/game/service';
 import { handleApiError, jsonError } from '$lib/server/http';
 
 const schema = z.object({
-	alignerPrompt: z.string().min(1).optional(),
 	botPrompt: z.string().min(1),
 	botName: z.string().min(1),
 	creatorId: z.string().optional().nullable()
@@ -20,10 +19,9 @@ export const POST: RequestHandler = async ({ params, request }) => {
 			return jsonError(400, 'Invalid request', parsed.error.flatten());
 		}
 
-		const { alignerPrompt, botPrompt, botName, creatorId } = parsed.data;
+		const { botPrompt, botName, creatorId } = parsed.data;
 		const payload = await joinGame({
 			gameId: params.gameId,
-			alignerPrompt,
 			botPrompt,
 			botName,
 			creatorId

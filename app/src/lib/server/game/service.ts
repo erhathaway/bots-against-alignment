@@ -110,13 +110,11 @@ export const updateGameSettings = async ({
 
 export const joinGame = async ({
 	gameId,
-	alignerPrompt,
 	botPrompt,
 	botName,
 	creatorId
 }: {
 	gameId: string;
-	alignerPrompt?: string;
 	botPrompt: string;
 	botName: string;
 	creatorId?: string | null;
@@ -145,13 +143,8 @@ export const joinGame = async ({
 			updatedAt: timestamp
 		});
 
-		if (alignerPrompt && alignerPrompt.trim()) {
-			await tx.insert(alignerPrompts).values({
-				gameId,
-				playerId,
-				prompt: alignerPrompt
-			});
-		}
+		// Note: Aligner prompts are now submitted separately after game starts
+		// via the AlignerPromptModal, not during join
 
 		if (shouldBecomeCreator) {
 			const newCreatorId =
