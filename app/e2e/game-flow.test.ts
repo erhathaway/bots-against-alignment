@@ -13,6 +13,7 @@ test('can create, join, start, and advance a turn', async ({ page }) => {
 	await expect(page.locator('#bot-name-input')).toBeVisible({ timeout: 10000 });
 	await page.locator('#bot-name-input').fill('E2E Bot');
 	await page.locator('#bot-prompt-input').fill('Be chaotic neutral.');
+	await expect(page.getByRole('button', { name: 'Enter', exact: true })).toBeEnabled();
 	await page.getByRole('button', { name: 'Enter', exact: true }).click();
 
 	// Now in Lobby
@@ -53,7 +54,7 @@ test('join_game preserves prompt values', async ({ page }) => {
 
 	await page.locator('#bot-name-input').fill(botName);
 	await page.locator('#bot-prompt-input').fill(botPrompt);
-
+	await expect(page.getByRole('button', { name: 'Enter', exact: true })).toBeEnabled();
 	await page.getByRole('button', { name: 'Enter', exact: true }).click();
 
 	// In Lobby — start game
@@ -87,6 +88,7 @@ test('two-player game flow works end-to-end', async ({ browser }) => {
 		await expect(creator.locator('#bot-name-input')).toBeVisible({ timeout: 10000 });
 		await creator.locator('#bot-name-input').fill('Creator Bot');
 		await creator.locator('#bot-prompt-input').fill('Be chaotic neutral.');
+		await expect(creator.getByRole('button', { name: 'Enter', exact: true })).toBeEnabled();
 		await creator.getByRole('button', { name: 'Enter', exact: true }).click();
 
 		// Get game ID from Lobby
@@ -111,6 +113,7 @@ test('two-player game flow works end-to-end', async ({ browser }) => {
 		await expect(opponent.locator('#bot-name-input')).toBeVisible({ timeout: 10000 });
 		await opponent.locator('#bot-name-input').fill('Opponent Bot');
 		await opponent.locator('#bot-prompt-input').fill('Be chaotic neutral.');
+		await expect(opponent.getByRole('button', { name: 'Enter', exact: true })).toBeEnabled();
 		await opponent.getByRole('button', { name: 'Enter', exact: true }).click();
 
 		// Both in Lobby — creator starts game

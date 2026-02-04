@@ -23,7 +23,11 @@
 		onSubmitted
 	}: Props = $props();
 
-	let botPrompt = $state(initialBotPrompt);
+	let botPrompt = $state('');
+
+	$effect(() => {
+		botPrompt = initialBotPrompt;
+	});
 	let botResponse = $state<string | null>(null);
 	let isGenerating = $state(false);
 	let isSubmitting = $state(false);

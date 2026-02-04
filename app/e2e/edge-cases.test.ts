@@ -6,6 +6,7 @@ async function fillBotSetupAndEnter(page: Page, botName: string) {
 	await expect(page.locator('#bot-name-input')).toBeVisible({ timeout: 10000 });
 	await page.locator('#bot-name-input').fill(botName);
 	await page.locator('#bot-prompt-input').fill('Be chaotic neutral.');
+	await expect(page.getByRole('button', { name: 'Enter', exact: true })).toBeEnabled();
 	await page.getByRole('button', { name: 'Enter', exact: true }).click();
 	await expect(page.getByPlaceholder('Type your message...')).toBeVisible({ timeout: 20000 });
 }
