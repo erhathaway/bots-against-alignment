@@ -37,21 +37,27 @@
 	async function generateResponse() {
 		if (!canGenerate && !canRegenerate) return;
 
+		console.log('Generating bot response...');
 		isGenerating = true;
 		botResponse = null;
 
 		try {
+			console.log('Calling generate API...');
 			const response = await fetch(`/api/game/${gameId}/turn/${turnId}/generate`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ playerId, botPrompt })
 			});
 
+			console.log('Generate API response:', response.status);
+
 			if (response.ok) {
 				const data = await response.json();
+				console.log('Bot response:', data.response);
 				botResponse = data.response;
 			} else {
 				const data = await response.json();
+				console.error('Generate error:', data);
 				addNotification({
 					source_url: 'bot-response',
 					title: 'Error generating response',
@@ -61,8 +67,19 @@
 					action_text: 'generate_response'
 				});
 			}
+		} catch (error) {
+			console.error('Generate exception:', error);
+			addNotification({
+				source_url: 'bot-response',
+				title: 'Error generating response',
+				body: 'Network error',
+				kind: NotificationKind.ERROR,
+				action_url: null,
+				action_text: 'generate_response'
+			});
 		} finally {
 			isGenerating = false;
+			console.log('Generation complete');
 		}
 	}
 

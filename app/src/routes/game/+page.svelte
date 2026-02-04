@@ -108,11 +108,11 @@
 		return () => clearInterval(interval);
 	});
 
-	// Fetch current turn prompt
+	// Fetch/create current turn and prompt
 	$effect(() => {
 		const gameId = globalState.game_id;
-		const turnId = globalState.last_turn_id;
-		if (!gameId || !turnId) return;
+		if (!gameId || !globalState.is_game_started || globalState.is_collecting_aligner_prompts)
+			return;
 
 		const fetchTurnPrompt = async () => {
 			try {
@@ -122,6 +122,9 @@
 				});
 				if (response.ok) {
 					const data = await response.json();
+					if (data.turnId && data.turnId !== globalState.last_turn_id) {
+						globalState.last_turn_id = data.turnId;
+					}
 					if (data.alignmentPrompt) {
 						currentTurnPrompt = data.alignmentPrompt;
 					}
@@ -132,6 +135,9 @@
 		};
 
 		fetchTurnPrompt();
+		// Poll for turn updates
+		const interval = setInterval(fetchTurnPrompt, 3000);
+		return () => clearInterval(interval);
 	});
 
 	let showBotResponseModal = $derived(
