@@ -55,8 +55,22 @@ export async function ensureDbBootstrapped() {
 		);
 	}
 
-	// Fast path: already migrated.
-	if (await hasTable('games')) return;
+	// Fast path: schema is present. We check a small set of required tables because
+	// some deployments may have a partially-migrated/older schema.
+	const requiredTables = [
+		'games',
+		'players',
+		'game_messages',
+		'aligner_prompts',
+		'turns',
+		'turn_responses',
+		'rate_limits'
+	];
+	const missingTables: string[] = [];
+	for (const table of requiredTables) {
+		if (!(await hasTable(table))) missingTables.push(table);
+	}
+	if (!missingTables.length) return;
 
 	const migrations = getMigrationSqlFiles();
 	if (!migrations.length) {
@@ -64,7 +78,7 @@ export async function ensureDbBootstrapped() {
 	}
 
 	const client = getClient();
-	console.log('[db] Bootstrapping schema (games table missing)');
+	console.log('[db] Bootstrapping schema (missing tables)', missingTables);
 
 	for (const mig of migrations) {
 		const statements = splitStatements(mig.sqlText);
@@ -80,8 +94,15 @@ export async function ensureDbBootstrapped() {
 		}
 	}
 
-	if (!(await hasTable('games'))) {
-		throw new Error('DB bootstrap finished but games table is still missing');
+	// Re-check required tables.
+	const stillMissing: string[] = [];
+	for (const table of requiredTables) {
+		if (!(await hasTable(table))) stillMissing.push(table);
+	}
+	if (stillMissing.length) {
+		throw new Error(
+			`DB bootstrap finished but tables are still missing: ${stillMissing.join(', ')}`
+		);
 	}
 
 	console.log('[db] Schema bootstrap complete');

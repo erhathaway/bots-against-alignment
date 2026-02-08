@@ -493,7 +493,7 @@
 	let alignerTyping = $derived(
 		messages.length > 0 &&
 			messages[messages.length - 1].senderName === 'The Aligner' &&
-			messages[messages.length - 1].type === 'system'
+			messages[messages.length - 1].type === 'aligner_deliberation'
 	);
 
 	async function fetchMessages() {

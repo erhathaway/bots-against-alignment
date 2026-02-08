@@ -45,11 +45,15 @@
 	const responses = $derived(botResponse ? [botResponse] : []);
 
 	const isDirty = $derived(botPrompt.trim() !== committedBotPrompt.trim());
+	const hasCommittedChange = $derived(committedBotPrompt.trim() !== initialBotPrompt.trim());
+	const effectivePromptsRemaining = $derived(
+		hasCommittedChange ? promptsRemaining - 1 : promptsRemaining
+	);
 	const hasChangedPrompt = $derived(botPrompt.trim() !== initialBotPrompt.trim());
 	const canGenerate = $derived(!isGenerating && !botResponse && !isDirty);
 	const canRegenerate = $derived(!isGenerating && botResponse && hasChangedPrompt);
 	const canSubmit = $derived(!isSubmitting && botResponse !== null && !isDirty);
-	const promptLocked = $derived(promptsRemaining <= 0);
+	const promptLocked = $derived(effectivePromptsRemaining <= 0);
 
 	function updatePrompt() {
 		committedBotPrompt = botPrompt;
@@ -174,7 +178,7 @@
 				{#if promptLocked}
 					<span class="locked-badge">LOCKED</span>
 				{:else}
-					<span class="prompts-remaining">{promptsRemaining} changes left</span>
+					<span class="prompts-remaining">{effectivePromptsRemaining} changes left</span>
 				{/if}
 			</div>
 			<div class="textarea-container">
@@ -211,7 +215,7 @@
 			{#if isDirty && !promptLocked}
 				<div class="dirty-prompt-bar">
 					<p class="change-warning">
-						Changing this will use 1 of your {promptsRemaining} remaining prompt changes
+						Changing this will use 1 of your {effectivePromptsRemaining} remaining prompt changes
 					</p>
 					<div class="dirty-prompt-actions">
 						<button class="update-button" onclick={updatePrompt}>Update</button>

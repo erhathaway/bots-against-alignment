@@ -5,14 +5,21 @@ import { getClient } from '$lib/server/db';
 export const GET = async () => {
 	const configured = Boolean(env.DATABASE_URL);
 	let dbOk = false;
+	let schemaOk = false;
 
 	if (configured) {
 		try {
 			const client = getClient();
-			// Query sqlite_master so this succeeds even before migrations.
-			await client.execute(
-				"select name from sqlite_master where type='table' and name='games' limit 1"
+			const required = ['games', 'game_messages'];
+			const rows = await Promise.all(
+				required.map((name) =>
+					client.execute({
+						sql: "select name from sqlite_master where type='table' and name=? limit 1",
+						args: [name]
+					})
+				)
 			);
+			schemaOk = rows.every((r) => r.rows.length > 0);
 			dbOk = true;
 		} catch {
 			dbOk = false;
@@ -24,6 +31,7 @@ export const GET = async () => {
 		db: {
 			configured,
 			ok: dbOk,
+			schemaOk: configured ? schemaOk : null,
 			isRemote: configured ? !env.DATABASE_URL!.startsWith('file:') : null
 		}
 	});
