@@ -23,17 +23,17 @@
 		const gameId = data.gameId;
 		if (!gameId) return;
 
-		// If the game ID changed or player hasn't joined, redirect to homepage
+		// If the game ID changed or player hasn't joined, redirect to join flow
 		if (globalState.game_id !== gameId) {
 			if (!globalState.has_player_joined) {
-				goto('/');
+				goto(`/?join=${gameId}`);
 				return;
 			}
 			globalState.game_id = gameId;
 		}
 
 		if (!globalState.has_player_joined) {
-			goto('/');
+			goto(`/?join=${gameId}`);
 			return;
 		}
 	});
