@@ -160,9 +160,10 @@
 		}
 	}
 
-	function handleBotResponseSubmitted() {
+	function handleBotResponseSubmitted(finalBotPrompt: string) {
 		hasSubmittedBotResponse = true;
 		showBotResponseModal = false;
+		globalState.current_bot_prompt = finalBotPrompt;
 	}
 
 	async function submitAlignerPrompt(alignerPrompt: string) {

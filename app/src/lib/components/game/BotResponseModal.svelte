@@ -10,7 +10,7 @@
 		gameId: string;
 		playerId: string;
 		turnId: number;
-		onSubmitted?: () => void;
+		onSubmitted?: (finalBotPrompt: string) => void;
 	};
 
 	let {
@@ -24,9 +24,11 @@
 	}: Props = $props();
 
 	let botPrompt = $state('');
+	let committedBotPrompt = $state('');
 
 	$effect(() => {
 		botPrompt = initialBotPrompt;
+		committedBotPrompt = initialBotPrompt;
 	});
 	let botResponse = $state<string | null>(null);
 	let isGenerating = $state(false);
@@ -42,11 +44,22 @@
 
 	const responses = $derived(botResponse ? [botResponse] : []);
 
+	const isDirty = $derived(botPrompt.trim() !== committedBotPrompt.trim());
 	const hasChangedPrompt = $derived(botPrompt.trim() !== initialBotPrompt.trim());
-	const canGenerate = $derived(!isGenerating && !botResponse);
+	const canGenerate = $derived(!isGenerating && !botResponse && !isDirty);
 	const canRegenerate = $derived(!isGenerating && botResponse && hasChangedPrompt);
-	const canSubmit = $derived(!isSubmitting && botResponse !== null);
+	const canSubmit = $derived(!isSubmitting && botResponse !== null && !isDirty);
 	const promptLocked = $derived(promptsRemaining <= 0);
+
+	function updatePrompt() {
+		committedBotPrompt = botPrompt;
+		botResponse = null;
+		showResponse = true;
+	}
+
+	function discardPromptChange() {
+		botPrompt = committedBotPrompt;
+	}
 
 	function hideResponse() {
 		showResponse = false;
@@ -118,7 +131,7 @@
 			});
 
 			if (response.ok) {
-				onSubmitted?.();
+				onSubmitted?.(botPrompt);
 			} else {
 				const data = await response.json();
 				addNotification({
@@ -180,7 +193,7 @@
 						<button
 							class="respond-button"
 							onclick={generateResponse}
-							disabled={isGenerating || promptLocked}
+							disabled={!canGenerate || promptLocked}
 						>
 							<span class="button-icon">▶</span>
 							Respond
@@ -195,10 +208,16 @@
 					</button>
 				{/if}
 			</div>
-			{#if hasChangedPrompt && !promptLocked && (!botResponse || !showResponse)}
-				<p class="change-warning">
-					Changing this will use 1 of your {promptsRemaining} remaining prompt changes
-				</p>
+			{#if isDirty && !promptLocked}
+				<div class="dirty-prompt-bar">
+					<p class="change-warning">
+						Changing this will use 1 of your {promptsRemaining} remaining prompt changes
+					</p>
+					<div class="dirty-prompt-actions">
+						<button class="update-button" onclick={updatePrompt}>Update</button>
+						<button class="discard-button" onclick={discardPromptChange}>Discard</button>
+					</div>
+				</div>
 			{/if}
 		</div>
 
@@ -595,8 +614,68 @@
 		font-size: 0.85rem;
 		font-family: var(--font-mono);
 		color: var(--color-accent);
-		margin-top: 0.75rem;
+		margin: 0;
 		text-shadow: 0 0 10px rgba(230, 200, 50, 0.3);
+	}
+
+	.dirty-prompt-bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		margin-top: 0.75rem;
+		flex-wrap: wrap;
+	}
+
+	.dirty-prompt-actions {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.update-button,
+	.discard-button {
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		padding: 0.4rem 0.9rem;
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+		transition: all 200ms var(--ease);
+	}
+
+	.update-button {
+		border: 2px solid rgba(230, 200, 50, 0.4);
+		background: rgba(0, 0, 0, 0.9);
+		color: rgba(230, 200, 50, 0.7);
+		box-shadow:
+			0 0 8px rgba(230, 200, 50, 0.1),
+			inset 0 0 15px rgba(230, 200, 50, 0.02);
+	}
+
+	.update-button:hover {
+		background: var(--color-accent);
+		color: #000000;
+		box-shadow:
+			0 0 20px rgba(230, 200, 50, 0.3),
+			0 0 40px rgba(230, 200, 50, 0.2);
+	}
+
+	.discard-button {
+		border: 2px solid rgba(255, 255, 255, 0.2);
+		background: transparent;
+		color: rgba(255, 255, 255, 0.5);
+	}
+
+	.discard-button:hover {
+		border-color: rgba(255, 255, 255, 0.4);
+		color: rgba(255, 255, 255, 0.8);
+		background: rgba(255, 255, 255, 0.05);
+	}
+
+	.update-button:active,
+	.discard-button:active {
+		transform: scale(0.97);
 	}
 
 	.action-container {

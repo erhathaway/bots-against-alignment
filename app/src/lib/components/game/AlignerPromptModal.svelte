@@ -62,6 +62,7 @@
 	let showStory = $state(true);
 	let storyText = $state('');
 	let isFlipping = $state(false);
+	let storyAborted = false;
 	let storyContainer: HTMLDivElement | null = null;
 
 	const fullStory = `THE ALIGNER AWAITS...
@@ -82,14 +83,25 @@ But choose wisely...
 
 The game begins NOW.`;
 
+	function skipStory() {
+		if (!showStory || isFlipping) return;
+		storyAborted = true;
+		isFlipping = true;
+		setTimeout(() => {
+			showStory = false;
+		}, 600);
+	}
+
 	async function typeWriter() {
 		const lines = fullStory.split('\n');
 
 		for (let i = 0; i < lines.length; i++) {
+			if (storyAborted) return;
 			const line = lines[i];
 
 			// Type out the line character by character quickly
 			for (let char of line) {
+				if (storyAborted) return;
 				storyText += char;
 				// Quick character delay (20-40ms)
 				await new Promise((resolve) => setTimeout(resolve, 20 + Math.random() * 20));
@@ -110,8 +122,12 @@ The game begins NOW.`;
 			await new Promise((resolve) => setTimeout(resolve, lineDelay));
 		}
 
+		if (storyAborted) return;
+
 		// Wait a few seconds after complete
 		await new Promise((resolve) => setTimeout(resolve, 2500));
+
+		if (storyAborted) return;
 
 		// Flip animation
 		isFlipping = true;
@@ -126,7 +142,8 @@ The game begins NOW.`;
 
 <div class="modal-overlay">
 	{#if showStory}
-		<div class="modal-content story-mode" class:flipping={isFlipping}>
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div class="modal-content story-mode" class:flipping={isFlipping} ondblclick={skipStory}>
 			<div class="story-container" bind:this={storyContainer}>
 				<div class="story-content">
 					<div class="story-spacer"></div>

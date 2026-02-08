@@ -135,9 +135,7 @@ export function isBufferedMessageType(type: MessageType): boolean {
 export function createMessage(input: CreateMessageInput): GameMessage {
 	const channel = input.channel;
 	const bufferDuration =
-		channel === 'buffered'
-			? input.bufferDuration ?? getDefaultBufferDuration(input.type)
-			: null;
+		channel === 'buffered' ? (input.bufferDuration ?? getDefaultBufferDuration(input.type)) : null;
 
 	return {
 		gameId: input.gameId,

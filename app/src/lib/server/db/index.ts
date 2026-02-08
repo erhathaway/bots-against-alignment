@@ -7,13 +7,22 @@ import { env } from '$env/dynamic/private';
 // Lazy-init: avoid creating the client at module-load time so SvelteKit's
 // postbuild analysis doesn't crash when the web client is aliased but
 // DATABASE_URL points to a local file (or isn't set yet).
+let _client: ReturnType<typeof createClient> | undefined;
 let _db: LibSQLDatabase<typeof schema> | undefined;
+
+export function getClient() {
+	if (!_client) {
+		if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
+		const authToken =
+			env.DATABASE_AUTH_TOKEN ?? env.LIBSQL_AUTH_TOKEN ?? env.TURSO_AUTH_TOKEN ?? undefined;
+		_client = createClient({ url: env.DATABASE_URL, authToken });
+	}
+	return _client;
+}
 
 export function getDb() {
 	if (!_db) {
-		if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
-		const client = createClient({ url: env.DATABASE_URL });
-		_db = drizzle(client, { schema });
+		_db = drizzle(getClient(), { schema });
 	}
 	return _db;
 }

@@ -160,11 +160,7 @@ async function handleBotResponseSubmit(gameId: string, payload: any): Promise<vo
 	const timestamp = now();
 
 	// Get player and game data
-	const playerRows = await db
-		.select()
-		.from(players)
-		.where(eq(players.id, playerId))
-		.limit(1);
+	const playerRows = await db.select().from(players).where(eq(players.id, playerId)).limit(1);
 
 	if (!playerRows.length) return;
 	const player = playerRows[0];

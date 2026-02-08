@@ -8,6 +8,24 @@ export const handleApiError = (error: unknown) => {
 	if (error instanceof HttpError) {
 		return jsonError(error.status, error.message);
 	}
+	// Common deployment/configuration failures: surface as 503 with a readable message.
+	if (error instanceof Error) {
+		const msg = error.message || '';
+		const lower = msg.toLowerCase();
+		if (lower.includes('database_url is not set')) {
+			return jsonError(503, 'Database is not configured');
+		}
+		if (
+			lower.includes('no such table') ||
+			lower.includes('games table') ||
+			lower.includes('schema')
+		) {
+			return jsonError(503, 'Database is not initialized');
+		}
+		if (lower.includes('file:') && lower.includes('vercel')) {
+			return jsonError(503, 'Database configuration is invalid for Vercel');
+		}
+	}
 	console.error(error);
 	return jsonError(500, 'Internal server error');
 };
