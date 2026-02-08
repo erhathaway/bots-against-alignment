@@ -509,6 +509,17 @@
 				const newMessages = data.messages as FeedMessage[];
 				messages = [...messages, ...newMessages];
 				lastMessageId = newMessages[newMessages.length - 1].id;
+
+				// State-changing messages: immediately refresh game status
+				const hasStateChange = newMessages.some(
+					(m) =>
+						m.type === 'game_started' ||
+						m.type === 'round_winner' ||
+						m.type === 'game_over'
+				);
+				if (hasStateChange) {
+					fetchGameStatus();
+				}
 			}
 		} catch {
 			// silently ignore polling errors
